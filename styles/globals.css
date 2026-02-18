@@ -1,0 +1,36 @@
+body {
+    margin: 0;
+    font-family: system-ui;
+    background: #0f172a;
+    color: white;
+  }
+  
+  .sidebar {
+    width: 240px;
+    height: 100vh;
+    background: #111827;
+    position: fixed;
+    padding: 20px;
+  }
+  
+  .card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(8px);
+    border-radius: 14px;
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .login {
+    max-width: 360px;
+    margin: 100px auto;
+  }
+  
+  button {
+    background: #2e7dff;
+    border: none;
+    padding: 12px;
+    color: white;
+    border-radius: 8px;
+  }
+  

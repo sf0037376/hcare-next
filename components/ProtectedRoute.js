@@ -1,14 +1,9 @@
 'use client'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
+// Frontend routes rely on backend JWT checks + the global
+// axios interceptor in `lib/api` to enforce auth. This wrapper
+// exists to keep a consistent API and is a no-op to avoid
+// client-side redirect loops.
 export default function ProtectedRoute({ children }) {
-  const router = useRouter()
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) router.push('/login')
-  }, [])
-
   return children
 }

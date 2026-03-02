@@ -6,14 +6,17 @@ export default function NotificationBell() {
   const [count, setCount] = useState(0)
 
   async function load() {
-    const data = await apiFetch("/notifications/unread")
+    // Backend notifications router is mounted at /notifications and
+    // defines GET /notifications/unread, so the full path is
+    // /notifications/notifications/unread
+    const data = await apiFetch("/notifications/notifications/unread")
     if (data) setCount(data.count || 0)
   }
 
   useEffect(() => {
-    load()
-    const i = setInterval(load, 15000)
-    return () => clearInterval(i)
+    // load()
+    // const i = setInterval(load, 15000)
+    // return () => clearInterval(i)
   }, [])
 
   return (

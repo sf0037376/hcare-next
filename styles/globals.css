@@ -25,6 +25,19 @@ body {
     max-width: 360px;
     margin: 100px auto;
   }
+
+  .main {
+    margin-left: 240px; /* width of sidebar */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content {
+    flex: 1;
+    padding: 24px;
+    overflow: auto;
+  }
   
   button {
     background: #2e7dff;

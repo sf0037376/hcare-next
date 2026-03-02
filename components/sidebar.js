@@ -19,6 +19,14 @@ export default function Sidebar() {
       )}
 
       <Link href="/vitals">Vitals</Link>
+
+      {role === "admin" && (
+        <>
+          <Link href="/users">Users</Link>
+          <Link href="/patients">Patients</Link>
+          <Link href="/notifications">Notifications</Link>
+        </>
+      )}
     </div>
   )
 }

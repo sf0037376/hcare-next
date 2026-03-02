@@ -1,11 +1,14 @@
 "use client"
 
-import Layout from "../../components/layout"
+import { useSearchParams } from "next/navigation"
 import { apiFetch } from "../../lib/api"
 import useToast from "../../components/toast"
+import ProtectedRoute from "../../components/ProtectedRoute"
 
 export default function Vitals() {
   const { Toast, show } = useToast()
+  const searchParams = useSearchParams()
+  const initialPatientId = searchParams.get("patient_id") || ""
 
   async function submit(e) {
     e.preventDefault()
@@ -21,16 +24,23 @@ export default function Vitals() {
   }
 
   return (
-    <Layout>
-      {Toast}
-      <h2>Vitals</h2>
+    <ProtectedRoute>
+      <div className="page">
+        {Toast}
+        <h2 className="page-title">Vitals</h2>
 
-      <form onSubmit={submit}>
-        <input name="patient" placeholder="Patient ID" required />
-        <input name="hr" placeholder="Heart Rate" required />
-        <input name="spo2" placeholder="SpO2" required />
-        <button>Save</button>
-      </form>
-    </Layout>
+        <form onSubmit={submit} className="form">
+          <input
+            name="patient"
+            placeholder="Patient ID"
+            defaultValue={initialPatientId}
+            required
+          />
+          <input name="hr" placeholder="Heart Rate" required />
+          <input name="spo2" placeholder="SpO2" required />
+          <button type="submit">Save</button>
+        </form>
+      </div>
+    </ProtectedRoute>
   )
 }

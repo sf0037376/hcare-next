@@ -14,212 +14,119 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #09090b; /* zinc-950 */
+    --foreground: #fafafa; /* zinc-50 */
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Layout shell */
-.sidebar {
-  min-width: 220px;
-  padding: 1rem;
-  background: #0f172a;
-  color: #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+/* Custom Animation Keyframes (Replacing tailwindcss-animate) */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.sidebar a {
-  color: inherit;
-  text-decoration: none;
+@keyframes zoomIn95 {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-.sidebar a:hover {
-  text-decoration: underline;
+@keyframes slideInFromBottom5 {
+  from { opacity: 0; transform: translateY(1.25rem); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
+.animate-in.fade-in {
+  animation: fadeIn var(--tw-enter-duration, 0.2s) ease-out forwards;
 }
 
-.main {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
+.animate-in.zoom-in-95 {
+  animation: zoomIn95 var(--tw-enter-duration, 0.2s) ease-out forwards;
 }
 
-.content {
-  padding: 1rem;
+.animate-in.slide-in-from-bottom-5 {
+  animation: slideInFromBottom5 var(--tw-enter-duration, 0.3s) ease-out forwards;
 }
 
-.layout,
-body > div {
-  display: flex;
-  min-height: 100vh;
+/* Animation variable overrides used in the codebase */
+.duration-200 { --tw-enter-duration: 200ms; }
+.duration-300 { --tw-enter-duration: 300ms; }
+.duration-500 { --tw-enter-duration: 500ms; }
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Generic page styles */
-.page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 1rem;
+/* Custom Scrollbar for sleek UI */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #d4d4d8; /* zinc-300 */
+  border-radius: 20px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #3f3f46; /* zinc-700 */
+}
+
+/* Base styles for standard elements that may be loaded dynamically without Tailwind classes */
 .page-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 480px;
-}
-
-input,
-select,
-textarea,
-button {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid #d1d5db;
-  font-size: 0.95rem;
-}
-
-button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1rem;
+  @apply text-2xl font-bold tracking-tight text-zinc-900 dark:text-white mb-6;
 }
 
 .card {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  background: white;
+  @apply bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5;
+}
+
+.form-input {
+  @apply block w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium placeholder-zinc-400 focus:outline-none;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center px-6 py-3 rounded-xl border border-transparent text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center px-6 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-sm transition-all duration-200;
+}
+
+/* Toast container styling */
+.toast-container {
+  @apply fixed bottom-24 md:bottom-6 right-6 z-50 flex flex-col gap-2;
 }
 
 .toast {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  background: #16a34a;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 999px;
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+  @apply bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium;
+  animation: slideInFromBottom5 0.3s ease-out forwards, fadeIn 0.3s ease-out forwards;
 }
 
-.skeleton {
-  min-height: 100vh;
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 37%, #e5e7eb 63%);
-  background-size: 400% 100%;
-  animation: skeleton-loading 1.4s ease infinite;
-}
-
-@keyframes skeleton-loading {
-  0% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0 50%;
-  }
-}
-
-.table-wrapper {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-th,
-td {
-  border: 1px solid #e5e7eb;
-  padding: 0.5rem;
-  text-align: left;
-  font-size: 0.9rem;
-}
-
-/* Login page */
-.login {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem;
-}
-
-/* Modal */
+/* Modal styles for legacy code */
 .modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 50;
+  @apply fixed inset-0 bg-zinc-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-50;
+  animation: fadeIn 0.2s ease-out forwards;
 }
 
 .modal {
-  width: 100%;
-  max-width: 420px;
-  background: white;
-  border-radius: 0.75rem;
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  @apply w-full max-w-md bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 md:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)];
+  animation: zoomIn95 0.2s ease-out forwards, fadeIn 0.2s ease-out forwards;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    inset: 0 50% auto 0;
-    min-width: 0;
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 1rem;
-  }
-
-  .main {
-    margin-top: 3.5rem;
-  }
-
-  .content {
-    padding: 0.75rem;
-  }
+/* Skeleton Loading */
+.skeleton {
+  @apply bg-zinc-200 dark:bg-zinc-800 animate-pulse rounded-xl;
 }

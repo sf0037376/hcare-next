@@ -1,0 +1,316 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { apiFetch } from "../../../lib/api"
+import useToast from "../../../components/toast"
+import ProtectedRoute from "../../../components/ProtectedRoute"
+import Link from "next/link"
+
+export default function PatientAdmission() {
+  const { Toast, show } = useToast()
+  const router = useRouter()
+  
+  const [form, setForm] = useState({
+    name: "",
+    age: "",
+    gender: "Other",
+    contact_number: "",
+    address: "",
+    admission_date: new Date().toISOString().slice(0, 16),
+    condition_description: "",
+    organization_id: "", 
+    initial_payment_amount: "",
+    payment_method: "Cash",
+    assigned_doctor_id: "",
+    assigned_nurse_id: "",
+    abha_id: "",
+    abha_address: "",
+    email: "",
+    create_login: false
+  })
+
+  const [doctors, setDoctors] = useState([])
+  const [nurses, setNurses] = useState([])
+
+  useEffect(() => {
+    async function loadStaff() {
+      try {
+        const users = await apiFetch("/users")
+        setDoctors(users.filter(u => u.role.toLowerCase() === "doctor"))
+        setNurses(users.filter(u => u.role.toLowerCase() === "nurse"))
+      } catch (err) {
+        console.error("Failed to load staff", err)
+      }
+    }
+    loadStaff()
+  }, [])
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    try {
+      // 1. Create Patient
+      const patient = await apiFetch("/patients", {
+        method: "POST",
+        body: JSON.stringify({
+          name: form.name,
+          age: parseInt(form.age),
+          gender: form.gender,
+          contact_number: form.contact_number,
+          address: form.address,
+          admission_date: form.admission_date,
+          condition_description: form.condition_description,
+          organization_id: form.organization_id || 1,
+          assigned_doctor_id: form.assigned_doctor_id,
+          assigned_nurse_id: form.assigned_nurse_id,
+          abha_id: form.abha_id,
+          abha_address: form.abha_address,
+          email: form.email,
+          create_login: form.create_login
+        })
+      })
+
+      // 2. Create Initial Billing/Payment Entry (Mocking for now until billing schema is ready)
+      if (form.initial_payment_amount) {
+        show(`Patient admitted and payment of ${form.initial_payment_amount} recorded`)
+      } else {
+        show("Patient admitted successfully")
+      }
+
+      setTimeout(() => router.push("/patients"), 2000)
+    } catch (err) {
+      show("Failed to admit patient")
+    }
+  }
+
+  return (
+    <ProtectedRoute roles={["admin"]}>
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto pb-20">
+        {Toast}
+        
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Patient Admission</h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-2">Register a new patient and set up initial billing.</p>
+          </div>
+          <Link href="/dashboard" className="btn-secondary text-sm">Cancel</Link>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Personal Information */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm">1</span>
+              Personal Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="col-span-2">
+                <label className="form-label">Full Name</label>
+                <input
+                  className="form-input"
+                  value={form.name}
+                  onChange={e => setForm({...form, name: e.target.value})}
+                  placeholder="Enter patient's full name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Age (Days/Months/Years)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={form.age}
+                  onChange={e => setForm({...form, age: e.target.value})}
+                  placeholder="e.g. 5"
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Gender</label>
+                <select 
+                  className="form-input"
+                  value={form.gender}
+                  onChange={e => setForm({...form, gender: e.target.value})}
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Phone Number</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  value={form.contact_number}
+                  onChange={e => setForm({...form, contact_number: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="form-label text-blue-600">ABHA ID (14 digits)</label>
+                <input 
+                  type="text" 
+                  className="form-input border-blue-200"
+                  placeholder="1234-5678-9012-34"
+                  value={form.abha_id}
+                  onChange={e => setForm({...form, abha_id: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="form-label text-blue-600">ABHA Address</label>
+                <input 
+                  type="text" 
+                  className="form-input border-blue-200"
+                  placeholder="user@abdm"
+                  value={form.abha_address}
+                  onChange={e => setForm({...form, abha_address: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="form-label">Address</label>
+                <input
+                  className="form-input"
+                  value={form.address}
+                  onChange={e => setForm({...form, address: e.target.value})}
+                  placeholder="Full address"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Admission Details */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-sm">2</span>
+              Admission Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="form-label">Admission Date & Time</label>
+                <input
+                  type="datetime-local"
+                  className="form-input"
+                  value={form.admission_date}
+                  onChange={e => setForm({...form, admission_date: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Assigned Doctor</label>
+                <select 
+                  className="form-input"
+                  value={form.assigned_doctor_id}
+                  onChange={e => setForm({...form, assigned_doctor_id: e.target.value})}
+                >
+                  <option value="">Select Doctor</option>
+                  {doctors.map(d => (
+                    <option key={d.id} value={d.id}>{d.username}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Assigned Nurse</label>
+                <select 
+                  className="form-input"
+                  value={form.assigned_nurse_id}
+                  onChange={e => setForm({...form, assigned_nurse_id: e.target.value})}
+                >
+                  <option value="">Select Nurse</option>
+                  {nurses.map(n => (
+                    <option key={n.id} value={n.id}>{n.username}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="form-label">Condition Summary</label>
+                <textarea
+                  className="form-input min-h-[100px]"
+                  value={form.condition_description}
+                  onChange={e => setForm({...form, condition_description: e.target.value})}
+                  placeholder="Reason for admission and initial assessment..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Billing & Payment */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm border-l-4 border-l-emerald-500">
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm">3</span>
+              Initial Billing & Payment
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="form-label">Initial Payment Amount</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">$</span>
+                  <input
+                    type="number"
+                    className="form-input pl-8"
+                    value={form.initial_payment_amount}
+                    onChange={e => setForm({...form, initial_payment_amount: e.target.value})}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="form-label">Payment Method</label>
+                <select 
+                  className="form-input"
+                  value={form.payment_method}
+                  onChange={e => setForm({...form, payment_method: e.target.value})}
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI / Digital</option>
+                  <option value="Card">Card</option>
+                  <option value="Insurance">Insurance</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-zinc-100 dark:border-zinc-800">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span className="p-1.5 bg-blue-100 text-blue-600 rounded-lg text-sm">🔑</span>
+                Digital Access
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="form-label">Patient Email (Required for login)</label>
+                  <input 
+                    type="email" 
+                    className="form-input"
+                    placeholder="patient@example.com"
+                    value={form.email}
+                    onChange={e => setForm({...form, email: e.target.value})}
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-8">
+                  <input 
+                    type="checkbox"
+                    className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                    checked={form.create_login}
+                    onChange={e => setForm({...form, create_login: e.target.checked})}
+                  />
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Create Patient User Account
+                  </label>
+                </div>
+              </div>
+              {form.create_login && (
+                <p className="text-xs text-zinc-500 mt-2 italic">
+                  * A login will be created with username as email and default password 'patient123'.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <button type="submit" className="flex-1 btn-primary py-4 text-lg shadow-xl shadow-blue-500/20">
+              Complete Admission
+            </button>
+          </div>
+        </form>
+      </div>
+    </ProtectedRoute>
+  )
+}

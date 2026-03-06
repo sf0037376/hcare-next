@@ -15,17 +15,35 @@ export default function BillingPage() {
   const [doctors, setDoctors] = useState([])
   const [selectedPatientType, setSelectedPatientType] = useState("OP")
   const [insurance, setInsurance] = useState({ provider: "", policy_number: "", covered_amount: 0 })
+  const [role, setRole] = useState("")
 
   useEffect(() => {
     async function loadData() {
+      const userRole = (localStorage.getItem("role") || "").toLowerCase()
+      setRole(userRole)
       try {
-        const [pts, prc, drs] = await Promise.all([
+        const [pts, prc, drs, inv] = await Promise.all([
           apiFetch("/patients"),
           apiFetch("/pricing"),
-          apiFetch("/users") // assuming this returns doctors too, or use /doctors if exists
+          apiFetch("/users"),
+          userRole === 'pharmacist' ? apiFetch("/pharmacy/inventory") : Promise.resolve([])
         ])
         setPatients(Array.isArray(pts) ? pts : [])
-        setPricingMaster(Array.isArray(prc) ? prc : [])
+        
+        if (userRole === 'pharmacist') {
+          // Map inventory to pricingMaster structure
+          const mappedInv = Array.isArray(inv) ? inv.map(i => ({
+            id: i.id,
+            service_name: i.medicine,
+            base_charge: i.price,
+            category: 'PHARMACY',
+            patient_type: 'BOTH'
+          })) : []
+          setPricingMaster(mappedInv)
+        } else {
+          setPricingMaster(Array.isArray(prc) ? prc : [])
+        }
+        
         setDoctors(Array.isArray(drs) ? drs.filter(u => u.role === 'DOCTOR') : [])
       } catch (err) {
         show("Failed to load setup data")
@@ -168,10 +186,10 @@ export default function BillingPage() {
                 {items.map((item, index) => (
                   <div key={index} className="grid grid-cols-12 gap-3 items-end">
                     <div className="col-span-6 relative">
-                      <input 
-                        className="form-input text-sm"
-                        placeholder="Type service name to search (Enter to add)..."
-                        value={item.searchQuery !== undefined ? item.searchQuery : (pricingMaster.find(p => p.id === parseInt(item.serviceId))?.service_name || item.description || "")}
+                        <input 
+                          className="form-input text-sm"
+                          placeholder={role === 'pharmacist' ? "Type medicine name..." : "Type service name to search (Enter to add)..."}
+                          value={item.searchQuery !== undefined ? item.searchQuery : (pricingMaster.find(p => p.id === parseInt(item.serviceId))?.service_name || item.description || "")}
                         onChange={e => {
                           updateItem(index, 'searchQuery', e.target.value)
                           updateItem(index, 'showSuggestions', true)
@@ -186,10 +204,12 @@ export default function BillingPage() {
                                const suggestions = getSuggestions(query)
                                if (suggestions.length > 0) {
                                    handleSelectService(index, suggestions[0])
-                               } else {
+                               } else if (role !== 'pharmacist') {
                                    handleSelectService(index, { id: 'custom', service_name: query, base_charge: 0, category: 'OTHER' })
                                }
-                               addItem()
+                               if (role !== 'pharmacist' || (suggestions.length > 0)) {
+                                   addItem()
+                               }
                            }
                         }}
                       />
@@ -207,15 +227,15 @@ export default function BillingPage() {
                                     <span className="text-blue-600 dark:text-blue-400 font-bold">₹{p.base_charge}</span>
                                  </div>
                                </div>
-                            ))}
-                            {getSuggestions(item.searchQuery).length === 0 && (
-                               <div 
-                                 className="px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700 cursor-pointer text-sm text-blue-600 font-medium"
-                                 onClick={() => handleSelectService(index, { id: 'custom', service_name: item.searchQuery, base_charge: 0, category: 'OTHER' })}
-                               >
-                                 + Add "{item.searchQuery}" as Custom Item
-                               </div>
-                            )}
+                             ))}
+                             {getSuggestions(item.searchQuery).length === 0 && role !== 'pharmacist' && (
+                                <div 
+                                  className="px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700 cursor-pointer text-sm text-blue-600 font-medium"
+                                  onClick={() => handleSelectService(index, { id: 'custom', service_name: item.searchQuery, base_charge: 0, category: 'OTHER' })}
+                                >
+                                  + Add "{item.searchQuery}" as Custom Item
+                                </div>
+                             )}
                          </div>
                       )}
                       {item.serviceId && pricingMaster.find(p => p.id === parseInt(item.serviceId))?.category === 'CONSULTATION' && (

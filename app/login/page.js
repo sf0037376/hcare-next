@@ -37,6 +37,9 @@ export default function Login() {
       localStorage.setItem('username', data.username || data.name || username)
       localStorage.setItem('userId', String(data.user_id) ?? '2')
       localStorage.setItem('orgId', String(data.organisation_id) ?? '1')
+      if (data.patient_id) {
+        localStorage.setItem('patientId', String(data.patient_id))
+      }
 
       // Route based on role
       const userRole = (data.role || '').toLowerCase()

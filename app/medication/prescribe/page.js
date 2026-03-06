@@ -12,9 +12,13 @@ export default function PrescribePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialPatientId = searchParams.get("patient_id") || ""
+  const scheduleId = searchParams.get("schedule_id") || ""
+  const isEdit = !!scheduleId
 
   const [patients, setPatients] = useState([])
   const [medicines, setMedicines] = useState([])
+  const [medicineQuery, setMedicineQuery] = useState("")
+  const [showMedDropdown, setShowMedDropdown] = useState(false)
   const [form, setForm] = useState({
     patient_id: initialPatientId,
     medicine: "",
@@ -27,6 +31,17 @@ export default function PrescribePage() {
 
   const [showAddMedicine, setShowAddMedicine] = useState(false)
   const [newMedicine, setNewMedicine] = useState({ name: "", category: "General", unit_price: 0 })
+  
+  const [labTestsList, setLabTestsList] = useState([])
+  const [labSearch, setLabSearch] = useState("")
+  const [selectedLabs, setSelectedLabs] = useState([])
+
+  const filteredMedicines = medicineQuery
+    ? medicines.filter(m => m.medicine?.toLowerCase().includes(medicineQuery.toLowerCase()))
+    : medicines.slice(0, 10)
+  const filteredLabs = labSearch
+    ? labTestsList.filter(t => t.name?.toLowerCase().includes(labSearch.toLowerCase()))
+    : labTestsList
 
   const loadPatients = useCallback(async () => {
     try {
@@ -46,10 +61,42 @@ export default function PrescribePage() {
     }
   }, [show])
 
+  const loadLabTests = useCallback(async () => {
+    try {
+      const data = await apiFetch("/labs/list")
+      setLabTestsList(Array.isArray(data) ? data : [])
+    } catch (err) {
+      show("Failed to load lab tests")
+    }
+  }, [show])
+
   useEffect(() => {
     loadPatients()
     loadMedicines()
-  }, [loadPatients, loadMedicines])
+    loadLabTests()
+  }, [loadPatients, loadMedicines, loadLabTests])
+
+  useEffect(() => {
+    async function loadSchedule() {
+      if (!scheduleId) return
+      try {
+        const item = await apiFetch(`/medication/schedule/item/${scheduleId}`)
+        setForm({
+          patient_id: item.patient_id,
+          medicine: item.medicine,
+          dosage: item.dosage,
+          times_per_day: item.times_per_day,
+          first_dose: item.first_dose,
+          interval_minutes: item.interval_minutes,
+          start_date: item.start_date ? new Date(item.start_date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
+        })
+        setMedicineQuery(item.medicine)
+      } catch (err) {
+        show("Failed to load schedule details")
+      }
+    }
+    loadSchedule()
+  }, [scheduleId, show])
 
   async function handleAddMedicine(e) {
     if (e) e.preventDefault()
@@ -79,26 +126,47 @@ export default function PrescribePage() {
     if (!form.medicine) return show("Select or add a medicine")
 
     try {
-      await apiFetch("/medication/schedule", {
-        method: "POST",
-        body: JSON.stringify(form)
-      })
-      show("Prescription saved and scheduled")
+      const promises = []
+      
+      if (form.medicine) {
+        const url = isEdit ? `/medication/schedule/${scheduleId}` : "/medication/schedule"
+        const method = isEdit ? "PUT" : "POST"
+        promises.push(apiFetch(url, {
+          method,
+          body: JSON.stringify(form)
+        }))
+      }
+
+      if (selectedLabs.length > 0) {
+        selectedLabs.forEach(testId => {
+          promises.push(apiFetch("/labs/order", {
+            method: "POST",
+            body: JSON.stringify({
+              patient_id: form.patient_id,
+              test_id: testId,
+              doctor_id: 1 // Placeholder for current doctor
+            })
+          }))
+        })
+      }
+
+      await Promise.all(promises)
+      show("Prescription and Lab Orders saved")
       setTimeout(() => router.back(), 1500)
     } catch (err) {
-      show("Failed to save prescription")
+      show("Failed to save prescription/lab orders")
     }
   }
 
   return (
-    <ProtectedRoute roles={["doctor", "admin"]}>
+    <ProtectedRoute roles={["DOCTOR", "ADMIN", "NURSE", "STAFF"]}>
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto pb-20">
         {Toast}
         
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Create Prescription</h2>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-2">Generate a new medication schedule for a patient.</p>
+            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">{isEdit ? 'Adjust Dosage' : 'Create Prescription'}</h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-2">{isEdit ? 'Update details for this prescription. History will be preserved.' : 'Generate a new medication schedule for a patient.'}</p>
           </div>
           <button onClick={() => router.back()} className="btn-secondary text-sm">Cancel</button>
         </div>
@@ -119,6 +187,7 @@ export default function PrescribePage() {
                       <option value="">-- Choose Patient --</option>
                       {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
+                    {isEdit && <p className="text-[10px] font-bold text-zinc-400 mt-2 uppercase tracking-widest">Locked for current adjustment</p>}
                   </div>
 
                   <div className="col-span-2">
@@ -132,15 +201,30 @@ export default function PrescribePage() {
                         + Add Missing Medicine
                       </button>
                     </div>
-                    <select 
-                      className="form-input"
-                      value={form.medicine}
-                      onChange={e => setForm({...form, medicine: e.target.value})}
-                      required
-                    >
-                      <option value="">-- Select from Inventory --</option>
-                      {medicines.map(m => <option key={m.id} value={m.medicine}>{m.medicine}</option>)}
-                    </select>
+                    <div className="relative">
+                      <input
+                        className="form-input"
+                        placeholder="Type to search medicine..."
+                        value={medicineQuery || form.medicine}
+                        onFocus={() => setShowMedDropdown(true)}
+                        onChange={e => { setMedicineQuery(e.target.value); setForm({...form, medicine: e.target.value}); setShowMedDropdown(true) }}
+                        onBlur={() => setTimeout(() => setShowMedDropdown(false), 150)}
+                        required
+                      />
+                      {showMedDropdown && filteredMedicines.length > 0 && (
+                        <div className="absolute z-20 top-full mt-1 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
+                          {filteredMedicines.map(m => (
+                            <div
+                              key={m.id}
+                              className="px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer text-sm font-medium"
+                              onMouseDown={() => { setForm({...form, medicine: m.medicine}); setMedicineQuery(m.medicine); setShowMedDropdown(false) }}
+                            >
+                              {m.medicine}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -189,27 +273,54 @@ export default function PrescribePage() {
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                  <h4 className="font-bold text-zinc-900 dark:text-white mb-4 uppercase tracking-widest text-xs">Request Lab Tests</h4>
+                  <input
+                    className="form-input mb-3"
+                    placeholder="Search tests..."
+                    value={labSearch}
+                    onChange={e => setLabSearch(e.target.value)}
+                  />
+                  {selectedLabs.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {selectedLabs.map(id => {
+                        const t = labTestsList.find(x => x.id === id)
+                        return t ? (
+                          <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold">
+                            {t.name}
+                            <button type="button" onClick={() => setSelectedLabs(selectedLabs.filter(l => l !== id))} className="text-blue-400 hover:text-blue-600">×</button>
+                          </span>
+                        ) : null
+                      })}
+                    </div>
+                  )}
+                  <div className="max-h-48 overflow-y-auto space-y-1 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-2">
+                    {filteredLabs.map(test => (
+                      <label key={test.id} className="flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl cursor-pointer transition-colors">
+                        <input 
+                          type="checkbox" 
+                          className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                          checked={selectedLabs.includes(test.id)}
+                          onChange={e => {
+                            if (e.target.checked) setSelectedLabs([...selectedLabs, test.id])
+                            else setSelectedLabs(selectedLabs.filter(id => id !== test.id))
+                          }}
+                        />
+                        <span className="text-sm">{test.name}</span>
+                      </label>
+                    ))}
+                    {filteredLabs.length === 0 && <p className="text-xs text-zinc-400 text-center py-4">No tests match your search</p>}
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800">
                   <button type="submit" className="w-full btn-primary py-4 text-lg">
-                    Confirm & Prescribe
+                    {isEdit ? 'Update & Prescribe' : 'Confirm & Prescribe'}
                   </button>
                 </div>
               </div>
             </form>
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-3xl p-6 h-fit sticky top-6">
-              <h4 className="font-bold text-blue-900 dark:text-blue-300 mb-4 flex items-center gap-2">
-                <span>ℹ️</span> Dosage Help
-              </h4>
-              <ul className="text-sm text-blue-800/80 dark:text-blue-300/80 space-y-3">
-                <li>• <b>TDS</b>: 3 times a day (8-hourly)</li>
-                <li>• <b>BD</b>: 2 times a day (12-hourly)</li>
-                <li>• <b>OD</b>: Once a day (24-hourly)</li>
-                <li>• <b>SOS</b>: As needed only</li>
-              </ul>
-            </div>
-          </div>
         </div>
 
         {/* Add Medicine Modal */}

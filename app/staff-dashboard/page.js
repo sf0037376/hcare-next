@@ -10,8 +10,11 @@ export default function StaffDashboard() {
   const { Toast, show } = useToast()
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
+  const [displayName, setDisplayName] = useState("Staff") // SSR-safe initial value
 
   useEffect(() => {
+    // Only access localStorage on the client
+    setDisplayName(localStorage.getItem("username") || "Staff")
     async function init() {
       try {
         const patientsData = await apiFetch("/patients")
@@ -43,7 +46,7 @@ export default function StaffDashboard() {
                <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-pulse"></span>
                Shift Active
             </span>
-            <h3 className="text-2xl sm:text-3xl font-bold mb-2">Hello, {typeof window !== "undefined" ? localStorage.getItem("username") || "Staff" : "Staff"}</h3>
+            <h3 className="text-2xl sm:text-3xl font-bold mb-2">Hello, {displayName}</h3>
             <p className="text-orange-100 text-lg">Ready to log your rounds for {patients.length} patients.</p>
           </div>
           <div className="hidden md:flex opacity-20 transform -rotate-12 scale-150 absolute right-12">

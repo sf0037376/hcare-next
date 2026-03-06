@@ -9,13 +9,25 @@ import Link from "next/link"
 export default function DoctorDashboard() {
   const { Toast, show } = useToast()
   const [patients, setPatients] = useState([])
+  const [logs, setLogs] = useState([])
+  const [meds, setMeds] = useState([])
   const [loading, setLoading] = useState(true)
+
+  // Accordion state
+  const [openSection, setOpenSection] = useState('urgent')
 
   useEffect(() => {
     async function init() {
       try {
-        const patientsData = await apiFetch("/patients")
+        const [patientsData, logsData, medsData] = await Promise.all([
+          apiFetch("/patients"),
+          apiFetch("/vitals"), // Note: We might need a real dashboard aggregator route
+          apiFetch("/medication/schedule")
+        ]).catch(() => [[], [], []])
+
         setPatients(Array.isArray(patientsData) ? patientsData : [])
+        setLogs(Array.isArray(logsData) ? logsData : [])
+        setMeds(Array.isArray(medsData) ? medsData : [])
       } catch (err) {
         show("Failed to load dashboard data")
       } finally {
@@ -83,52 +95,107 @@ export default function DoctorDashboard() {
           </Link>
         </div>
 
-        {/* Patients Overview */}
-        <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-4">Urgent Patients Overview</h3>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden">
-          {loading ? (
-             <div className="p-8 flex items-center justify-center text-zinc-500">
-               <div className="w-8 h-8 border-4 border-zinc-200 dark:border-zinc-700 border-t-purple-500 rounded-full animate-spin"></div>
-             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-50/50 dark:bg-zinc-900/50">Patient</th>
-                    <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-50/50 dark:bg-zinc-900/50">DOB</th>
-                    <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-50/50 dark:bg-zinc-900/50">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                  {patients.slice(0, 5).map((p) => (
-                    <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-white flex items-center gap-3">
-                         <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xs uppercase">
+        {/* Accordion Sections */}
+        <div className="space-y-4">
+          
+          {/* Urgent Patients List */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden">
+            <button 
+              onClick={() => setOpenSection(openSection === 'urgent' ? '' : 'urgent')}
+              className="w-full px-6 py-5 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                🚨 Urgent Patients Overview
+                <span className="bg-purple-100 text-purple-600 text-xs px-2 py-0.5 rounded-full">{patients.length}</span>
+              </h3>
+              <span className={`transform transition-transform ${openSection === 'urgent' ? 'rotate-180' : ''}`}>▼</span>
+            </button>
+            
+            {openSection === 'urgent' && (
+              <div className="border-t border-zinc-200 dark:border-zinc-800">
+                {loading ? (
+                  <div className="p-8 flex justify-center"><div className="w-6 h-6 border-2 border-purple-500 rounded-full animate-spin border-t-transparent"></div></div>
+                ) : patients.length > 0 ? (
+                  <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {patients.slice(0, 5).map(p => (
+                      <li key={p.id} className="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 flex items-center justify-center font-bold">
                             {p.name.charAt(0)}
                           </div>
                           <div>
-                            {p.name}
-                            <div className="text-xs text-zinc-500 font-normal">ID: #{p.id}</div>
+                            <p className="font-bold text-zinc-900 dark:text-white">{p.name}</p>
+                            <p className="text-xs text-zinc-500">ID: #{p.id} • {p.dob}</p>
                           </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">{p.dob}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
-                        <Link href={`/dashboard?patient_id=${p.id}`} className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-semibold text-sm">
-                          View Details &rarr;
+                        </div>
+                        <Link href={`/patients/${p.id}/profile`} className="text-sm font-semibold text-purple-600 hover:text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg">
+                          View Profile
                         </Link>
-                      </td>
-                    </tr>
-                  ))}
-                  {patients.length === 0 && (
-                    <tr>
-                      <td colSpan="3" className="px-6 py-8 text-center text-zinc-500 text-sm">No patients assigned found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="p-6 text-center text-zinc-500 text-sm">No urgent patients assigned.</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Logs List */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden">
+            <button 
+              onClick={() => setOpenSection(openSection === 'logs' ? '' : 'logs')}
+              className="w-full px-6 py-5 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                📋 Recent Logs
+              </h3>
+              <span className={`transform transition-transform ${openSection === 'logs' ? 'rotate-180' : ''}`}>▼</span>
+            </button>
+            
+            {openSection === 'logs' && (
+              <div className="border-t border-zinc-200 dark:border-zinc-800">
+                {loading ? (
+                  <div className="p-8 flex justify-center"><div className="w-6 h-6 border-2 border-purple-500 rounded-full animate-spin border-t-transparent"></div></div>
+                ) : logs.length > 0 ? (
+                  <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {/* Placeholder map since we don't have a real Recent Logs global endpoint yet */}
+                    {logs.map(log => <li key={log.id} className="p-4 text-sm text-zinc-600">Log entry</li>)}
+                  </ul>
+                ) : (
+                  <div className="p-6 text-center text-zinc-500 text-sm">No recent logs found.</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Medications List */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden">
+            <button 
+              onClick={() => setOpenSection(openSection === 'meds' ? '' : 'meds')}
+              className="w-full px-6 py-5 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                💊 Recent Medications
+              </h3>
+              <span className={`transform transition-transform ${openSection === 'meds' ? 'rotate-180' : ''}`}>▼</span>
+            </button>
+            
+            {openSection === 'meds' && (
+              <div className="border-t border-zinc-200 dark:border-zinc-800">
+                {loading ? (
+                  <div className="p-8 flex justify-center"><div className="w-6 h-6 border-2 border-purple-500 rounded-full animate-spin border-t-transparent"></div></div>
+                ) : meds.length > 0 ? (
+                  <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    <li className="p-4 text-sm text-zinc-600 italic">Medication history available in patient profiles.</li>
+                  </ul>
+                ) : (
+                  <div className="p-6 text-center text-zinc-500 text-sm">No recent medications found.</div>
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </ProtectedRoute>

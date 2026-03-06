@@ -15,7 +15,10 @@ export default function UserManagement() {
     username: "",
     email: "",
     password: "",
-    role: "staff"
+    role: "staff",
+    doctor_id_string: "",
+    employment_type: "PERMANENT",
+    pay_per_case: ""
   })
 
   // Password Reset State
@@ -40,12 +43,12 @@ export default function UserManagement() {
   async function handleCreateUser(e) {
     e.preventDefault()
     try {
-      await apiFetch("/auth/register", {
+      await apiFetch("/users", {
         method: "POST",
         body: JSON.stringify(newUser)
       })
       show("User created successfully")
-      setNewUser({ username: "", email: "", password: "", role: "staff" })
+      setNewUser({ username: "", email: "", password: "", role: "staff", doctor_id_string: "", employment_type: "PERMANENT", pay_per_case: "" })
       loadUsers()
     } catch (err) {
       show("Failed to create user")
@@ -130,6 +133,47 @@ export default function UserManagement() {
                     <option value="admin">Admin</option>
                   </select>
                 </div>
+
+                {newUser.role === 'doctor' && (
+                  <div className="space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 animate-in slide-in-from-top-2 duration-300">
+                    <div>
+                      <label className="form-label text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                        Doctor ID <span className="text-[10px] bg-blue-100 dark:bg-blue-900/30 px-1.5 rounded">REQUIRED</span>
+                      </label>
+                      <input
+                        className="form-input border-blue-100 dark:border-blue-900/30"
+                        value={newUser.doctor_id_string}
+                        onChange={e => setNewUser({...newUser, doctor_id_string: e.target.value})}
+                        placeholder="e.g. DOC-2024-001"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Employment Type</label>
+                      <select
+                        className="form-input"
+                        value={newUser.employment_type}
+                        onChange={e => setNewUser({...newUser, employment_type: e.target.value})}
+                      >
+                        <option value="PERMANENT">Permanent (Salary)</option>
+                        <option value="CONSULTANT">Consultant (Pay-per-case)</option>
+                      </select>
+                    </div>
+                    {newUser.employment_type === 'CONSULTANT' && (
+                      <div>
+                        <label className="form-label">Pay Per Case (₹)</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={newUser.pay_per_case}
+                          onChange={e => setNewUser({...newUser, pay_per_case: e.target.value})}
+                          placeholder="e.g. 500"
+                          required
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
                 <button type="submit" className="w-full btn-primary py-3 mt-2">
                   Add Staff Member
                 </button>
@@ -165,19 +209,33 @@ export default function UserManagement() {
                               {user.role === 'doctor' ? '👨‍⚕️' : '👤'}
                             </div>
                             <div>
-                              <p className="font-medium text-zinc-900 dark:text-white">{user.username}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-zinc-900 dark:text-white">{user.username}</p>
+                                {user.doctor_id_string && (
+                                  <span className="text-[10px] font-black bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800">
+                                    {user.doctor_id_string}
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-zinc-500">{user.email}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                            user.role === 'admin' ? 'bg-red-100 text-red-600' :
-                            user.role === 'doctor' ? 'bg-blue-100 text-blue-600' :
-                            'bg-emerald-100 text-emerald-600'
-                          }`}>
-                            {user.role}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className={`w-fit px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                              user.role === 'admin' ? 'bg-red-100 text-red-600' :
+                              user.role === 'doctor' ? 'bg-blue-100 text-blue-600' :
+                              'bg-emerald-100 text-emerald-600'
+                            }`}>
+                              {user.role}
+                            </span>
+                            {user.role === 'doctor' && user.employment_type && (
+                              <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest pl-1">
+                                {user.employment_type}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-right space-x-2">
                           <button 

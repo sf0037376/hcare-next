@@ -223,11 +223,31 @@ export default function AppointmentPage() {
                           {appt.doctor_name}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            appt.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-600' : 'bg-zinc-100 text-zinc-600'
-                          }`}>
-                            {appt.status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              appt.is_confirmed ? 'bg-emerald-100 text-emerald-600' : 
+                              appt.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-600' : 
+                              'bg-zinc-100 text-zinc-600'
+                            }`}>
+                              {appt.is_confirmed ? 'CONFIRMED' : appt.status}
+                            </span>
+                            {!appt.is_confirmed && (
+                              <button 
+                                onClick={async () => {
+                                  try {
+                                    await apiFetch(`/appointments/${appt.id}/confirm`, { method: 'PUT' });
+                                    show("Appointment confirmed! Doctor notified.");
+                                    loadData();
+                                  } catch (e) {
+                                    show("Failed to confirm");
+                                  }
+                                }}
+                                className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg transition-colors border border-emerald-100 dark:border-emerald-800"
+                              >
+                                CONFIRM ✓
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

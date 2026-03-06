@@ -27,11 +27,16 @@ export default function PatientAdmission() {
     abha_id: "",
     abha_address: "",
     email: "",
-    create_login: false
+    create_login: false,
+    patient_type: "OP",
+    assigned_ward_id: "",
+    assigned_bed_id: ""
   })
 
   const [doctors, setDoctors] = useState([])
   const [nurses, setNurses] = useState([])
+  const [wards, setWards] = useState([])
+  const [beds, setBeds] = useState([])
 
   useEffect(() => {
     async function loadStaff() {
@@ -39,12 +44,29 @@ export default function PatientAdmission() {
         const users = await apiFetch("/users")
         setDoctors(users.filter(u => u.role.toLowerCase() === "doctor"))
         setNurses(users.filter(u => u.role.toLowerCase() === "nurse"))
+        
+        const wardsData = await apiFetch("/wards")
+        setWards(wardsData)
       } catch (err) {
-        console.error("Failed to load staff", err)
+        console.error("Failed to load setup data", err)
       }
     }
     loadStaff()
   }, [])
+
+  useEffect(() => {
+    if (form.assigned_ward_id) {
+      async function loadBeds() {
+        try {
+          const data = await apiFetch(`/wards/${form.assigned_ward_id}/beds`)
+          setBeds(data.filter(b => b.status === "AVAILABLE"))
+        } catch (err) { console.error(err) }
+      }
+      loadBeds()
+    } else {
+      setBeds([])
+    }
+  }, [form.assigned_ward_id])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -66,7 +88,10 @@ export default function PatientAdmission() {
           abha_id: form.abha_id,
           abha_address: form.abha_address,
           email: form.email,
-          create_login: form.create_login
+          create_login: form.create_login,
+          patient_type: form.patient_type,
+          assigned_ward_id: form.patient_type === 'IP' ? form.assigned_ward_id : null,
+          assigned_bed_id: form.patient_type === 'IP' ? form.assigned_bed_id : null
         })
       })
 
@@ -178,11 +203,74 @@ export default function PatientAdmission() {
             </div>
           </div>
 
+          {/* Patient Type & Facility */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center text-sm">2</span>
+              Patient Type & Facility
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="col-span-2">
+                <label className="form-label">Admission Type</label>
+                <div className="flex gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl w-fit">
+                  <button 
+                    type="button" 
+                    onClick={() => setForm({...form, patient_type: "OP"})}
+                    className={`px-8 py-2.5 rounded-xl text-sm font-bold transition-all ${form.patient_type === "OP" ? "bg-white dark:bg-zinc-900 shadow-sm text-blue-600" : "text-zinc-500"}`}
+                  >
+                    Out-Patient (OP)
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setForm({...form, patient_type: "IP"})}
+                    className={`px-8 py-2.5 rounded-xl text-sm font-bold transition-all ${form.patient_type === "IP" ? "bg-white dark:bg-zinc-900 shadow-sm text-blue-600" : "text-zinc-500"}`}
+                  >
+                    In-Patient (IP)
+                  </button>
+                </div>
+              </div>
+
+              {form.patient_type === "IP" && (
+                <>
+                  <div>
+                    <label className="form-label">Select Ward</label>
+                    <select 
+                      className="form-input"
+                      value={form.assigned_ward_id}
+                      onChange={e => setForm({...form, assigned_ward_id: e.target.value, assigned_bed_id: ""})}
+                      required
+                    >
+                      <option value="">-- Choose Ward --</option>
+                      {wards.map(w => (
+                        <option key={w.id} value={w.id}>{w.name} ({w.type})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="form-label">Select Bed</label>
+                    <select 
+                      className="form-input"
+                      value={form.assigned_bed_id}
+                      onChange={e => setForm({...form, assigned_bed_id: e.target.value})}
+                      required
+                    >
+                      <option value="">-- Choose Bed --</option>
+                      {beds.map(b => (
+                        <option key={b.id} value={b.id}>{b.bed_number} (₹{b.daily_charge}/day)</option>
+                      ))}
+                    </select>
+                    {beds.length === 0 && form.assigned_ward_id && <p className="text-[10px] text-red-500 mt-1">No available beds in this ward.</p>}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Admission Details */}
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-sm">2</span>
-              Admission Details
+              <span className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-sm">3</span>
+              Clinical Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -236,7 +324,7 @@ export default function PatientAdmission() {
           {/* Billing & Payment */}
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm border-l-4 border-l-emerald-500">
             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm">3</span>
+              <span className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm">4</span>
               Initial Billing & Payment
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

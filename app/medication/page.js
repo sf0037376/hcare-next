@@ -12,6 +12,7 @@ export default function Medication() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialPatientId = searchParams.get("patient_id") || ""
+  const [role, setRole] = useState("")
 
   const [patients, setPatients] = useState([])
   const [form, setForm] = useState({
@@ -20,6 +21,15 @@ export default function Medication() {
     dose: "",
     recorded_at: new Date().toISOString().slice(0, 16)
   })
+
+  useEffect(() => {
+    const userRole = (localStorage.getItem("role") || "").toLowerCase()
+    setRole(userRole)
+    if (userRole === "patient") {
+      const pId = localStorage.getItem("patientId")
+      if (pId) setForm(prev => ({ ...prev, patient_id: pId }))
+    }
+  }, [])
 
   useEffect(() => {
     async function loadPatients() {
@@ -53,11 +63,11 @@ export default function Medication() {
     }
   }
 
-  const role = typeof window !== "undefined" ? (localStorage.getItem("role") || "").toLowerCase() : ""
-  const dashboardLink = role === "doctor" ? "/doctor-dashboard" : role === "nurse" || role === "staff" ? "/staff-dashboard" : "/dashboard"
+  const currentRole = typeof window !== "undefined" ? (localStorage.getItem("role") || "").toLowerCase() : ""
+  const dashboardLink = currentRole === "doctor" ? "/doctor-dashboard" : currentRole === "nurse" || currentRole === "staff" ? "/staff-dashboard" : "/dashboard"
 
   return (
-    <ProtectedRoute roles={["admin", "doctor", "nurse"]}>
+    <ProtectedRoute roles={["admin", "doctor", "nurse", "patient"]}>
       <div className="animate-in fade-in duration-500 max-w-2xl mx-auto pb-safe">
         {Toast}
 
@@ -81,17 +91,23 @@ export default function Medication() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="form-label">Select Patient</label>
-                <select
-                  className="form-input"
-                  value={form.patient_id}
-                  onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
-                  required
-                >
-                  <option value="">-- Choose Patient --</option>
-                  {patients.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                {role === 'patient' ? (
+                  <div className="form-input bg-zinc-50 dark:bg-zinc-800/50 font-bold text-zinc-900 dark:text-white">
+                    Logged in as Patient #{form.patient_id}
+                  </div>
+                ) : (
+                  <select
+                    className="form-input"
+                    value={form.patient_id}
+                    onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
+                    required
+                  >
+                    <option value="">-- Choose Patient --</option>
+                    {patients.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div>
                 <label className="form-label">Time of Administration</label>

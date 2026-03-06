@@ -11,11 +11,12 @@ export default function PharmacyInventory() {
   const [loading, setLoading] = useState(true)
   
   const [newItem, setNewItem] = useState({
-    name: "",
+    medicine: "",
     category: "Medicine",
-    stock_quantity: "",
-    unit_price: "",
-    expiry_date: ""
+    stock: "",
+    price: "",
+    expiry_date: "",
+    barcode: ""
   })
 
   useEffect(() => {
@@ -25,13 +26,10 @@ export default function PharmacyInventory() {
   async function loadInventory() {
     setLoading(true)
     try {
-      // Mocking inventory for now as we might need a backend route update
-      // In a real scenario, we'd have GET /pharmacy/inventory
-      const data = [
-        { id: 1, name: "Amoxicillin 250mg", category: "Antibiotic", stock_quantity: 450, unit_price: 12.50, expiry_date: "2026-12-31" },
-        { id: 2, name: "Paracetamol Syrup", category: "Analgesic", stock_quantity: 80, unit_price: 45.00, expiry_date: "2025-06-15" }
-      ]
-      setInventory(data)
+      const data = await apiFetch("/pharmacy/inventory")
+      setInventory(Array.isArray(data) ? data : [])
+    } catch(err) {
+      show("Failed to load inventory")
     } finally {
       setLoading(false)
     }
@@ -39,11 +37,17 @@ export default function PharmacyInventory() {
 
   async function handleAddItem(e) {
     e.preventDefault()
-    // Mock addition
-    const added = { ...newItem, id: Date.now() }
-    setInventory([...inventory, added])
-    show(`${newItem.name} added to inventory`)
-    setNewItem({ name: "", category: "Medicine", stock_quantity: "", unit_price: "", expiry_date: "" })
+    try {
+      await apiFetch("/pharmacy/inventory", {
+        method: "POST",
+        body: JSON.stringify(newItem)
+      })
+      show(`${newItem.medicine} added to inventory`)
+      setNewItem({ medicine: "", category: "Medicine", stock: "", price: "", expiry_date: "", barcode: "" })
+      loadInventory() // reload to see new item
+    } catch(err) {
+      show("Failed to add item: " + err.message)
+    }
   }
 
   return (
@@ -66,13 +70,23 @@ export default function PharmacyInventory() {
               </h3>
               <form onSubmit={handleAddItem} className="space-y-4">
                 <div>
-                  <label className="form-label">Item Name</label>
+                  <label className="form-label">Item / Medicine Name</label>
                   <input
                     className="form-input"
-                    value={newItem.name}
-                    onChange={e => setNewItem({...newItem, name: e.target.value})}
+                    value={newItem.medicine}
+                    onChange={e => setNewItem({...newItem, medicine: e.target.value})}
                     placeholder="e.g. Paracetamol"
                     required
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Barcode (Optional)</label>
+                  <input
+                    className="form-input focus:ring-blue-500"
+                    value={newItem.barcode}
+                    onChange={e => setNewItem({...newItem, barcode: e.target.value})}
+                    placeholder="Scan or type barcode"
+                    title="Focus this field and use scanner"
                   />
                 </div>
                 <div>
@@ -90,8 +104,8 @@ export default function PharmacyInventory() {
                     <input
                       type="number"
                       className="form-input"
-                      value={newItem.stock_quantity}
-                      onChange={e => setNewItem({...newItem, stock_quantity: e.target.value})}
+                      value={newItem.stock}
+                      onChange={e => setNewItem({...newItem, stock: e.target.value})}
                       placeholder="0"
                       required
                     />
@@ -102,8 +116,8 @@ export default function PharmacyInventory() {
                       type="number"
                       step="0.01"
                       className="form-input"
-                      value={newItem.unit_price}
-                      onChange={e => setNewItem({...newItem, unit_price: e.target.value})}
+                      value={newItem.price}
+                      onChange={e => setNewItem({...newItem, price: e.target.value})}
                       placeholder="0.00"
                       required
                     />
@@ -152,15 +166,20 @@ export default function PharmacyInventory() {
                   <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                     {inventory.map(item => (
                       <tr key={item.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-zinc-900 dark:text-white">{item.name}</td>
+                        <td className="px-6 py-4 font-medium text-zinc-900 dark:text-white flex flex-col items-start gap-1">
+                          <span>{item.medicine}</span>
+                          {item.barcode && <span className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-500 font-mono tracking-wider">BC: {item.barcode}</span>}
+                        </td>
                         <td className="px-6 py-4 text-zinc-500 text-sm">{item.category}</td>
                         <td className="px-6 py-4">
-                          <span className={`font-mono font-bold ${item.stock_quantity < 50 ? 'text-red-500' : 'text-emerald-500'}`}>
-                            {item.stock_quantity}
+                          <span className={`font-mono font-bold ${item.stock < 50 ? 'text-red-500' : 'text-emerald-500'}`}>
+                            {item.stock}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-zinc-900 dark:text-white font-medium">₹{item.unit_price}</td>
-                        <td className="px-6 py-4 text-zinc-500 text-sm font-mono truncate max-w-[100px]">{item.expiry_date}</td>
+                        <td className="px-6 py-4 text-zinc-900 dark:text-white font-medium">₹{parseFloat(item.price).toFixed(2)}</td>
+                        <td className="px-6 py-4 text-zinc-500 text-sm font-mono truncate max-w-[100px]">
+                          {new Date(item.expiry_date).toLocaleDateString()}
+                        </td>
                         <td className="px-6 py-4 text-right">
                           <button className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
                             <span className="text-lg">⚙️</span>

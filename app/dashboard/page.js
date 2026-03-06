@@ -28,6 +28,16 @@ export default function Dashboard() {
   })
 
   useEffect(() => {
+    const userRole = (localStorage.getItem("role") || "").toLowerCase()
+    setRole(userRole)
+    if (userRole === 'patient') {
+      const pId = localStorage.getItem('patientId')
+      if (pId) {
+        window.location.href = `/patients/${pId}/profile`
+        return
+      }
+    }
+
     async function loadPatients() {
       try {
         const data = await apiFetch("/patients")
@@ -37,8 +47,9 @@ export default function Dashboard() {
       }
     }
 
-    loadPatients()
-    setRole((localStorage.getItem("role") || "").toLowerCase())
+    if (userRole !== 'patient') {
+      loadPatients()
+    }
   }, [show])
 
   function requirePatient() {
@@ -153,155 +164,206 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="animate-in fade-in duration-500">
+      <div className="animate-in fade-in duration-500 pb-safe">
         {Toast}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 relative z-10">
+        
+        {/* Header with Patient Selector */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 sticky top-0 z-30 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md py-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Dashboard</h2>
+            <h2 className="text-3xl font-black tracking-tight text-zinc-900 dark:text-white">Dashboard</h2>
             {selectedPatientName && (
-              <p className="text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                Monitoring: <span className="font-semibold text-zinc-700 dark:text-zinc-300">{selectedPatientName}</span>
+              <p className="text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Monitoring: <span className="text-zinc-800 dark:text-zinc-200">{selectedPatientName}</span>
               </p>
             )}
           </div>
           
-          <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 p-2 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-3 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl shadow-inner border border-zinc-200 dark:border-zinc-800">
+            <span className="pl-3 text-zinc-400">👤</span>
             <select
               id="patient-select"
               value={selectedPatientId}
               onChange={(e) => {
-                setSelectedPatientId(e.target.value);
-                const p = patients.find(p => String(p.id) === e.target.value);
+                const val = e.target.value;
+                setSelectedPatientId(val);
+                const p = patients.find(p => String(p.id) === val);
                 setSelectedPatientName(p ? p.name : "");
               }}
-              className="bg-transparent border-none text-sm font-medium text-zinc-700 dark:text-zinc-300 focus:ring-0 cursor-pointer min-w-[200px]"
+              className="bg-transparent border-none text-sm font-bold text-zinc-800 dark:text-zinc-200 focus:ring-0 cursor-pointer min-w-[220px] py-2"
             >
-              <option value="">-- Switch Patient --</option>
+              <option value="">-- Switch Patient View --</option>
               {patients.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name || `Patient #${p.id}`}
+                  {p.name} (ID: {p.id})
                 </option>
               ))}
             </select>
           </div>
         </div>
 
-        {/* Hero Section */}
-        {!selectedPatientId ? (
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-8 sm:p-12 text-white shadow-lg shadow-blue-500/20 mb-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <span className="text-9xl">🏥</span>
-            </div>
-            <div className="relative z-10 max-w-lg">
-              <h3 className="text-2xl sm:text-3xl font-bold mb-4">Select a Patient</h3>
-              <p className="text-blue-100 mb-8 text-lg">Choose a patient from the dropdown above to view their vitals, log medications, or add feeding records.</p>
-            </div>
-          </div>
-        ) : (
+        {/* Dynamic Dashboard Content */}
+        {role === 'admin' ? (
           <>
-            {/* Quick Actions Base on the provided UI */}
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {role !== "pharmacist" && (
-                  <>
-                    <button 
-                      onClick={() => openModal("feed")}
-                      className="flex flex-col items-center justify-center gap-3 p-6 bg-orange-50 dark:bg-orange-500/10 hover:bg-orange-100 dark:hover:bg-orange-500/20 rounded-3xl transition-colors border border-orange-100 dark:border-orange-500/20 group"
-                    >
-                      <div className="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                        🍼
-                      </div>
-                      <span className="font-semibold text-orange-900 dark:text-orange-100 text-sm">Log Feed</span>
-                    </button>
-                    
-                    <button 
-                      onClick={() => openModal("vitals")}
-                      className="flex flex-col items-center justify-center gap-3 p-6 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-3xl transition-colors border border-red-100 dark:border-red-500/20 group"
-                    >
-                      <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                        ❤️
-                      </div>
-                      <span className="font-semibold text-red-900 dark:text-red-100 text-sm">Add Vitals</span>
-                    </button>
-                  </>
-                )}
-                
-                <button 
-                  onClick={() => openModal("med")}
-                  className={`flex flex-col items-center justify-center gap-3 p-6 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-100 rounded-3xl transition-colors border border-purple-100 dark:border-purple-500/20 group ${role === 'pharmacist' ? 'col-span-2' : 'col-span-2 md:col-span-1'}`}
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                    💊
+            {/* Admin Overview: Hospital Health */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+              <div className="md:col-span-2 bg-zinc-900 dark:bg-zinc-800 rounded-[40px] p-10 text-white relative overflow-hidden shadow-2xl">
+                <div className="relative z-10">
+                  <h3 className="text-3xl font-black mb-2">Facility Health</h3>
+                  <p className="text-zinc-400 text-lg font-medium opacity-80">Real-time occupancy and performance.</p>
+                  <div className="mt-10 flex gap-10">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Bed Occupancy</p>
+                      <p className="text-4xl font-black italic font-mono">84%</p>
+                    </div>
+                    <div className="w-px h-12 bg-zinc-700/50 self-center"></div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Live Appointments</p>
+                      <p className="text-4xl font-black italic font-mono">42</p>
+                    </div>
                   </div>
-                  <span className="font-semibold text-purple-900 dark:text-purple-100 text-sm">Log Medication</span>
-                </button>
-                
-                <Link 
-                  href={`/medication/prescribe?patient_id=${selectedPatientId}`}
-                  className="flex flex-col items-center justify-center gap-3 p-6 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 rounded-3xl transition-colors border border-blue-100 dark:border-blue-500/20 group col-span-2 md:col-span-1"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                    ✍️
-                  </div>
-                  <span className="font-semibold text-blue-900 dark:text-blue-100 text-sm">Prescribe</span>
+                </div>
+                <div className="absolute -bottom-12 -right-12 text-[12rem] opacity-5 grayscale select-none rotate-12">🏥</div>
+              </div>
+              
+              <div className="bg-blue-600 rounded-[40px] p-8 text-white shadow-xl shadow-blue-500/20 flex flex-col justify-between group cursor-pointer hover:bg-blue-500 transition-all duration-500 hover:scale-[1.02]">
+                <p className="text-blue-100 text-[10px] font-black uppercase tracking-widest">Revenue Today</p>
+                <h4 className="text-5xl font-black italic font-mono tracking-tighter">₹14.2k</h4>
+                <div className="mt-6 flex items-center gap-2 text-xs font-black text-blue-200">
+                  <span className="p-1 px-3 bg-blue-500/50 backdrop-blur-sm rounded-full border border-blue-400/30">↑ 12.5%</span>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm flex flex-col justify-between group transition-all duration-500 hover:shadow-xl">
+                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Staff Online</p>
+                <h4 className="text-5xl font-black text-zinc-900 dark:text-white font-mono">18/24</h4>
+                <Link href="/users/manage" className="text-blue-600 text-xs font-black uppercase tracking-widest hover:text-blue-700 mt-6 flex items-center gap-2 group-hover:translate-x-2 transition-all">
+                  Directory <span>&rarr;</span>
                 </Link>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 text-xl">
-                  📊
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Feeds Today</p>
-                  <h4 className="text-2xl font-bold text-zinc-900 dark:text-white">0</h4>
-                </div>
+            {/* Admin Quick Controls */}
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-8 px-2">
+                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Control Center</h3>
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Admin Privileges</span>
               </div>
-              <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 text-xl">
-                  📋
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Medications Done</p>
-                  <h4 className="text-2xl font-bold text-zinc-900 dark:text-white">0</h4>
-                </div>
-              </div>
-              <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 text-xl">
-                  📈
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Vitals Logged</p>
-                  <h4 className="text-2xl font-bold text-zinc-900 dark:text-white">0</h4>
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { label: "Patients", icon: "👥", color: "blue", path: "/patients" },
+                  { label: "Orders", icon: "📋", color: "emerald", path: "/billing/orders" },
+                  { label: "Appts", icon: "📅", color: "purple", path: "/appointments" },
+                  { label: "Billing", icon: "💰", color: "orange", path: "/billing" }
+                ].map((item) => (
+                  <Link 
+                    key={item.label}
+                    href={item.path}
+                    className={`flex flex-col items-center justify-center gap-4 p-10 bg-${item.color}-50/50 dark:bg-${item.color}-500/5 hover:bg-${item.color}-100 dark:hover:bg-${item.color}-500/10 rounded-[40px] transition-all border border-${item.color}-100/50 dark:border-${item.color}-500/10 group shadow-sm hover:shadow-md`}
+                  >
+                    <div className={`w-16 h-16 rounded-3xl bg-${item.color}-100 dark:bg-${item.color}-500/20 text-${item.color}-600 dark:text-${item.color}-400 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform`}>
+                      {item.icon}
+                    </div>
+                    <span className={`font-black text-${item.color}-900 dark:text-${item.color}-50 text-sm uppercase tracking-widest`}>{item.label}</span>
+                  </Link>
+                ))}
               </div>
             </div>
           </>
+        ) : selectedPatientId ? (
+          <>
+            {/* Clinical Interface */}
+            <div className="mb-12 animate-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between mb-8 px-2">
+                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Clinical Actions</h3>
+                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Active Session</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {role !== "pharmacist" && (
+                  <>
+                    <button onClick={() => openModal("feed")} className="flex flex-col items-center justify-center gap-4 p-10 bg-orange-50/50 dark:bg-orange-500/10 hover:bg-orange-100 dark:hover:bg-orange-500/20 rounded-[40px] transition-all border border-orange-100/50 group shadow-sm hover:shadow-md">
+                      <div className="w-16 h-16 rounded-3xl bg-orange-100 dark:bg-orange-500/20 text-orange-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">🍼</div>
+                      <span className="font-black text-orange-900 dark:text-orange-100 text-sm uppercase tracking-widest">Log Feed</span>
+                    </button>
+                    <button onClick={() => openModal("vitals")} className="flex flex-col items-center justify-center gap-4 p-10 bg-red-50/50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-[40px] transition-all border border-red-100/50 group shadow-sm hover:shadow-md">
+                      <div className="w-16 h-16 rounded-3xl bg-red-100 dark:bg-red-500/20 text-red-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">❤️</div>
+                      <span className="font-black text-red-900 dark:text-red-100 text-sm uppercase tracking-widest">Add Vitals</span>
+                    </button>
+                  </>
+                )}
+                <button 
+                  onClick={() => openModal("med")}
+                  className={`flex flex-col items-center justify-center gap-4 p-10 bg-purple-50/50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 rounded-[40px] transition-all border border-purple-100/50 group shadow-sm hover:shadow-md ${role === 'pharmacist' ? 'col-span-2' : ''}`}
+                >
+                  <div className="w-16 h-16 rounded-3xl bg-purple-100 dark:bg-purple-500/20 text-purple-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">💊</div>
+                  <span className="font-black text-purple-900 dark:text-purple-100 text-sm uppercase tracking-widest">Log Med</span>
+                </button>
+                <Link 
+                  href={`/medication/prescribe?patient_id=${selectedPatientId}`}
+                  className="flex flex-col items-center justify-center gap-4 p-10 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 rounded-[40px] transition-all border border-blue-100/50 group shadow-sm hover:shadow-md"
+                >
+                  <div className="w-16 h-16 rounded-3xl bg-blue-100 dark:bg-blue-500/20 text-blue-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">✍️</div>
+                  <span className="font-black text-blue-900 dark:text-blue-100 text-sm uppercase tracking-widest">Prescribe</span>
+                </Link>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Staff Landing Page */
+          <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[48px] p-16 text-white shadow-2xl mb-12 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-16 opacity-10 group-hover:scale-105 transition-transform duration-1000">
+              <span className="text-[12rem] font-black italic select-none">CARE</span>
+            </div>
+            <div className="relative z-10 max-w-2xl">
+              <h3 className="text-5xl font-black mb-6 tracking-tighter italic">Patient Management</h3>
+              <p className="text-blue-100 text-2xl font-medium leading-relaxed opacity-90 max-w-xl">
+                Ready to provide care? Select a patient from the dropdown above to begin monitoring and recording clinical data.
+              </p>
+              <div className="mt-12 flex gap-4">
+                 <div className="h-1 w-20 bg-white/30 rounded-full overflow-hidden">
+                    <div className="h-full bg-white w-1/3 animate-progress transition-all"></div>
+                 </div>
+              </div>
+            </div>
+          </div>
         )}
 
+        {/* Universal Metrics (Condensed) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20">
+          {[
+            { label: role === 'admin' ? "Total Admitted" : "Recent Logs", val: patients.length, icon: "🏥", color: "blue" },
+            { label: "Urgent Tasks", val: "2", icon: "⚡", color: "red" },
+            { label: "Shift Status", val: "Active", icon: "🕒", color: "emerald" }
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white dark:bg-zinc-900 p-8 rounded-[40px] border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center gap-6 group hover:border-zinc-400 dark:hover:border-zinc-500 transition-all duration-300">
+              <div className={`w-16 h-16 rounded-3xl bg-${stat.color}-50 dark:bg-${stat.color}-500/5 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform`}>
+                {stat.icon}
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-1">{stat.label}</p>
+                <h4 className="text-3xl font-black text-zinc-900 dark:text-white font-mono">{stat.val}</h4>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Modal System */}
         {modalType && (
-          <div className="modal-backdrop">
-            <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">
-                  {modalType === "feed"
-                    ? "Add Feed"
-                    : modalType === "vitals"
-                    ? "Add Vitals"
-                    : "Mark Medication Done"}
+          <div className="modal-backdrop z-[100] p-4 flex items-center justify-center bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[48px] p-10 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden">
+              <div className="mb-10 text-center">
+                <h3 className="text-3xl font-black text-zinc-900 dark:text-white lowercase tracking-tight">
+                  {modalType === "feed" ? "log_feeding" : modalType === "vitals" ? "add_vitals" : "log_medication"}
                 </h3>
-                <p className="text-sm text-zinc-500 mt-1">For patient: {selectedPatientName || selectedPatientId}</p>
+                <p className="text-sm text-zinc-500 font-bold mt-2 uppercase tracking-widest opacity-60">Patient: {selectedPatientName}</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="form-label text-xs">Date & Time of Log</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Timestamp</label>
                   <input
                     type="datetime-local"
-                    className="form-input !py-2 !text-sm"
+                    className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold text-zinc-700 dark:text-zinc-200"
                     value={formState.recorded_at}
                     onChange={(e) => setFormState((s) => ({ ...s, recorded_at: e.target.value }))}
                     required
@@ -309,144 +371,94 @@ export default function Dashboard() {
                 </div>
 
                 {modalType === "feed" && (
-                  <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="form-label text-xs">Feed Type</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Feed Type</label>
                       <select
-                        className="form-input !py-2 !text-sm"
+                        className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
                         value={formState.type}
                         onChange={(e) => setFormState((s) => ({ ...s, type: e.target.value }))}
                         required
                       >
-                        <option value="">Select type</option>
-                        <option value="EBM">EBM (Breast Milk)</option>
+                        <option value="">Select...</option>
+                        <option value="EBM">EBM</option>
                         <option value="Formula">Formula</option>
                         <option value="IV_FLUIDS">IV Fluids</option>
                       </select>
                     </div>
                     <div>
-                      <label className="form-label text-xs">Quantity (ml)</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Quantity (ml)</label>
                       <input
-                        className="form-input !py-2 !text-sm"
+                        className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
                         placeholder="e.g. 50"
                         value={formState.quantity}
                         onChange={(e) => setFormState((s) => ({ ...s, quantity: e.target.value }))}
                         required
                       />
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {modalType === "vitals" && (
-                  <>
-                    <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="form-label text-xs">Heart Rate</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Heart Rate (bpm)</label>
                         <input
-                          className="form-input !py-2 !text-sm"
-                          placeholder="bpm"
+                          className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
+                          placeholder="000"
                           value={formState.hr}
                           onChange={(e) => setFormState((s) => ({ ...s, hr: e.target.value }))}
                           required
                         />
                       </div>
                       <div>
-                        <label className="form-label text-xs">SpO2 (%)</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">SpO2 (%)</label>
                         <input
-                          className="form-input !py-2 !text-sm"
-                          placeholder="%"
+                          className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
+                          placeholder="00"
                           value={formState.spo2}
                           onChange={(e) => setFormState((s) => ({ ...s, spo2: e.target.value }))}
                           required
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="form-label text-xs">Weight (kg)</label>
-                        <input
-                          className="form-input !py-2 !text-sm"
-                          placeholder="e.g. 2.5"
-                          value={formState.weight}
-                          onChange={(e) => setFormState((s) => ({ ...s, weight: e.target.value }))}
-                        />
-                      </div>
-                      <div>
-                        <label className="form-label text-xs">Head (cm)</label>
-                        <input
-                          className="form-input !py-2 !text-sm"
-                          placeholder="e.g. 33.5"
-                          value={formState.head}
-                          onChange={(e) => setFormState((s) => ({ ...s, head: e.target.value }))}
-                        />
-                      </div>
-                    </div>
                     <div>
-                      <label className="form-label text-xs">Clinical Notes</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Clinical Observations</label>
                       <textarea
-                        className="form-input !py-2 !text-sm min-h-[60px] resize-none"
-                        placeholder="Clinical observations..."
+                        className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold min-h-[100px] resize-none"
+                        placeholder="Type any notes here..."
                         value={formState.notes}
                         onChange={(e) => setFormState((s) => ({ ...s, notes: e.target.value }))}
                       />
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {modalType === "med" && (
-                  <>
+                  <div className="space-y-4">
                     <div>
-                      <label className="form-label text-xs">Scheduled Medicine</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Schedule</label>
                       <select
-                        className="form-input !py-2 !text-sm"
+                        className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
                         value={formState.scheduleId}
                         onChange={(e) => {
-                          const selectedId = e.target.value
-                          const selected = medOptions.find((m) => String(m.id) === selectedId)
-                          setFormState((s) => ({
-                            ...s,
-                            scheduleId: selectedId,
-                            medicine: selected ? selected.medicine : "",
-                            dose: selected ? selected.dosage : "",
-                          }))
+                          const id = e.target.value;
+                          const m = medOptions.find(opt => String(opt.id) === id);
+                          setFormState(s => ({ ...s, scheduleId: id, medicine: m?.medicine || "", dose: m?.dosage || "" }));
                         }}
                         required
                       >
-                        <option value="">Select medicine</option>
-                        {medOptions.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.medicine} ({m.dosage})
-                          </option>
-                        ))}
+                        <option value="">Select Scheduled Dose...</option>
+                        {medOptions.map(m => <option key={m.id} value={m.id}>{m.medicine} ({m.dosage})</option>)}
                       </select>
                     </div>
-                    <div>
-                      <label className="form-label text-xs">Confirm Dose</label>
-                      <input
-                        className="form-input !py-2 !text-sm"
-                        placeholder="Dose"
-                        value={formState.dose}
-                        onChange={(e) => setFormState((s) => ({ ...s, dose: e.target.value }))}
-                        required
-                      />
-                    </div>
-                  </>
+                  </div>
                 )}
 
-                <div className="flex gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800 mt-2">
-                  <button 
-                    type="submit"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-semibold transition-colors shadow-sm text-sm"
-                  >
-                    Save Record
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setModalType(null)}
-                    className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white py-2.5 rounded-xl font-semibold transition-colors text-sm"
-                  >
-                    Cancel
-                  </button>
+                <div className="grid grid-cols-2 gap-4 pt-6">
+                  <button type="submit" className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-6 rounded-[24px] font-black uppercase tracking-widest text-xs hover:scale-[1.02] transition-transform">Save Entry</button>
+                  <button type="button" onClick={() => setModalType(null)} className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 py-6 rounded-[24px] font-black uppercase tracking-widest text-xs hover:bg-zinc-200 transition-colors">Discard</button>
                 </div>
               </form>
             </div>

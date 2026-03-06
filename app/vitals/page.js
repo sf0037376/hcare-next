@@ -12,6 +12,7 @@ export default function Vitals() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialPatientId = searchParams.get("patient_id") || ""
+  const [role, setRole] = useState("")
 
   const [patients, setPatients] = useState([])
   const [form, setForm] = useState({
@@ -23,6 +24,15 @@ export default function Vitals() {
     notes: "",
     recorded_at: new Date().toISOString().slice(0, 16)
   })
+
+  useEffect(() => {
+    const userRole = (localStorage.getItem("role") || "").toLowerCase()
+    setRole(userRole)
+    if (userRole === "patient") {
+      const pId = localStorage.getItem("patientId")
+      if (pId) setForm(prev => ({ ...prev, patient_id: pId }))
+    }
+  }, [])
 
   useEffect(() => {
     async function loadPatients() {
@@ -94,11 +104,11 @@ export default function Vitals() {
     }
   }
 
-  const role = typeof window !== "undefined" ? (localStorage.getItem("role") || "").toLowerCase() : ""
-  const dashboardLink = role === "doctor" ? "/doctor-dashboard" : role === "nurse" || role === "staff" ? "/staff-dashboard" : "/dashboard"
+  const currentRole = typeof window !== "undefined" ? (localStorage.getItem("role") || "").toLowerCase() : ""
+  const dashboardLink = currentRole === "doctor" ? "/doctor-dashboard" : currentRole === "nurse" || currentRole === "staff" ? "/staff-dashboard" : "/dashboard"
 
   return (
-    <ProtectedRoute roles={["admin", "doctor", "nurse", "staff"]}>
+    <ProtectedRoute roles={["admin", "doctor", "nurse", "staff", "patient"]}>
       <div className="animate-in fade-in duration-500 max-w-2xl mx-auto pb-safe">
         {Toast}
         
@@ -118,21 +128,34 @@ export default function Vitals() {
             <span className="text-9xl">❤️</span>
           </div>
           
+          {role === 'doctor' ? (
+            <div className="relative z-10 py-12 text-center">
+              <span className="text-4xl mb-4 block">⚕️</span>
+              <p className="text-zinc-500 font-medium">Doctors can prescribe medications and view patient history.</p>
+              <p className="text-sm text-zinc-400 mt-2">Vitals entry is restricted to Nursing and Staff personnel.</p>
+            </div>
+          ) : (
           <form onSubmit={submit} className="relative z-10 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="form-label">Select Patient</label>
-                <select
-                  className="form-input"
-                  value={form.patient_id}
-                  onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
-                  required
-                >
-                  <option value="">-- Choose Patient --</option>
-                  {patients.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                {role === 'patient' ? (
+                  <div className="form-input bg-zinc-50 dark:bg-zinc-800/50 font-bold text-zinc-900 dark:text-white">
+                    Logged in as Patient #{form.patient_id}
+                  </div>
+                ) : (
+                  <select
+                    className="form-input"
+                    value={form.patient_id}
+                    onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
+                    required
+                  >
+                    <option value="">-- Choose Patient --</option>
+                    {patients.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div>
                 <label className="form-label">Time of Recording</label>
@@ -212,6 +235,7 @@ export default function Vitals() {
               </button>
             </div>
           </form>
+          )}
         </div>
       </div>
     </ProtectedRoute>

@@ -7,10 +7,13 @@ import { usePathname } from "next/navigation"
 export default function Sidebar() {
   const pathname = usePathname()
   const [role, setRole] = useState("")
+  const [userName, setUserName] = useState("")
 
   useEffect(() => {
     const savedRole = (localStorage.getItem("role") || "").toLowerCase()
     setRole(savedRole)
+    const savedName = localStorage.getItem("name") || ""
+    setUserName(savedName)
   }, [])
 
   const getDashboardHref = () => {
@@ -21,12 +24,16 @@ export default function Sidebar() {
 
   const navItems = [
     { href: getDashboardHref(), label: "Dashboard", icon: "🏠" },
-    { href: "/medication", label: "Medication", icon: "💊", roles: ["admin", "doctor"] },
-    { href: "/feeding", label: "Feeding", icon: "🍼", roles: ["admin", "nurse"] },
-    { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["admin", "doctor", "nurse", "staff"] },
+    { href: "/patients", label: "Patients", icon: "👥", roles: ["admin"] },
+    { href: "/billing/orders", label: "Audit Logs", icon: "📋", roles: ["admin"] },
+    { href: "/medication", label: "Medication", icon: "💊", roles: ["doctor"] },
+    { href: "/feeding", label: "Feeding", icon: "🍼", roles: ["doctor", "nurse"] },
+    { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
     { href: "/appointments", label: "Appointments", icon: "📅", roles: ["admin", "doctor"] },
+    { href: "/availability", label: "My Schedule", icon: "⏰", roles: ["doctor", "nurse", "admin"] },
     { href: "/pharmacy/inventory", label: "Pharmacy", icon: "🏥", roles: ["admin", "pharmacist"] },
     { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },
+    { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },
   ]
   
   const adminItems = [
@@ -107,8 +114,9 @@ export default function Sidebar() {
             👨‍⚕️
           </div>
           <div>
-            <p className="text-sm font-medium text-zinc-900 dark:text-white capitalize">{role || 'User'}</p>
-            <p className="text-xs text-zinc-500 cursor-pointer hover:text-red-500" onClick={() => {
+            <p className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[120px]">{userName || 'User'}</p>
+            <p className="text-xs font-medium text-zinc-500 capitalize">{role}</p>
+            <p className="text-[10px] text-zinc-400 cursor-pointer hover:text-red-500 mt-1 uppercase tracking-wider font-bold" onClick={() => {
               localStorage.clear();
               window.location.href = "/login";
             }}>Sign Out</p>

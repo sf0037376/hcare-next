@@ -1,173 +1,234 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { apiFetch } from "../../lib/api"
 import useToast from "../../components/toast"
 import ProtectedRoute from "../../components/ProtectedRoute"
+import Link from "next/link"
 
-export default function PatientsPage() {
+export default function PatientsModule() {
   const { Toast, show } = useToast()
-  const [patients, setPatients] = useState([])
-  const [loading, setLoading] = useState(true)
+    const [patients, setPatients] = useState([])
+    const [searchTerm, setSearchTerm] = useState("")
+    const [loading, setLoading] = useState(true)
+    const [editingPatient, setEditingPatient] = useState(null)
+    const [doctors, setDoctors] = useState([])
+    const [nurses, setNurses] = useState([])
+    const [wards, setWards] = useState([])
+    const [beds, setBeds] = useState([])
 
-  async function loadPatients() {
-    try {
-      const data = await apiFetch("/patients")
-      setPatients(Array.isArray(data) ? data : [])
-    } catch (e) {
-      show("Failed to load patients")
-    } finally {
-      setLoading(false)
+    useEffect(() => {
+      async function loadSetup() {
+        try {
+          const patientsData = await apiFetch("/patients")
+          setPatients(Array.isArray(patientsData) ? patientsData : [])
+          const users = await apiFetch("/users")
+          setDoctors(users.filter(u => u.role.toLowerCase() === 'doctor'))
+          setNurses(users.filter(u => u.role.toLowerCase() === 'nurse' || u.role.toLowerCase() === 'staff'))
+          
+          const wardsData = await apiFetch("/wards")
+          setWards(wardsData)
+        } catch (err) {
+          show("Failed to load data")
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadSetup()
+    }, [show])
+
+    useEffect(() => {
+      if (editingPatient?.assigned_ward_id && editingPatient?.patient_type === 'IP') {
+        async function loadBeds() {
+          try {
+            const data = await apiFetch(`/wards/${editingPatient.assigned_ward_id}/beds`)
+            // Include currently assigned bed even if status is BOOKED, so it shows up in edit mode
+            setBeds(data.filter(b => b.status === "AVAILABLE" || b.id === editingPatient.assigned_bed_id))
+          } catch (err) { console.error(err) }
+        }
+        loadBeds()
+      } else {
+        setBeds([])
+      }
+    }, [editingPatient?.assigned_ward_id, editingPatient?.patient_type])
+
+    async function handleUpdatePatient(e) {
+      e.preventDefault()
+      try {
+        await apiFetch(`/patients/${editingPatient.id}`, {
+          method: "PUT",
+          body: JSON.stringify(editingPatient)
+        })
+        show("Patient updated successfully")
+        setPatients(patients.map(p => p.id === editingPatient.id ? editingPatient : p))
+        setEditingPatient(null)
+      } catch (err) {
+        show("Failed to update patient")
+      }
     }
-  }
 
-  useEffect(() => {
-    loadPatients()
-  }, [])
-
-  async function createPatient(e) {
-    e.preventDefault()
-    const body = {
-      name: e.target.name.value,
-      dob: e.target.dob.value,
-      gender: e.target.gender.value,
-    }
-
-    try {
-      await apiFetch("/patients", {
-        method: "POST",
-        body: JSON.stringify(body),
-      })
-      show("Patient created")
-      e.target.reset()
-      loadPatients()
-    } catch (e) {
-      show("Failed to create patient")
-    }
-  }
+    const filteredPatients = patients.filter(p => 
+      p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.phone?.includes(searchTerm) ||
+      p.id.toString().includes(searchTerm) ||
+      p.abha_id?.includes(searchTerm)
+    )
 
   return (
-    <ProtectedRoute>
-      <div className="animate-in fade-in duration-500">
+    <ProtectedRoute roles={["admin"]}>
+      <div className="animate-in fade-in duration-500 pb-safe">
         {Toast}
+        
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Patients Directory</h2>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1">Manage and register new patients in the system.</p>
+            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Patients Module</h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-1">Manage hospital admissions and clinical records.</p>
+          </div>
+          <Link href="/users/admission" className="btn-primary !py-3 !px-6 shadow-blue-500/20">
+            + New Admission
+          </Link>
+        </div>
+
+        {/* Search & Filters */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 mb-8 shadow-sm">
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">🔍</span>
+            <input 
+              type="text" 
+              placeholder="Search by name, phone, ABHA ID or Patient ID..." 
+              className="form-input !pl-12 !py-4 bg-zinc-50 dark:bg-zinc-800/50"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Create Patient Form */}
-          <div className="xl:col-span-1">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm top-24 sticky">
-              <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
-                <span className="text-blue-500">➕</span> Register Patient
-              </h3>
-              
-              <form onSubmit={createPatient} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Full Name</label>
-                  <input
-                    className="block w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
-                    name="name"
-                    placeholder="Enter patient name"
-                    required
-                  />
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-zinc-900 dark:text-white">
+            {filteredPatients.map(p => (
+              <div key={p.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold">
+                      {p.name?.[0] || "#"}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg">{p.name}</h4>
+                      <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">ID: {p.id}</p>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                    p.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                  }`}>
+                    {p.status || 'ACTIVE'}
+                  </span>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Date of Birth</label>
-                  <input
-                    className="block w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
-                    name="dob"
-                    type="date"
-                    required
-                  />
+
+                <div className="space-y-3 mb-8">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-zinc-500">Type</span>
+                    <span className={`font-bold ${p.patient_type === 'IP' ? 'text-orange-600' : 'text-blue-600'}`}>
+                      {p.patient_type || 'OP'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-zinc-500">ABHA ID</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-400">{p.abha_id || "Not Linked"}</span>
+                  </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Gender</label>
-                  <select
-                    className="block w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
-                    name="gender"
-                    defaultValue="M"
-                  >
-                    <option value="M">Male</option>
-                    <option value="F">Female</option>
-                    <option value="O">Other</option>
-                  </select>
-                </div>
-                
-                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Link href={`/patients/${p.id}/profile`} className="btn-secondary !py-3 text-sm text-center">View History</Link>
+                  <Link href={`/patients/${p.id}/discharge`} className="btn-primary !py-3 text-sm text-center !bg-zinc-900 dark:!bg-white dark:text-zinc-900">Discharge</Link>
                   <button 
-                    type="submit"
-                    className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                    onClick={() => setEditingPatient({...p})}
+                    className="col-span-2 py-3 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-center text-sm font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                   >
-                    Register Patient
+                    Edit Patient Data
                   </button>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Edit Patient Modal */}
+        {editingPatient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[40px] p-10 shadow-2xl border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-2xl font-bold">Edit Patient: {editingPatient.name}</h3>
+                <button onClick={() => setEditingPatient(null)} className="text-zinc-400 hover:text-zinc-600 text-2xl">&times;</button>
+              </div>
+              <form onSubmit={handleUpdatePatient} className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="col-span-2">
+                    <label className="form-label">Full Name</label>
+                    <input className="form-input" value={editingPatient.name} onChange={e => setEditingPatient({...editingPatient, name: e.target.value})} required />
+                  </div>
+                  <div>
+                    <label className="form-label">Phone</label>
+                    <input className="form-input" value={editingPatient.phone} onChange={e => setEditingPatient({...editingPatient, phone: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="form-label">Patient Type</label>
+                    <select className="form-input" value={editingPatient.patient_type || "OP"} onChange={e => setEditingPatient({...editingPatient, patient_type: e.target.value, assigned_ward_id: e.target.value === 'OP' ? null : editingPatient.assigned_ward_id, assigned_bed_id: e.target.value === 'OP' ? null : editingPatient.assigned_bed_id})}>
+                      <option value="OP">Out-Patient</option>
+                      <option value="IP">In-Patient</option>
+                    </select>
+                  </div>
+                  {editingPatient.patient_type === 'IP' && (
+                    <>
+                      <div className="col-span-1">
+                        <label className="form-label">Assigned Ward</label>
+                        <select 
+                          className="form-input" 
+                          value={editingPatient.assigned_ward_id || ""} 
+                          onChange={e => setEditingPatient({...editingPatient, assigned_ward_id: e.target.value, assigned_bed_id: ""})}
+                        >
+                          <option value="">-- Change/Assign Ward --</option>
+                          {wards.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-span-1">
+                        <label className="form-label">Assigned Bed</label>
+                        <select 
+                          className="form-input" 
+                          value={editingPatient.assigned_bed_id || ""} 
+                          onChange={e => setEditingPatient({...editingPatient, assigned_bed_id: e.target.value})}
+                        >
+                          <option value="">-- Change/Assign Bed --</option>
+                          {beds.map(b => <option key={b.id} value={b.id}>{b.bed_number}</option>)}
+                        </select>
+                        {beds.length === 0 && editingPatient.assigned_ward_id && <p className="text-[10px] text-red-500 mt-1">No available beds in this ward.</p>}
+                      </div>
+                    </>
+                  )}
+                  <div className="col-span-1">
+                    <label className="form-label">Assigned Doctor</label>
+                    <select className="form-input" value={editingPatient.assigned_doctor_id || ""} onChange={e => setEditingPatient({...editingPatient, assigned_doctor_id: e.target.value})}>
+                      <option value="">-- Unassigned --</option>
+                      {doctors.map(d => <option key={d.id} value={d.id}>{d.username}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-span-1">
+                    <label className="form-label">Assigned Nurse</label>
+                    <select className="form-input" value={editingPatient.assigned_nurse_id || ""} onChange={e => setEditingPatient({...editingPatient, assigned_nurse_id: e.target.value})}>
+                      <option value="">-- Unassigned --</option>
+                      {nurses.map(n => <option key={n.id} value={n.id}>{n.username}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <button type="submit" className="w-full btn-primary !py-4 text-lg font-bold shadow-blue-500/30">Update Records</button>
               </form>
             </div>
           </div>
-
-          {/* Patients List */}
-          <div className="xl:col-span-2">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-                <h3 className="text-lg font-bold text-zinc-900 dark:text-white">All Patients</h3>
-              </div>
-              
-              {loading ? (
-                <div className="p-8 pb-12 flex flex-col items-center justify-center text-zinc-500">
-                  <div className="w-8 h-8 border-4 border-zinc-200 dark:border-zinc-700 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                  <p>Loading patient directory...</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr>
-                        <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-50/50 dark:bg-zinc-900/50">ID</th>
-                        <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-50/50 dark:bg-zinc-900/50">Patient Name</th>
-                        <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-50/50 dark:bg-zinc-900/50">Date of Birth</th>
-                        <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-50/50 dark:bg-zinc-900/50">Gender</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                      {patients.map((p) => (
-                        <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-white">
-                            <span className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md text-xs">#{p.id}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-white flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs uppercase">
-                              {p.name.charAt(0)}
-                            </div>
-                            {p.name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">{p.dob}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
-                            {p.gender === 'M' ? 'Male' : p.gender === 'F' ? 'Female' : 'Other'}
-                          </td>
-                        </tr>
-                      ))}
-                      {patients.length === 0 && (
-                        <tr>
-                          <td colSpan="4" className="px-6 py-12 text-center text-sm text-zinc-500">
-                            No patients found in the system. Register a new patient to get started.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </ProtectedRoute>
   )
 }
-

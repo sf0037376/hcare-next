@@ -7,9 +7,21 @@ export default function BottomNav() {
   const pathname = usePathname()
   const [role, setRole] = useState("")
   const [showMore, setShowMore] = useState(false)
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
-    setRole((localStorage.getItem("role") || "").toLowerCase())
+    const savedRole = (localStorage.getItem("role") || "").toLowerCase()
+    setRole(savedRole)
+    if (savedRole === "patient") {
+      const pid = localStorage.getItem("patientId")
+      if (pid) {
+        apiFetch(`/billing/ip-items/${pid}`).then(data => {
+          if (Array.isArray(data)) {
+            setPendingCount(data.filter(i => i.acceptance_status === 'PENDING').length)
+          }
+        }).catch(() => {})
+      }
+    }
   }, [])
 
   const navItems = [
@@ -20,6 +32,7 @@ export default function BottomNav() {
     { href: "/appointments", label: "Appts", icon: "📅", roles: ["admin", "doctor", "nurse"] },
     { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
     { href: role === 'patient' ? "/patients/financials" : "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist", "patient"] },
+    { href: `/patients/${typeof window !== 'undefined' ? localStorage.getItem('patientId') : ''}/approvals`, label: "Approvals", icon: "✅", roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },
   ]
 
@@ -51,6 +64,11 @@ export default function BottomNav() {
               >
                 <span className={`text-xl transition-transform ${isActive ? 'scale-110 -translate-y-0.5' : ''}`}>{item.icon}</span>
                 <span className={`text-[10px] font-bold uppercase tracking-tight transition-all ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
+                {item.label === "Approvals" && pendingCount > 0 && (
+                  <span className="absolute top-1 right-2 w-4 h-4 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full font-black animate-pulse">
+                    {pendingCount}
+                  </span>
+                )}
                 {isActive && (
                   <span className="absolute bottom-1 w-1 h-1 rounded-full bg-blue-600 dark:bg-blue-400" />
                 )}

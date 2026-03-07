@@ -19,6 +19,7 @@ export default function PatientProfile() {
   const [appts, setAppts] = useState([])
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState('')
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
     setRole((localStorage.getItem('role') || '').toLowerCase())
@@ -32,6 +33,14 @@ export default function PatientProfile() {
         setLogs(fullData.medication_logs || [])
         setReports(fullData.lab_reports || [])
         setAppts(fullData.appointments || [])
+
+        if (fullData.ip_items_pending) {
+          setPendingCount(fullData.ip_items_pending)
+        } else {
+          // Fallback check
+          const ipData = await apiFetch(`/billing/ip-items/${id}`)
+          setPendingCount(Array.isArray(ipData) ? ipData.filter(i => i.acceptance_status === 'PENDING').length : 0)
+        }
       } catch (err) {
         show("Failed to load patient profile")
       } finally {
@@ -78,6 +87,25 @@ export default function PatientProfile() {
     <ProtectedRoute>
       <div className="animate-in fade-in duration-700 pb-24 max-w-7xl mx-auto px-4 sm:px-6">
         {Toast}
+
+        {/* Pending Approvals Alert Banner */}
+        {pendingCount > 0 && (role === 'patient' || role === 'admin' || role === 'super_admin') && (
+          <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/30 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse shadow-lg shadow-amber-500/10">
+            <div className="flex items-center gap-4 text-center md:text-left">
+              <span className="text-4xl">🧾</span>
+              <div>
+                <h4 className="text-lg font-black text-amber-900 dark:text-amber-100 italic">Action Required: {pendingCount} Pending Charges</h4>
+                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mt-1">Please review and approve the latest billing items for your stay.</p>
+              </div>
+            </div>
+            <Link 
+              href={`/patients/${id}/approvals`} 
+              className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-lg shadow-amber-500/20 whitespace-nowrap"
+            >
+              Review & Approve Now →
+            </Link>
+          </div>
+        )}
 
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">

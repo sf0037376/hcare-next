@@ -67,6 +67,28 @@ export default function BillingPage() {
     }
   }
 
+  async function fetchApprovedLogs() {
+    if (!selectedPatientId) return show("Select a patient first")
+    try {
+      const data = await apiFetch(`/billing/ip-items/${selectedPatientId}`)
+      const approved = data.filter(i => i.acceptance_status === 'ACCEPTED')
+      if (approved.length === 0) return show("No approved (Accepted) charges found for this patient")
+      
+      const mappedItems = approved.map(i => ({
+        description: i.description,
+        quantity: i.quantity,
+        price: i.unit_price,
+        serviceId: "custom",
+        id: i.id // Keep track of the original log ID for cleanup
+      }))
+      
+      setItems(mappedItems)
+      show(`Imported ${approved.length} approved logs`)
+    } catch (err) {
+      show("Failed to fetch logs")
+    }
+  }
+
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0)
   const discountAmount = parseFloat(couponDiscount || 0) + parseFloat(manualDiscount || 0)
   const discountedSubtotal = Math.max(0, subtotal - discountAmount)
@@ -197,6 +219,16 @@ export default function BillingPage() {
           insurance: insurance.covered_amount > 0 ? insurance : undefined
         })
       })
+
+      // If we used IP logs, clean them up
+      const logIds = items.filter(i => i.id).map(i => i.id)
+      if (logIds.length > 0) {
+        await apiFetch("/billing/ip-items/cleanup-invoiced", {
+          method: "POST",
+          body: JSON.stringify({ patient_id: selectedPatientId, ids: logIds })
+        })
+      }
+
       show("Invoice generated successfully")
       
       // RESET FORM
@@ -270,6 +302,14 @@ export default function BillingPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                   <h4 className="font-semibold text-zinc-900 dark:text-white uppercase tracking-wider text-xs">Line Items</h4>
+                  {selectedPatientType === 'IP' && (
+                    <button 
+                      onClick={fetchApprovedLogs}
+                      className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-3 py-1.5 rounded-xl hover:bg-blue-100 animate-pulse"
+                    >
+                      ✨ Auto-Fill from Approved Logs
+                    </button>
+                  )}
                 </div>
                 {items.map((item, index) => (
                   <div key={index} className="grid grid-cols-12 gap-3 items-end">

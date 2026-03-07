@@ -17,17 +17,24 @@ export default function DischargeSummary() {
   const [totalDues, setTotalDues] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [approvals, setApprovals] = useState({ doctor_approval: false, admin_approval: false })
+  const [role, setRole] = useState("")
+  const [userId, setUserId] = useState("")
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [fullData, invoices, balanceData] = await Promise.all([
+        const [fullData, invoices, balanceData, approvalData] = await Promise.all([
           apiFetch(`/patients/${id}/full-profile`),
           apiFetch(`/billing/invoices/patient/${id}`).catch(() => []),
-          apiFetch(`/billing/balance/${id}`).catch(() => ({ net_balance: 0 }))
+          apiFetch(`/billing/balance/${id}`).catch(() => ({ net_balance: 0 })),
+          apiFetch(`/billing/discharge-approvals/${id}`).catch(() => ({ doctor_approval: false, admin_approval: false }))
         ])
         
         setPatient(fullData.patient)
+        setApprovals(approvalData)
+        setRole((localStorage.getItem("role") || "").toLowerCase())
+        setUserId(localStorage.getItem("userId") || "")
 
         // Calculate unpaid dues minus advance credits
         const invoiceDues = (Array.isArray(invoices) ? invoices : []).reduce((sum, inv) => {
@@ -69,7 +76,25 @@ Advice:
     loadData()
   }, [id, show])
 
+  async function approveDischarge() {
+    try {
+      await apiFetch(`/billing/discharge-approvals/${id}/approve`, {
+        method: "POST",
+        body: JSON.stringify({ role, user_id: userId })
+      })
+      show("Approval recorded")
+      // Refresh approvals
+      const approvalData = await apiFetch(`/billing/discharge-approvals/${id}`)
+      setApprovals(approvalData)
+    } catch (err) {
+      show("Failed to approve")
+    }
+  }
+
   async function handleDischarge() {
+    if (!approvals.doctor_approval || !approvals.admin_approval) {
+      return show("Both Doctor and Admin must approve before discharge")
+    }
     setSubmitting(true)
     try {
       await apiFetch(`/patients/${id}/discharge`, {
@@ -125,31 +150,47 @@ Advice:
             />
           </div>
 
-          {totalDues > 0 && (
-            <div className="mb-8 p-6 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-3xl flex items-start gap-4 animate-in slide-in-from-top-2">
-              <span className="text-3xl">⚠️</span>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-red-900 dark:text-red-100 uppercase tracking-tight">Financial Block: Outstanding Dues</p>
-                <p className="text-lg font-black text-red-600 dark:text-red-400 mt-1">₹{totalDues.toFixed(2)}</p>
-                <p className="text-[10px] text-zinc-500 font-medium mt-2 leading-relaxed">
-                  Discharge is restricted until all outstanding payments are cleared. Please visit the billing section to settle the balance.
-                </p>
-                <Link href="/billing" className="inline-block mt-4 text-xs font-bold text-blue-600 hover:underline px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                  Go to Billing &rarr;
-                </Link>
+          {/* Dual Approval Section */}
+          <div className="mb-8 p-6 bg-zinc-50 dark:bg-zinc-800/30 rounded-[32px] border border-zinc-100 dark:border-zinc-800">
+            <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-6">Discharge Clearances</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Doctor Approval */}
+              <div className={`p-4 rounded-2xl border transition-all ${approvals.doctor_approval ? 'bg-emerald-50 border-emerald-100' : 'bg-white border-zinc-200'}`}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Clinical Approval</span>
+                  {approvals.doctor_approval ? <span className="text-emerald-500 font-bold text-[10px]">APPROVED ✓</span> : <span className="text-amber-500 font-bold text-[10px]">PENDING</span>}
+                </div>
+                <p className="text-xs font-bold text-zinc-900 mb-4">Verification by Assigned Doctor</p>
+                {role === 'doctor' && !approvals.doctor_approval && (
+                  <button onClick={approveDischarge} className="w-full py-2 bg-zinc-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform">Authorize Discharge</button>
+                )}
+              </div>
+
+              {/* Admin Approval */}
+              <div className={`p-4 rounded-2xl border transition-all ${approvals.admin_approval ? 'bg-emerald-50 border-emerald-100' : 'bg-white border-zinc-200'}`}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Admin/Financial Clearance</span>
+                  {approvals.admin_approval ? <span className="text-emerald-500 font-bold text-[10px]">CLEARED ✓</span> : <span className="text-amber-500 font-bold text-[10px]">WAITING</span>}
+                </div>
+                <p className="text-xs font-bold text-zinc-900 mb-4">Verification by Hospital Admin</p>
+                {(role === 'admin' || role === 'super_admin') && !approvals.admin_approval && (
+                  <button onClick={approveDischarge} className="w-full py-2 bg-zinc-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform">Authorize Clearance</button>
+                )}
               </div>
             </div>
-          )}
+          </div>
 
           <div className="flex flex-col gap-3">
             <button 
               onClick={handleDischarge}
-              disabled={submitting || totalDues > 0}
-              className={`btn-primary !py-4 w-full shadow-blue-500/20 flex items-center justify-center gap-2 ${totalDues > 0 ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+              disabled={submitting || totalDues > 0 || !approvals.doctor_approval || !approvals.admin_approval}
+              className={`btn-primary !py-4 w-full shadow-blue-500/20 flex items-center justify-center gap-2 ${
+                (totalDues > 0 || !approvals.doctor_approval || !approvals.admin_approval) ? 'opacity-50 grayscale cursor-not-allowed' : ''
+              }`}
             >
               {submitting ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : totalDues > 0 ? "❌ Dues Pending" : "📜 Finalize & Discharge"}
+              ) : (totalDues > 0 || !approvals.doctor_approval || !approvals.admin_approval) ? "❌ Discharge Blocked" : "📜 Finalize & Discharge"}
             </button>
             <button 
               onClick={() => window.print()}

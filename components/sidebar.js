@@ -33,6 +33,7 @@ export default function Sidebar() {
     { href: "/availability", label: "My Schedule", icon: "⏰", roles: ["doctor", "nurse", "admin"] },
     { href: "/pharmacy/inventory", label: "Pharmacy", icon: "🏥", roles: ["admin", "pharmacist"] },
     { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },
+    { href: "/patients/financials", label: "Financials", icon: "💳", roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },
   ]
   

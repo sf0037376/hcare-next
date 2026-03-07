@@ -19,6 +19,7 @@ export default function BottomNav() {
     { href: "/medication", label: "Meds", icon: "💊", roles: ["doctor"] },
     { href: "/appointments", label: "Appts", icon: "📅", roles: ["admin", "doctor", "nurse"] },
     { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
+    { href: role === 'patient' ? "/patients/financials" : "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist", "patient"] },
     { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },
   ]
 

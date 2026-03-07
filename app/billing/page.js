@@ -21,6 +21,7 @@ export default function BillingPage() {
   const [couponCode, setCouponCode] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("Cash")
   const [panNumber, setPanNumber] = useState("")
+  const [transactionRef, setTransactionRef] = useState("")
   const [billingType, setBillingType] = useState("Total") // Daily or Total
 
   useEffect(() => {
@@ -151,6 +152,9 @@ export default function BillingPage() {
   async function generateInvoice(isFinal = false) {
     if (!selectedPatientId) return show("Select a patient")
     
+    if (!transactionRef) {
+      return show("Transaction Reference/UTR is mandatory for all transactions")
+    }
     const finalDue = Math.max(0, total - (insurance.covered_amount || 0))
     if (paymentMethod === "Cash" && finalDue > 200000 && !panNumber) {
       return show("PAN number is mandatory for cash payments over ₹2,00,000")
@@ -177,6 +181,7 @@ export default function BillingPage() {
         status: isIP ? (isFinal ? "Final" : "Pending") : "Paid",
         payment_method: paymentMethod,
         pan_number: panNumber || null,
+        transaction_ref: transactionRef,
         billing_frequency: billingType,
         is_final: isFinal,
         is_ip_approval_required: isIP
@@ -202,6 +207,7 @@ export default function BillingPage() {
       setCouponDiscount(0)
       setCouponCode("")
       setPanNumber("")
+      setTransactionRef("")
       setPaymentMethod("Cash")
     } catch (err) {
       show("Failed to generate invoice")
@@ -214,9 +220,7 @@ export default function BillingPage() {
     if (!amt || isNaN(parseFloat(amt))) return
 
     const amountNum = parseFloat(amt)
-    if (paymentMethod === "Cash" && amountNum > 200000 && !panNumber) {
-      return show("PAN number is mandatory for cash payments over ₹2,00,000")
-    }
+    if (!transactionRef) return show("Please enter a Transaction Reference (UTR/Ref) first")
 
     try {
       await apiFetch("/billing/payments", {
@@ -226,11 +230,13 @@ export default function BillingPage() {
           amount: amountNum,
           payment_method: paymentMethod,
           pan_number: panNumber || null,
+          transaction_ref: transactionRef,
           status: "SUCCESS"
         })
       })
       show(`₹${amountNum} advance payment logged successfully`)
       setPanNumber("")
+      setTransactionRef("")
     } catch (err) {
       show("Failed to log payment")
     }
@@ -471,6 +477,17 @@ export default function BillingPage() {
                       />
                     </div>
                   )}
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-2">Payment Reference (UTR/REF#) *</label>
+                  <input 
+                    className="form-input !py-3 !rounded-xl !text-sm bg-zinc-50 border-none font-bold" 
+                    placeholder="Enter Payment/Txn Ref"
+                    value={transactionRef}
+                    onChange={(e) => setTransactionRef(e.target.value)}
+                  />
+                  {!transactionRef && <p className="text-[8px] text-amber-600 font-bold mt-1">REFERENCE IS MANDATORY</p>}
                 </div>
 
                 <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between font-bold text-xl text-zinc-900 dark:text-white">

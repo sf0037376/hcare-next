@@ -12,10 +12,22 @@ export default function IPLogs() {
   const [search, setSearch] = useState("")
   const [form, setForm] = useState({ description: "", quantity: 1, unit_price: "" })
   const [recentItems, setRecentItems] = useState([])
+  const [pricingMaster, setPricingMaster] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   useEffect(() => {
     loadPatients()
+    loadPricing()
   }, [])
+
+  async function loadPricing() {
+    try {
+      const data = await apiFetch("/pricing")
+      setPricingMaster(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error("Failed to load pricing")
+    }
+  }
 
   async function loadPatients() {
     try {
@@ -55,6 +67,23 @@ export default function IPLogs() {
     } catch (err) {
       show("Failed to log item")
     }
+  }
+
+  function getSuggestions(query) {
+    if (!query) return []
+    const q = query.toLowerCase()
+    return pricingMaster
+      .filter(p => p.patient_type === 'BOTH' || p.patient_type === 'IP')
+      .filter(p => p.service_name.toLowerCase().includes(q))
+  }
+
+  function handleSelectSuggestion(service) {
+    setForm({
+      ...form,
+      description: service.service_name,
+      unit_price: service.base_charge
+    })
+    setShowSuggestions(false)
   }
 
   const filteredPatients = patients.filter(p => 
@@ -111,14 +140,36 @@ export default function IPLogs() {
                   <div className="relative z-10">
                     <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-6">New Entry for {selectedPatient.name}</h3>
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="md:col-span-2">
+                      <div className="md:col-span-2 relative">
                         <label className="text-[10px] uppercase font-black text-zinc-500 mb-2 block ml-1">Charge Description</label>
                         <input 
                           className="w-full bg-zinc-800 border-none rounded-2xl p-4 text-sm font-bold text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500"
                           placeholder="e.g. Consultation Fee / Consumables"
                           value={form.description}
-                          onChange={(e) => setForm({...form, description: e.target.value})}
+                          onChange={(e) => {
+                            setForm({...form, description: e.target.value});
+                            setShowSuggestions(true);
+                          }}
+                          onFocus={() => setShowSuggestions(true)}
+                          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                         />
+                        {showSuggestions && form.description && (
+                          <div className="absolute z-50 w-full bg-zinc-800 border border-zinc-700 mt-1 max-h-60 overflow-y-auto rounded-xl shadow-2xl custom-scrollbar">
+                            {getSuggestions(form.description).map(p => (
+                              <div 
+                                key={p.id} 
+                                className="px-4 py-3 hover:bg-blue-600 cursor-pointer border-b border-zinc-700/50 last:border-0 transition-colors"
+                                onClick={() => handleSelectSuggestion(p)}
+                              >
+                                <div className="font-bold text-sm text-white">{p.service_name}</div>
+                                <div className="text-[10px] text-zinc-400 flex justify-between mt-1">
+                                  <span className="font-black uppercase tracking-widest">{p.category}</span>
+                                  <span className="text-blue-400 font-black">₹{p.base_charge}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label className="text-[10px] uppercase font-black text-zinc-500 mb-2 block ml-1">Qty</label>

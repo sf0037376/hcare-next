@@ -14,6 +14,9 @@ export default function PatientProfile() {
   const [vitals, setVitals] = useState([])
   const [meds, setMeds] = useState([])
   const [feeds, setFeeds] = useState([])
+  const [logs, setLogs] = useState([])
+  const [reports, setReports] = useState([])
+  const [appts, setAppts] = useState([])
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState('')
 
@@ -23,9 +26,12 @@ export default function PatientProfile() {
       try {
         const fullData = await apiFetch(`/patients/${id}/full-profile`)
         setPatient(fullData.patient)
-        setVitals(fullData.vitals)
-        setMeds(fullData.medication_schedule)
-        setFeeds(fullData.feeding_logs)
+        setVitals(fullData.vitals || [])
+        setMeds(fullData.medication_schedule || [])
+        setFeeds(fullData.feeding_logs || [])
+        setLogs(fullData.medication_logs || [])
+        setReports(fullData.lab_reports || [])
+        setAppts(fullData.appointments || [])
       } catch (err) {
         show("Failed to load patient profile")
       } finally {
@@ -66,7 +72,6 @@ export default function PatientProfile() {
 
   if (!patient) return <p className="text-center p-20">Patient not found</p>
 
-  const { medication_logs, medication_schedule, feeding_logs, lab_reports, appointments } = patient // Destructure from patient now
   const latestVitals = vitals[0] || {}
 
   return (
@@ -163,7 +168,7 @@ export default function PatientProfile() {
                 <div className="absolute left-6 top-2 bottom-2 w-0.5 bg-zinc-100 dark:bg-zinc-800"></div>
                 
                 {/* Unified List logic */}
-                {[...medication_logs, ...feeding_logs]
+                {[...logs, ...feeds]
                   .sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at))
                   .slice(0, 10)
                   .map((log, idx) => {
@@ -189,7 +194,7 @@ export default function PatientProfile() {
                     )
                   })}
 
-                  {medication_logs.length === 0 && feeding_logs.length === 0 && (
+                  {logs.length === 0 && feeds.length === 0 && (
                     <div className="py-10 text-center text-zinc-400 italic">No clinical logs in the last 24 hours.</div>
                   )}
               </div>
@@ -199,7 +204,7 @@ export default function PatientProfile() {
             <div>
               <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6 px-2">Lab Diagnostics</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {lab_reports.map((report) => (
+                {reports.map((report) => (
                   <div key={report.id} className="bg-zinc-100 dark:bg-zinc-900/50 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 group hover:bg-white dark:hover:bg-zinc-900 transition-all">
                     <div className="flex justify-between items-start mb-4">
                       <div>
@@ -233,7 +238,7 @@ export default function PatientProfile() {
                     )}
                   </div>
                 ))}
-                {lab_reports.length === 0 && (
+                {reports.length === 0 && (
                   <div className="col-span-full py-10 rounded-[40px] border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center opacity-40">
                     <span className="text-4xl mb-4">🔬</span>
                     <p className="text-sm font-bold uppercase tracking-widest">No lab data recorded</p>
@@ -317,10 +322,10 @@ export default function PatientProfile() {
               <h3 className="text-xs font-black text-zinc-500 uppercase tracking-[.25em] mb-8">Prescribed Regimen</h3>
               
               {/* Reminder Highlight (Patient Only) */}
-              {role === 'patient' && medication_schedule.length > 0 && (
+              {role === 'patient' && meds.length > 0 && (
                 <div className="mb-8 p-6 bg-blue-500/10 border border-blue-500/20 rounded-3xl">
                   <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Upcoming Reminder</p>
-                  <p className="text-sm font-bold text-white">Next doses due at intervals of {medication_schedule[0].interval_minutes} mins.</p>
+                  <p className="text-sm font-bold text-white">Next doses due at intervals of {meds[0].interval_minutes} mins.</p>
                   <div className="mt-4 flex items-center gap-3">
                     <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                       <div className="w-1/3 h-full bg-blue-500 animate-pulse"></div>
@@ -331,7 +336,7 @@ export default function PatientProfile() {
               )}
 
               <div className="space-y-4">
-                {medication_schedule.map((med) => (
+                {meds.map((med) => (
                   <div key={med.id} className="p-4 bg-zinc-800/40 rounded-2xl border border-zinc-800 group hover:border-blue-500/50 transition-all flex justify-between items-start">
                     <div>
                       <p className="font-black text-sm group-hover:text-blue-400 transition-colors uppercase tracking-tight">{med.medicine}</p>
@@ -347,7 +352,7 @@ export default function PatientProfile() {
                     )}
                   </div>
                 ))}
-                {medication_schedule.length === 0 && (
+                {meds.length === 0 && (
                   <p className="text-xs text-zinc-500 italic text-center py-4">No active prescriptions.</p>
                 )}
               </div>
@@ -358,7 +363,7 @@ export default function PatientProfile() {
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm">
                  <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8">Next Consults</h3>
                  <div className="space-y-6">
-                   {appointments && appointments.filter(a => new Date(a.appointment_time) > new Date()).slice(0, 3).map(appt => (
+                   {appts && appts.filter(a => new Date(a.appointment_time) > new Date()).slice(0, 3).map(appt => (
                      <div key={appt.id} className="flex gap-4 group">
                        <div className="flex flex-col items-center justify-center w-12 h-14 bg-blue-50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 dark:border-blue-900/30">
                           <span className="text-[10px] font-black uppercase text-blue-600">{new Date(appt.appointment_time).toLocaleString('en-US', { month: 'short' })}</span>
@@ -369,11 +374,11 @@ export default function PatientProfile() {
                           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">
                             {appt.is_confirmed ? '✅ Confirmed' : '⏳ Pending'}
                           </p>
-                       </div>
-                     </div>
-                   ))}
-                   {appointments.length === 0 && <p className="text-xs text-zinc-400 italic text-center py-2">No upcoming visits.</p>}
-                 </div>
+                        </div>
+                      </div>
+                    ))}
+                    {appts.length === 0 && <p className="text-xs text-zinc-400 italic text-center py-2">No upcoming visits.</p>}
+                  </div>
               </div>
             )}
 

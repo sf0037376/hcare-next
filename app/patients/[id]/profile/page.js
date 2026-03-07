@@ -34,6 +34,24 @@ export default function PatientProfile() {
     loadProfile()
   }, [id, show])
 
+  async function acceptItem(invoiceId, itemIndex) {
+    try {
+      await apiFetch(`/billing/invoices/${invoiceId}/accept-item`, {
+        method: 'PUT',
+        body: JSON.stringify({ item_index: itemIndex })
+      })
+      show("Charge accepted successfully")
+      const newInvoices = [...invoices]
+      const invIdx = newInvoices.findIndex(inv => inv.id === invoiceId)
+      if (invIdx !== -1) {
+        newInvoices[invIdx].order_data.items[itemIndex].status = 'ACCEPTED'
+        setInvoices(newInvoices)
+      }
+    } catch (err) {
+      show("Failed to accept charge")
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -338,6 +356,35 @@ export default function PatientProfile() {
                    ))}
                    {appointments.length === 0 && <p className="text-xs text-zinc-400 italic text-center py-2">No upcoming visits.</p>}
                  </div>
+              </div>
+            )}
+
+            {/* Pending Approvals Widget (IP Only) */}
+            {role === 'patient' && invoices.some(inv => inv.invoice_data?.is_ip_approval_required && inv.order_data?.items?.some(i => i.status === 'PENDING_APPROVAL')) && (
+              <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-[40px] p-8 shadow-sm">
+                <h3 className="text-xs font-black text-amber-600 uppercase tracking-[.25em] mb-6 flex items-center gap-2">
+                  <span className="animate-pulse">⚠️</span> Review Pending Charges
+                </h3>
+                <div className="space-y-3">
+                  {invoices.filter(inv => inv.invoice_data?.is_ip_approval_required).map(inv => (
+                    inv.order_data?.items?.map((item, idx) => (
+                      item.status === 'PENDING_APPROVAL' && (
+                        <div key={`${inv.id}-${idx}`} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-amber-100 dark:border-amber-800 flex justify-between items-center shadow-sm">
+                          <div>
+                            <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">{item.description}</p>
+                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">₹{item.price} x {item.quantity}</p>
+                          </div>
+                          <button 
+                            onClick={() => acceptItem(inv.id, idx)}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all shadow-md shadow-emerald-500/10"
+                          >
+                            Accept
+                          </button>
+                        </div>
+                      )
+                    ))
+                  ))}
+                </div>
               </div>
             )}
 

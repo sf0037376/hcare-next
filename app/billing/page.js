@@ -146,7 +146,13 @@ export default function BillingPage() {
     if (!selectedPatientId) return show("Select a patient")
     
     try {
-      const orderData = { items }
+      const isIP = selectedPatientType === "IP"
+      const orderData = { 
+        items: items.map(item => ({
+          ...item,
+          status: isIP ? "PENDING_APPROVAL" : "ACCEPTED"
+        }))
+      }
       const invoiceData = { 
         subtotal, 
         discount_amount: parseFloat(discountAmount) || 0,
@@ -156,7 +162,8 @@ export default function BillingPage() {
         gstAmount, 
         total,
         currency: "INR",
-        status: "Paid"
+        status: "Paid",
+        is_ip_approval_required: isIP
       }
 
       await apiFetch("/billing/invoices", {

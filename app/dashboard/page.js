@@ -32,8 +32,17 @@ export default function Dashboard() {
     setRole(userRole)
     if (userRole === 'patient') {
       const pId = localStorage.getItem('patientId')
-      if (pId) {
+      if (pId && pId !== "undefined") {
         window.location.href = `/patients/${pId}/profile`
+        return
+      } else {
+        // Fallback: fetch from /dashboard to get patient ID if localStorage is missing it
+        apiFetch("/dashboard").then(data => {
+          if (data && data.id) {
+            localStorage.setItem('patientId', data.id)
+            window.location.href = `/patients/${data.id}/profile`
+          }
+        }).catch(err => console.error("Could not fetch patient dashboard", err))
         return
       }
     }

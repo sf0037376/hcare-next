@@ -12,6 +12,8 @@ export default function PatientProfile() {
   const { Toast, show } = useToast()
   const [data, setData] = useState(null)
   const [invoices, setInvoices] = useState([])
+  const [payments, setPayments] = useState([])
+  const [balance, setBalance] = useState(null)
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState('')
 
@@ -19,12 +21,16 @@ export default function PatientProfile() {
     setRole((localStorage.getItem('role') || '').toLowerCase())
     async function loadProfile() {
       try {
-        const [profileData, invoiceData] = await Promise.all([
+        const [profileData, invoiceData, paymentData, balanceData] = await Promise.all([
           apiFetch(`/patients/${id}/full-profile`),
-          apiFetch(`/billing/invoices/patient/${id}`).catch(() => []) 
+          apiFetch(`/billing/invoices/patient/${id}`).catch(() => []),
+          apiFetch(`/billing/payments/patient/${id}`).catch(() => []),
+          apiFetch(`/billing/balance/${id}`).catch(() => ({ net_balance: 0, pending_charges: 0 }))
         ])
         setData(profileData)
         setInvoices(Array.isArray(invoiceData) ? invoiceData : [])
+        setPayments(Array.isArray(paymentData) ? paymentData : [])
+        setBalance(balanceData)
       } catch (err) {
         show("Failed to load patient 360 view")
       } finally {
@@ -273,6 +279,46 @@ export default function PatientProfile() {
               </div>
             )}
             
+            {/* Financial Summary (Admin/Patient Only) */}
+            {(role === 'admin' || role === 'patient') && balance && (
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm">
+                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8">Financial Summary</h3>
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Advance Balance</p>
+                      <p className={`text-2xl font-black ${balance.net_balance > 0 ? 'text-emerald-500' : 'text-zinc-900 dark:text-white'}`}>
+                        ₹{Math.max(0, balance.net_balance).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Pending Dues</p>
+                      <p className={`text-2xl font-black ${balance.pending_charges > 10000 ? 'text-red-500' : 'text-zinc-900 dark:text-white'}`}>
+                        ₹{balance.pending_charges.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {balance.pending_charges > 10000 && role === 'admin' && (
+                    <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800 rounded-2xl flex items-center gap-3 animate-pulse">
+                      <span className="text-xl">🚨</span>
+                      <div>
+                        <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">THRESHOLD EXCEEDED</p>
+                        <p className="text-xs font-bold text-red-900 dark:text-red-100 mt-0.5">Un-invoiced charges &gt; ₹10,000</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-sm font-bold">
+                    <span className="text-zinc-500">Net Position</span>
+                    <span className={balance.net_balance - balance.pending_charges >= 0 ? 'text-emerald-500' : 'text-red-500'}>
+                      ₹{(balance.net_balance - balance.pending_charges).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Care Team */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm">
               <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8">Medical Team</h3>
@@ -388,34 +434,58 @@ export default function PatientProfile() {
               </div>
             )}
 
-             {/* Billing & Invoices (Visible to Patients and Admins) */}
-             {(role === 'patient' || role === 'admin' || role === 'super_admin') && (
-               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm mt-10">
-                  <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8 flex justify-between items-center">
-                    <span>Billing & Invoices</span>
-                    <span className="text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[8px]">SECURE</span>
-                  </h3>
-                  <div className="space-y-4">
-                    {invoices.map((inv) => (
-                      <div key={inv.id} className="p-5 bg-orange-50/50 dark:bg-orange-500/5 rounded-3xl border border-orange-100 dark:border-orange-900/30 flex justify-between items-center group transition-all hover:bg-orange-50 dark:hover:bg-orange-900/20">
-                         <div>
-                            <p className="font-black text-zinc-900 dark:text-white text-lg">₹{inv.invoice_data?.total || 0}</p>
-                            <p className="text-[10px] font-bold text-zinc-500 mt-1 uppercase tracking-widest">{new Date(inv.created_at).toLocaleDateString()}</p>
-                         </div>
-                         <div className="flex flex-col items-end gap-2">
-                            <span className="px-3 py-1 bg-white dark:bg-zinc-800 text-[10px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 rounded-lg shadow-sm">
-                              {inv.invoice_data?.status || 'Paid'}
-                            </span>
-                            <button className="text-[10px] uppercase font-black tracking-widest text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
-                               View Receipt
-                            </button>
-                         </div>
-                      </div>
-                    ))}
-                    {invoices.length === 0 && <p className="text-xs text-zinc-400 italic text-center py-2">No billing history found.</p>}
-                  </div>
-               </div>
-             )}
+             {/* Transaction History (Unified Payments & Invoices) */}
+              {(role === 'patient' || role === 'admin' || role === 'super_admin') && (
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm mt-10">
+                   <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8 flex justify-between items-center">
+                     <span>Transaction History</span>
+                     <span className="text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[8px]">LEDGER</span>
+                   </h3>
+                   <div className="space-y-4">
+                     {[...invoices.map(i => ({...i, type: 'INVOICE', date: i.created_at})), 
+                       ...payments.map(p => ({...p, type: 'PAYMENT', date: p.created_at}))]
+                       .sort((a, b) => new Date(b.date) - new Date(a.date))
+                       .map((item, idx) => (
+                       <div key={`${item.type}-${item.id}`} className={`p-5 rounded-3xl border flex justify-between items-center transition-all ${
+                         item.type === 'PAYMENT' 
+                         ? 'bg-emerald-50/30 dark:bg-emerald-500/5 border-emerald-100 dark:border-emerald-900/20'
+                         : 'bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-100 dark:border-zinc-800'
+                       }`}>
+                          <div>
+                             <div className="flex items-center gap-2 mb-1">
+                               <p className="font-black text-zinc-900 dark:text-white text-lg">
+                                 {item.type === 'PAYMENT' ? '+' : '-'} ₹{item.type === 'PAYMENT' ? (item.amount || 0) : (item.invoice_data?.total || 0)}
+                               </p>
+                               <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest ${
+                                 item.type === 'PAYMENT' ? 'bg-emerald-500 text-white' : 'bg-zinc-500 text-white'
+                               }`}>
+                                 {item.type}
+                               </span>
+                             </div>
+                             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                               {new Date(item.date).toLocaleDateString()} • {item.type === 'PAYMENT' ? item.payment_method : (item.invoice_data?.status || 'Billed')}
+                             </p>
+                          </div>
+                          <div className="text-right">
+                             {item.type === 'INVOICE' && (
+                               <button className="text-[10px] uppercase font-black tracking-widest text-zinc-400 hover:text-blue-500 transition-colors">
+                                  View Invoice
+                               </button>
+                             )}
+                             {item.type === 'PAYMENT' && (
+                               <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-lg">
+                                 Receipt Generated
+                               </span>
+                             )}
+                          </div>
+                       </div>
+                     ))}
+                     {invoices.length === 0 && payments.length === 0 && (
+                       <p className="text-xs text-zinc-400 italic text-center py-2">No transactions found.</p>
+                     )}
+                   </div>
+                </div>
+              )}
 
           </div>
         </div>

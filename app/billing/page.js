@@ -16,8 +16,12 @@ export default function BillingPage() {
   const [selectedPatientType, setSelectedPatientType] = useState("OP")
   const [insurance, setInsurance] = useState({ provider: "", policy_number: "", covered_amount: 0 })
   const [role, setRole] = useState("")
-  const [discountAmount, setDiscountAmount] = useState(0)
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [manualDiscount, setManualDiscount] = useState(0)
   const [couponCode, setCouponCode] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState("Cash")
+  const [panNumber, setPanNumber] = useState("")
+  const [billingType, setBillingType] = useState("Total") // Daily or Total
 
   useEffect(() => {
     async function loadData() {
@@ -63,7 +67,8 @@ export default function BillingPage() {
   }
 
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0)
-  const discountedSubtotal = Math.max(0, subtotal - (parseFloat(discountAmount) || 0))
+  const discountAmount = parseFloat(couponDiscount || 0) + parseFloat(manualDiscount || 0)
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount)
   const gstAmount = (discountedSubtotal * gstRate) / 100
   const total = discountedSubtotal + gstAmount
 
@@ -71,15 +76,16 @@ export default function BillingPage() {
     const code = couponCode.toUpperCase().trim()
     if (!subtotal) return show("Add items first to apply a coupon")
     if (code === 'HCARE10') {
-      setDiscountAmount((subtotal * 0.10).toFixed(2))
+      setCouponDiscount((subtotal * 0.10).toFixed(2))
       show("10% discount applied!")
     } else if (code === 'FLAT500') {
-      setDiscountAmount(500)
+      setCouponDiscount(500)
       show("₹500 flat discount applied!")
     } else if (code === 'STAFF25') {
-      setDiscountAmount((subtotal * 0.25).toFixed(2))
+      setCouponDiscount((subtotal * 0.25).toFixed(2))
       show("25% staff discount applied!")
     } else {
+      setCouponDiscount(0)
       show("Invalid or expired coupon code")
     }
   }
@@ -142,9 +148,14 @@ export default function BillingPage() {
       .filter(p => p.service_name.toLowerCase().includes(q))
   }
 
-  async function generateInvoice() {
+  async function generateInvoice(isFinal = false) {
     if (!selectedPatientId) return show("Select a patient")
     
+    const finalDue = Math.max(0, total - (insurance.covered_amount || 0))
+    if (paymentMethod === "Cash" && finalDue > 200000 && !panNumber) {
+      return show("PAN number is mandatory for cash payments over ₹2,00,000")
+    }
+
     try {
       const isIP = selectedPatientType === "IP"
       const orderData = { 
@@ -155,14 +166,19 @@ export default function BillingPage() {
       }
       const invoiceData = { 
         subtotal, 
-        discount_amount: parseFloat(discountAmount) || 0,
+        discount_amount: discountAmount || 0,
         coupon_applied: couponCode || null,
         discounted_subtotal: discountedSubtotal,
         gstRate, 
         gstAmount, 
         total,
+        final_due: finalDue,
         currency: "INR",
-        status: "Paid",
+        status: isIP ? (isFinal ? "Final" : "Pending") : "Paid",
+        payment_method: paymentMethod,
+        pan_number: panNumber || null,
+        billing_frequency: billingType,
+        is_final: isFinal,
         is_ip_approval_required: isIP
       }
 
@@ -170,17 +186,53 @@ export default function BillingPage() {
         method: "POST",
         body: JSON.stringify({
           patient_id: selectedPatientId,
-          organization_id: 1, // Organization-linked
+          organization_id: 1,
           order_data: orderData,
           invoice_data: invoiceData,
           insurance: insurance.covered_amount > 0 ? insurance : undefined
         })
       })
-      show("Invoice generated and saved to audit logs")
+      show("Invoice generated successfully")
+      
+      // RESET FORM
       setItems([{ description: "", quantity: 1, price: 0, serviceId: "", doctorId: "", searchQuery: "", showSuggestions: false }])
       setInsurance({ provider: "", policy_number: "", covered_amount: 0 })
+      setSelectedPatientId("")
+      setManualDiscount(0)
+      setCouponDiscount(0)
+      setCouponCode("")
+      setPanNumber("")
+      setPaymentMethod("Cash")
     } catch (err) {
       show("Failed to generate invoice")
+    }
+  }
+
+  async function logAdvance() {
+    if (!selectedPatientId) return show("Select a patient first to log advance payment")
+    const amt = prompt("Enter Advance Deposit / Payment Amount (₹):")
+    if (!amt || isNaN(parseFloat(amt))) return
+
+    const amountNum = parseFloat(amt)
+    if (paymentMethod === "Cash" && amountNum > 200000 && !panNumber) {
+      return show("PAN number is mandatory for cash payments over ₹2,00,000")
+    }
+
+    try {
+      await apiFetch("/billing/payments", {
+        method: "POST",
+        body: JSON.stringify({
+          patient_id: selectedPatientId,
+          amount: amountNum,
+          payment_method: paymentMethod,
+          pan_number: panNumber || null,
+          status: "SUCCESS"
+        })
+      })
+      show(`₹${amountNum} advance payment logged successfully`)
+      setPanNumber("")
+    } catch (err) {
+      show("Failed to log payment")
     }
   }
 
@@ -339,82 +391,135 @@ export default function BillingPage() {
                   <span>₹{gstAmount.toFixed(2)}</span>
                 </div>
                 
-                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
-                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white flex justify-between">
-                    Discounts & Offers
+                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-6">
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white flex justify-between uppercase tracking-wider text-[10px]">
+                    Discounts & Invoicing
                   </h4>
-                  <div className="flex gap-2 items-center">
-                    <input 
-                      type="text" 
-                      className="form-input text-xs flex-1 uppercase" 
-                      placeholder="Coupon Code" 
-                      value={couponCode}
-                      onChange={e => setCouponCode(e.target.value)}
-                    />
-                    <button onClick={applyCoupon} className="px-3 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-semibold rounded-lg transition-colors">
-                      Apply
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-medium text-sm">
-                    <span>Manual Discount</span>
-                    <div className="flex items-center gap-1">
-                      <span>- ₹</span>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Manual Discount (₹)</label>
                       <input 
-                        type="number" 
-                        className="w-24 text-right text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-bold border-none rounded p-1" 
+                        type="number"
+                        className="form-input !py-3" 
                         placeholder="0.00"
-                        value={discountAmount || ''}
-                        onChange={e => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                        value={manualDiscount}
+                      onChange={e => setManualDiscount(parseFloat(e.target.value) || 0)}
                       />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Frequency</label>
+                      <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 h-[46px] items-center">
+                        <button 
+                          type="button"
+                          onClick={() => setBillingType("Daily")}
+                          className={`flex-1 h-full text-[10px] font-bold uppercase rounded-lg transition-all ${billingType === 'Daily' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600' : 'text-zinc-500'}`}
+                        >Daily</button>
+                        <button 
+                          type="button"
+                          onClick={() => setBillingType("Total")}
+                          className={`flex-1 h-full text-[10px] font-bold uppercase rounded-lg transition-all ${billingType === 'Total' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600' : 'text-zinc-500'}`}
+                        >Total</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Coupon Code</label>
+                    <div className="flex gap-2 items-center">
+                      <input 
+                        type="text" 
+                        className="form-input text-xs flex-1 uppercase" 
+                        placeholder="e.g. SAVE10" 
+                        value={couponCode}
+                        onChange={e => setCouponCode(e.target.value)}
+                      />
+                      <button onClick={applyCoupon} className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold rounded-xl transition-all">
+                        Apply
+                      </button>
                     </div>
                   </div>
                 </div>
                 
-                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
-                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white">Insurance / Third-Party Coverage</h4>
+                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-wider text-[10px]">Payment Method</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    <input 
-                      type="text" 
-                      className="form-input text-xs" 
-                      placeholder="Provider (e.g., Star Health)" 
-                      value={insurance.provider}
-                      onChange={e => setInsurance({ ...insurance, provider: e.target.value })}
-                    />
-                    <input 
-                      type="text" 
-                      className="form-input text-xs" 
-                      placeholder="Policy No." 
-                      value={insurance.policy_number}
-                      onChange={e => setInsurance({ ...insurance, policy_number: e.target.value })}
-                    />
+                    {['Cash', 'UPI', 'Card', 'Bank Transfer'].map(method => (
+                      <button
+                        key={method}
+                        onClick={() => setPaymentMethod(method)}
+                        className={`py-2 px-4 rounded-xl text-xs font-bold transition-all border ${
+                          paymentMethod === method 
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20' 
+                          : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
+                        }`}
+                      >
+                        {method}
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex justify-between items-center text-zinc-500 dark:text-zinc-400 text-sm">
-                    <span>Covered Amount</span>
-                    <div className="flex items-center gap-1">
-                      <span>₹</span>
+
+                  {paymentMethod === 'Cash' && total > 200000 && (
+                    <div className="animate-in slide-in-from-top-2 duration-300">
+                      <label className="text-[10px] font-black text-red-500 uppercase tracking-widest block mb-2">PAN Number Required (&gt; 2 Lakh Cash)</label>
                       <input 
-                        type="number" 
-                        className="w-24 text-right text-xs bg-zinc-50 dark:bg-zinc-800 border-none rounded p-1" 
-                        placeholder="0.00"
-                        value={insurance.covered_amount || ''}
-                        onChange={e => setInsurance({ ...insurance, covered_amount: parseFloat(e.target.value) || 0 })}
+                        className="form-input !border-red-200 focus:!ring-red-500 !py-3 font-mono" 
+                        placeholder="ABCDE1234F"
+                        value={panNumber}
+                        onChange={e => setPanNumber(e.target.value.toUpperCase())}
+                        maxLength={10}
                       />
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between font-bold text-xl text-zinc-900 dark:text-white">
-                  <span>Patient Due</span>
+                  <span>{selectedPatientType === 'IP' ? 'Estimate Current Due' : 'Patient Due'}</span>
                   <span>₹{Math.max(0, total - (insurance.covered_amount || 0)).toFixed(2)}</span>
                 </div>
               </div>
 
-              <button 
-                onClick={generateInvoice}
-                className="w-full btn-primary py-4 mt-8 shadow-xl shadow-blue-500/20"
-              >
-                Generate Final Invoice
-              </button>
+              <div className="space-y-3 mt-8">
+                {selectedPatientType === 'IP' ? (
+                  <>
+                    <button 
+                      onClick={() => generateInvoice(false)}
+                      className="w-full btn-primary py-4 shadow-xl shadow-blue-500/20 bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      📄 Generate Daily Summary Receipt
+                    </button>
+                    <button 
+                      onClick={() => generateInvoice(true)}
+                      className="w-full py-4 border-2 border-blue-600 text-blue-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-50 transition-all"
+                    >
+                      🏦 Generate Final Discharge Invoice
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    onClick={() => generateInvoice(true)}
+                    className="w-full btn-primary py-4 shadow-xl shadow-blue-500/20"
+                  >
+                    Generate Final Invoice
+                  </button>
+                )}
+                <button 
+                  onClick={logAdvance}
+                  className="w-full py-3.5 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400"
+                >
+                  ➕ Log Advance Payment
+                </button>
+                <button 
+                  onClick={() => {
+                    setItems([{ description: "", quantity: 1, price: 0, serviceId: "", doctorId: "", searchQuery: "", showSuggestions: false }])
+                    setInsurance({ provider: "", policy_number: "", covered_amount: 0 })
+                    setSelectedPatientId("")
+                  }}
+                  className="w-full text-[10px] font-black uppercase text-zinc-400 hover:text-red-500 transition-colors py-2"
+                >
+                  Reset / Clear Form
+                </button>
+              </div>
               <p className="text-[10px] text-zinc-400 mt-4 text-center">Invoices are saved as JSON snapshots in <code>hcare_dev_billing</code></p>
             </div>
           </div>

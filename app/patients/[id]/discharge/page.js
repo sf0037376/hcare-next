@@ -14,20 +14,37 @@ export default function DischargeSummary() {
   
   const [patient, setPatient] = useState(null)
   const [summary, setSummary] = useState("")
+  const [totalDues, setTotalDues] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadData() {
       try {
-        const fullData = await apiFetch(`/patients/${id}/full-profile`)
+        const [fullData, invoices, balanceData] = await Promise.all([
+          apiFetch(`/patients/${id}/full-profile`),
+          apiFetch(`/billing/invoices/patient/${id}`).catch(() => []),
+          apiFetch(`/billing/balance/${id}`).catch(() => ({ net_balance: 0 }))
+        ])
+        
         setPatient(fullData.patient)
+
+        // Calculate unpaid dues minus advance credits
+        const invoiceDues = (Array.isArray(invoices) ? invoices : []).reduce((sum, inv) => {
+          if (inv.invoice_data?.status !== 'Paid' && inv.invoice_data?.status !== 'paid') {
+            return sum + (parseFloat(inv.invoice_data?.final_due || inv.invoice_data?.total) || 0)
+          }
+          return sum
+        }, 0)
+        
+        const advanceCredit = Math.max(0, balanceData.net_balance)
+        const netDues = Math.max(0, invoiceDues - advanceCredit)
+        setTotalDues(netDues)
         
         const latestVitals = fullData.vitals[0] || {}
         const meds = fullData.medication_schedule.map(m => m.medicine).join(", ")
         const lastFeed = fullData.feeding_logs[0] || {}
         
-        // Auto-generate a rich summary using real clinical data
         const draft = `DISCHARGE SUMMARY: ${fullData.patient.name}
 --------------------------------------------------
 Clinical Course: Stable clinical condition observed during the stay.
@@ -108,15 +125,31 @@ Advice:
             />
           </div>
 
+          {totalDues > 0 && (
+            <div className="mb-8 p-6 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-3xl flex items-start gap-4 animate-in slide-in-from-top-2">
+              <span className="text-3xl">⚠️</span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-red-900 dark:text-red-100 uppercase tracking-tight">Financial Block: Outstanding Dues</p>
+                <p className="text-lg font-black text-red-600 dark:text-red-400 mt-1">₹{totalDues.toFixed(2)}</p>
+                <p className="text-[10px] text-zinc-500 font-medium mt-2 leading-relaxed">
+                  Discharge is restricted until all outstanding payments are cleared. Please visit the billing section to settle the balance.
+                </p>
+                <Link href="/billing" className="inline-block mt-4 text-xs font-bold text-blue-600 hover:underline px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                  Go to Billing &rarr;
+                </Link>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-3">
             <button 
               onClick={handleDischarge}
-              disabled={submitting}
-              className="btn-primary !py-4 w-full shadow-blue-500/20 flex items-center justify-center gap-2"
+              disabled={submitting || totalDues > 0}
+              className={`btn-primary !py-4 w-full shadow-blue-500/20 flex items-center justify-center gap-2 ${totalDues > 0 ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
             >
               {submitting ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : "📜 Finalize & Discharge"}
+              ) : totalDues > 0 ? "❌ Dues Pending" : "📜 Finalize & Discharge"}
             </button>
             <button 
               onClick={() => window.print()}

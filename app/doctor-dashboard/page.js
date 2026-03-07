@@ -21,7 +21,7 @@ export default function DoctorDashboard() {
   useEffect(() => {
     async function init() {
       try {
-        const uid = localStorage.getItem("id")
+        const uid = localStorage.getItem("userId")
         setUserId(uid)
         
         const [patientsData, logsData, medsData, usersData] = await Promise.all([

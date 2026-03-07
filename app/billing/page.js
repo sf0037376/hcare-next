@@ -22,7 +22,7 @@ export default function BillingPage() {
   const [paymentMethod, setPaymentMethod] = useState("Cash")
   const [panNumber, setPanNumber] = useState("")
   const [transactionRef, setTransactionRef] = useState("")
-  const [billingType, setBillingType] = useState("Total") // Daily or Total
+  const [billingType, setBillingType] = useState("One-Time") // Daily or One-Time
 
   useEffect(() => {
     async function loadData() {
@@ -453,21 +453,23 @@ export default function BillingPage() {
                       onChange={e => setManualDiscount(parseFloat(e.target.value) || 0)}
                       />
                     </div>
-                    <div>
-                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Frequency</label>
-                      <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 h-[46px] items-center">
-                        <button 
-                          type="button"
-                          onClick={() => setBillingType("Daily")}
-                          className={`flex-1 h-full text-[10px] font-bold uppercase rounded-lg transition-all ${billingType === 'Daily' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600' : 'text-zinc-500'}`}
-                        >Daily</button>
-                        <button 
-                          type="button"
-                          onClick={() => setBillingType("Total")}
-                          className={`flex-1 h-full text-[10px] font-bold uppercase rounded-lg transition-all ${billingType === 'Total' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600' : 'text-zinc-500'}`}
-                        >Total</button>
+                    {selectedPatientType === 'IP' && (
+                      <div>
+                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Frequency</label>
+                        <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 h-[46px] items-center">
+                          <button 
+                            type="button"
+                            onClick={() => setBillingType("Daily")}
+                            className={`flex-1 h-full text-[10px] font-bold uppercase rounded-lg transition-all ${billingType === 'Daily' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600' : 'text-zinc-500'}`}
+                          >Daily</button>
+                          <button 
+                            type="button"
+                            onClick={() => setBillingType("One-Time")}
+                            className={`flex-1 h-full text-[10px] font-bold uppercase rounded-lg transition-all ${billingType === 'One-Time' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600' : 'text-zinc-500'}`}
+                          >One-Time</button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   <div>
@@ -547,7 +549,7 @@ export default function BillingPage() {
                     </button>
                     <button 
                       onClick={() => generateInvoice(true)}
-                      className="w-full py-4 border-2 border-blue-600 text-blue-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-50 transition-all"
+                      className="w-full py-4 border-2 border-blue-600 text-blue-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-50 transition-all font-mono"
                     >
                       🏦 Generate Final Discharge Invoice
                     </button>
@@ -557,7 +559,7 @@ export default function BillingPage() {
                     onClick={() => generateInvoice(true)}
                     className="w-full btn-primary py-4 shadow-xl shadow-blue-500/20"
                   >
-                    Generate Final Invoice
+                    Generate Invoice
                   </button>
                 )}
                 <button 

@@ -20,7 +20,8 @@ export default function IPLogs() {
   async function loadPatients() {
     try {
       const data = await apiFetch("/patients")
-      setPatients(Array.isArray(data) ? data.filter(p => p.status === 'Admitted') : [])
+      // Be more inclusive: Show if status is Admitted OR if patient_type is IP
+      setPatients(Array.isArray(data) ? data.filter(p => p.status === 'Admitted' || p.patient_type === 'IP') : [])
     } catch (err) {
       show("Failed to load patient directory")
     }

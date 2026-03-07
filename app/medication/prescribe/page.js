@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { Suspense, useState, useEffect, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { apiFetch } from "../../../lib/api"
 import useToast from "../../../components/toast"
 import ProtectedRoute from "../../../components/ProtectedRoute"
 import Link from "next/link"
 
-export default function PrescribePage() {
+function PrescribeClient() {
   const { Toast, show } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -370,5 +370,13 @@ export default function PrescribePage() {
         )}
       </div>
     </ProtectedRoute>
+  )
+}
+
+export default function PrescribePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-zinc-500">Loading prescription tool...</div>}>
+      <PrescribeClient />
+    </Suspense>
   )
 }

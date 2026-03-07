@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { apiFetch } from "../../lib/api"
 import useToast from "../../components/toast"
 import ProtectedRoute from "../../components/ProtectedRoute"
 import Link from "next/link"
 
-export default function Medication() {
+function MedicationClient() {
   const { Toast, show } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -157,5 +157,13 @@ export default function Medication() {
         </div>
       </div>
     </ProtectedRoute>
+  )
+}
+
+export default function Medication() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-zinc-500">Loading medication log...</div>}>
+      <MedicationClient />
+    </Suspense>
   )
 }

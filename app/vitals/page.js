@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { apiFetch } from "../../lib/api"
 import useToast from "../../components/toast"
 import ProtectedRoute from "../../components/ProtectedRoute"
 import Link from "next/link"
 
-export default function Vitals() {
+function VitalsClient() {
   const { Toast, show } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -239,5 +239,13 @@ export default function Vitals() {
         </div>
       </div>
     </ProtectedRoute>
+  )
+}
+
+export default function Vitals() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-zinc-500">Loading vitals...</div>}>
+      <VitalsClient />
+    </Suspense>
   )
 }

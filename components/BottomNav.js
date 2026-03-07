@@ -9,10 +9,17 @@ export default function BottomNav() {
   const [role, setRole] = useState("")
   const [showMore, setShowMore] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
+  const [unreadAlerts, setUnreadAlerts] = useState(0)
 
   useEffect(() => {
     const savedRole = (localStorage.getItem("role") || "").toLowerCase()
     setRole(savedRole)
+
+    // Fetch unread alerts for all
+    apiFetch("/notifications/unread-count").then(data => {
+      setUnreadAlerts(data.count || 0)
+    }).catch(() => {})
+
     if (savedRole === "patient") {
       const pid = localStorage.getItem("patientId")
       if (pid) {
@@ -32,6 +39,7 @@ export default function BottomNav() {
     { href: "/medication", label: "Meds", icon: "💊", roles: ["doctor"] },
     { href: "/appointments", label: "Appts", icon: "📅", roles: ["admin", "doctor", "nurse"] },
     { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
+    { href: "/alerts", label: "Alerts", icon: "🔔" },
     { href: role === 'patient' ? "/patients/financials" : "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist", "patient"] },
     { href: `/patients/${typeof window !== 'undefined' ? localStorage.getItem('patientId') : ''}/approvals`, label: "Approvals", icon: "✅", roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },
@@ -68,6 +76,11 @@ export default function BottomNav() {
                 {item.label === "Approvals" && pendingCount > 0 && (
                   <span className="absolute top-1 right-2 w-4 h-4 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full font-black animate-pulse">
                     {pendingCount}
+                  </span>
+                )}
+                {item.label === "Alerts" && unreadAlerts > 0 && (
+                  <span className="absolute top-1 right-2 w-4 h-4 bg-blue-600 text-white text-[8px] flex items-center justify-center rounded-full font-black">
+                    {unreadAlerts}
                   </span>
                 )}
                 {isActive && (

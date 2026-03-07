@@ -7,8 +7,13 @@ import ProtectedRoute from "../../../components/ProtectedRoute"
 
 export default function IPLogs() {
   const { Toast, show } = useToast()
+  const [role, setRole] = useState("")
   const [patients, setPatients] = useState([])
   const [selectedPatient, setSelectedPatient] = useState(null)
+
+  useEffect(() => {
+    setRole((localStorage.getItem("role") || "").toLowerCase())
+  }, [])
   const [search, setSearch] = useState("")
   const [form, setForm] = useState({ description: "", quantity: 1, unit_price: "" })
   const [recentItems, setRecentItems] = useState([])
@@ -92,7 +97,7 @@ export default function IPLogs() {
   )
 
   return (
-    <ProtectedRoute roles={["admin", "super_admin"]}>
+    <ProtectedRoute roles={["admin", "super_admin", "nurse"]}>
       <div className="p-6 md:p-12 animate-in fade-in duration-500 max-w-6xl mx-auto">
         {Toast}
         <div className="mb-12">
@@ -244,3 +249,4 @@ export default function IPLogs() {
     </ProtectedRoute>
   )
 }
+IPLogs.roles = ["admin", "super_admin", "nurse"]

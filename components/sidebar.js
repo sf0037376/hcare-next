@@ -10,6 +10,7 @@ export default function Sidebar() {
   const [role, setRole] = useState("")
   const [userName, setUserName] = useState("")
   const [pendingCount, setPendingCount] = useState(0)
+  const [unreadAlerts, setUnreadAlerts] = useState(0)
 
   useEffect(() => {
     const savedRole = (localStorage.getItem("role") || "").toLowerCase()
@@ -27,6 +28,11 @@ export default function Sidebar() {
         }).catch(() => {})
       }
     }
+
+    // Fetch unread alerts for all roles
+    apiFetch("/notifications/unread-count").then(data => {
+      setUnreadAlerts(data.count || 0)
+    }).catch(() => {})
   }, [])
 
   const getDashboardHref = () => {
@@ -44,6 +50,7 @@ export default function Sidebar() {
     { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
     { href: "/appointments", label: "Appointments", icon: "📅", roles: ["admin", "doctor"] },
     { href: "/availability", label: "My Schedule", icon: "⏰", roles: ["doctor", "nurse", "admin"] },
+    { href: "/alerts", label: "Alerts", icon: "🔔" },
     { href: "/pharmacy/inventory", label: "Pharmacy", icon: "🏥", roles: ["admin", "pharmacist"] },
     { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },
     { href: "/billing/ip-logs", label: "IP Billing Log", icon: "📑", roles: ["admin"] },
@@ -55,7 +62,6 @@ export default function Sidebar() {
   const adminItems = [
     { href: "/users/admission", label: "Admission", icon: "📝" },
     { href: "/users/manage", label: "Manage Staff", icon: "👥" },
-    { href: "/notifications", label: "Alerts", icon: "🔔" },
   ]
 
   const visibleItems = navItems.filter(
@@ -95,6 +101,11 @@ export default function Sidebar() {
                   {item.label === "Approvals" && pendingCount > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-bounce">
                       {pendingCount}
+                    </span>
+                  )}
+                  {item.label === "Alerts" && unreadAlerts > 0 && (
+                    <span className="ml-auto bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                      {unreadAlerts}
                     </span>
                   )}
                 </Link>

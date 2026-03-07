@@ -159,7 +159,7 @@ function PrescribeClient() {
   }
 
   return (
-    <ProtectedRoute roles={["DOCTOR", "ADMIN", "NURSE", "STAFF"]}>
+    <ProtectedRoute roles={["DOCTOR"]}>
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto pb-20">
         {Toast}
         

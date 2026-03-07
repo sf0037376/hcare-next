@@ -188,27 +188,29 @@ export default function Dashboard() {
             )}
           </div>
           
-          <div className="flex items-center gap-3 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl shadow-inner border border-zinc-200 dark:border-zinc-800">
-            <span className="pl-3 text-zinc-400">👤</span>
-            <select
-              id="patient-select"
-              value={selectedPatientId}
-              onChange={(e) => {
-                const val = e.target.value;
-                setSelectedPatientId(val);
-                const p = patients.find(p => String(p.id) === val);
-                setSelectedPatientName(p ? p.name : "");
-              }}
-              className="bg-transparent border-none text-sm font-bold text-zinc-800 dark:text-zinc-200 focus:ring-0 cursor-pointer min-w-[220px] py-2"
-            >
-              <option value="">-- Switch Patient View --</option>
-              {patients.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} (ID: {p.id})
-                </option>
-              ))}
-            </select>
-          </div>
+          {(role === "doctor" || role === "patient") && (
+            <div className="flex items-center gap-3 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl shadow-inner border border-zinc-200 dark:border-zinc-800">
+              <span className="pl-3 text-zinc-400">👤</span>
+              <select
+                id="patient-select"
+                value={selectedPatientId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedPatientId(val);
+                  const p = patients.find(p => String(p.id) === val);
+                  setSelectedPatientName(p ? p.name : "");
+                }}
+                className="bg-transparent border-none text-sm font-bold text-zinc-800 dark:text-zinc-200 focus:ring-0 cursor-pointer min-w-[220px] py-2"
+              >
+                <option value="">-- Switch Patient View --</option>
+                {patients.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} (ID: {p.id})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Dashboard Content */}

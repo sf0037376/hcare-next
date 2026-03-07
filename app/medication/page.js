@@ -21,6 +21,7 @@ function MedicationClient() {
     dose: "",
     recorded_at: new Date().toISOString().slice(0, 16)
   })
+  const [password, setPassword] = useState("")
 
   useEffect(() => {
     const userRole = (localStorage.getItem("role") || "").toLowerCase()
@@ -49,6 +50,25 @@ function MedicationClient() {
     if (!form.patient_id) {
       show("Please select a patient")
       return
+    }
+
+    if (role === 'patient') {
+      if (!password) {
+        show("Please enter your password to confirm")
+        return
+      }
+      try {
+        const username = localStorage.getItem("username")
+        const authData = await apiFetch("/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        })
+        if (!authData?.token) throw new Error("Invalid auth")
+      } catch (err) {
+        show("Authentication failed. Incorrect password.")
+        return
+      }
     }
 
     try {
@@ -144,6 +164,22 @@ function MedicationClient() {
                 />
               </div>
             </div>
+
+            {role === 'patient' && (
+              <div className="bg-blue-50/50 dark:bg-blue-500/5 p-4 rounded-2xl border border-blue-100 dark:border-blue-500/10">
+                <label className="form-label text-blue-900 dark:text-blue-100 mb-2">
+                  <span className="mr-2">🔒</span>Confirm Identity (Password)
+                </label>
+                <input
+                  type="password"
+                  className="form-input !bg-white dark:!bg-zinc-900 border-blue-200 dark:border-blue-800"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your login password to verify"
+                  required
+                />
+              </div>
+            )}
             
             <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
               <button 

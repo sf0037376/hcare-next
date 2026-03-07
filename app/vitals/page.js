@@ -21,6 +21,8 @@ function VitalsClient() {
     spo2: "",
     weight: "",
     head: "",
+    height: "",
+    bmi: "",
     notes: "",
     recorded_at: new Date().toISOString().slice(0, 16)
   })
@@ -52,8 +54,18 @@ function VitalsClient() {
     const spo2Val = parseInt(form.spo2)
     const weightVal = parseFloat(form.weight)
     const headVal = parseFloat(form.head)
+    const heightVal = parseFloat(form.height)
     
     let alerts = []
+
+    // BMI Calculation (Weight / Height^2) - Height in cm converted to m
+    if (weightVal && heightVal) {
+      const heightInMeters = heightVal / 100
+      const calculatedBmi = (weightVal / (heightInMeters * heightInMeters)).toFixed(2)
+      if (form.bmi !== calculatedBmi) {
+        setForm(prev => ({ ...prev, bmi: calculatedBmi }))
+      }
+    }
 
     // Heart Rate Alerts
     if (hrVal) {
@@ -80,15 +92,21 @@ function VitalsClient() {
 
     if (alerts.length > 0) {
       setForm(prev => ({ ...prev, notes: alerts.join(". ") }))
-      // In a real app, this would also trigger a backend-sent alert/notification
     }
-  }, [form.hr, form.spo2, form.weight, form.head])
+  }, [form.hr, form.spo2, form.weight, form.head, form.height])
 
   async function submit(e) {
     e.preventDefault()
 
     if (!form.patient_id) {
       show("Please select a patient")
+      return
+    }
+
+    // Check if at least one vital is recorded
+    const hasValue = form.hr || form.spo2 || form.weight || form.head || form.height || form.bmi
+    if (!hasValue) {
+      show("Please enter at least one measurement")
       return
     }
 
@@ -178,7 +196,6 @@ function VitalsClient() {
                   value={form.hr}
                   onChange={(e) => setForm({ ...form, hr: e.target.value })}
                   placeholder="e.g. 140"
-                  required
                 />
               </div>
               <div className="col-span-2">
@@ -189,7 +206,6 @@ function VitalsClient() {
                   value={form.spo2}
                   onChange={(e) => setForm({ ...form, spo2: e.target.value })}
                   placeholder="e.g. 98"
-                  required
                 />
               </div>
               <div className="col-span-2">
@@ -212,6 +228,28 @@ function VitalsClient() {
                   value={form.head}
                   onChange={(e) => setForm({ ...form, head: e.target.value })}
                   placeholder="e.g. 33.5"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="form-label">Height (cm)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="form-input border-zinc-200 dark:border-zinc-800"
+                  value={form.height}
+                  onChange={(e) => setForm({ ...form, height: e.target.value })}
+                  placeholder="e.g. 170"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="form-label">BMI (Optional)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="form-input bg-zinc-50 dark:bg-zinc-800/50"
+                  value={form.bmi}
+                  onChange={(e) => setForm({ ...form, bmi: e.target.value })}
+                  placeholder="Auto-calculated"
                 />
               </div>
             </div>

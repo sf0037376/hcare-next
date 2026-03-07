@@ -42,8 +42,8 @@ export default function PatientHistory() {
         {Toast}
         
         <div className="mb-8">
-          <Link href="/patients" className="text-zinc-500 hover:text-blue-600 transition-colors text-sm font-semibold">
-            &larr; Back to Patients
+          <Link href={`/patients/${id}/profile`} className="text-zinc-500 hover:text-blue-600 transition-colors text-sm font-semibold flex items-center gap-1">
+            &larr; Back to Profile
           </Link>
           <div className="mt-4 flex items-center justify-between">
             <div>

@@ -73,10 +73,12 @@ Advice:
       <div className="animate-in fade-in duration-500 pb-safe max-w-2xl mx-auto">
         {Toast}
         
-        <div className="mb-8">
-          <Link href="/patients" className="text-zinc-500 hover:text-blue-600 transition-colors text-sm font-semibold">
-            &larr; Back to Patients
+        <div className="mb-6">
+          <Link href={`/patients/${id}/profile`} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-medium text-sm flex items-center gap-1 transition-colors">
+            &larr; Back to Profile
           </Link>
+        </div>
+        <div>
           <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mt-4">Discharge Summary</h2>
           <p className="text-zinc-500 dark:text-zinc-400 mt-1">Finalize clinical notes for {patient?.name}</p>
         </div>

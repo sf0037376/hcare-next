@@ -69,7 +69,7 @@ export default function PatientReportsPage() {
             <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Lab Reports</h2>
             <p className="text-zinc-500 dark:text-zinc-400 mt-2">Clinical findings and AI-powered diagnostic suggestions.</p>
           </div>
-          <Link href="/patients" className="btn-secondary text-sm">Back to Patient List</Link>
+          <Link href={`/patients/${patientId}/profile`} className="btn-secondary text-sm flex items-center gap-1">&larr; Back to Profile</Link>
         </div>
 
         <div className="space-y-6">

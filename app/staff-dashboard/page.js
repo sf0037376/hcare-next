@@ -77,13 +77,13 @@ export default function StaffDashboard() {
             </div>
           </Link>
 
-          <Link href="/dashboard" className="flex items-center gap-5 p-6 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-3xl transition-all border border-zinc-200 dark:border-zinc-800 shadow-sm group">
-            <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-inner">
-               📊
+          <Link href="/availability" className="flex items-center gap-5 p-6 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-3xl transition-all border border-zinc-200 dark:border-zinc-800 shadow-sm group">
+            <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-inner">
+               ⏰
             </div>
             <div>
-              <h4 className="font-bold text-zinc-900 dark:text-white text-lg">Full Dashboard</h4>
-              <p className="text-sm text-zinc-500">View complete patient overview</p>
+              <h4 className="font-bold text-zinc-900 dark:text-white text-lg">My Schedule</h4>
+              <p className="text-sm text-zinc-500">View your assigned shifts</p>
             </div>
           </Link>
         </div>
@@ -112,8 +112,9 @@ export default function StaffDashboard() {
                     </div>
                     
                     <div className="flex gap-2">
-                      <Link href={`/feeding?patient_id=${p.id}`} className="flex-1 py-2 text-center text-xs font-semibold bg-orange-50 hover:bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 dark:text-orange-400 rounded-lg transition-colors">Log Feed</Link>
-                      <Link href={`/vitals?patient_id=${p.id}`} className="flex-1 py-2 text-center text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-lg transition-colors">Log Vitals</Link>
+                      <Link href={`/patients/${p.id}/profile`} className="flex-1 py-2 text-center text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 dark:text-blue-400 rounded-lg transition-colors">Profile / Meds</Link>
+                      <Link href={`/feeding?patient_id=${p.id}`} className="flex-1 py-2 text-center text-xs font-semibold bg-orange-50 hover:bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 dark:text-orange-400 rounded-lg transition-colors">Feed</Link>
+                      <Link href={`/vitals?patient_id=${p.id}`} className="flex-1 py-2 text-center text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-lg transition-colors">Vitals</Link>
                     </div>
                  </div>
                ))}

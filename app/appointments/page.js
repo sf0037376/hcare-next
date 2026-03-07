@@ -24,6 +24,9 @@ export default function AppointmentPage() {
     abha_address: ""
   })
   const [isNewPatient, setIsNewPatient] = useState(false)
+  const [doctorSchedule, setDoctorSchedule] = useState([])
+  const [selectedDate, setSelectedDate] = useState("")
+  const [availableSlots, setAvailableSlots] = useState([])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -46,6 +49,41 @@ export default function AppointmentPage() {
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  useEffect(() => {
+    if (form.doctor_id) {
+      apiFetch(`/availability/${form.doctor_id}`)
+        .then(data => {
+           const sched = Array.isArray(data) ? data.filter(d => d.status === 'AVAILABLE') : []
+           setDoctorSchedule(sched)
+           setSelectedDate("")
+           setForm(f => ({...f, appointment_time: ""}))
+        })
+        .catch(err => setDoctorSchedule([]))
+    } else {
+      setDoctorSchedule([])
+      setSelectedDate("")
+      setForm(f => ({...f, appointment_time: ""}))
+    }
+  }, [form.doctor_id])
+
+  useEffect(() => {
+    if (selectedDate && doctorSchedule.length > 0) {
+       const daySlots = doctorSchedule.filter(d => d.available_date.split('T')[0] === selectedDate)
+       const generated = []
+       daySlots.forEach(block => {
+          let current = new Date(`1970-01-01T${block.slot_start}`)
+          const end = new Date(`1970-01-01T${block.slot_end}`)
+          while(current < end) {
+             generated.push(current.toTimeString().substring(0, 5))
+             current = new Date(current.getTime() + 30 * 60000)
+          }
+       })
+       setAvailableSlots(generated)
+    } else {
+       setAvailableSlots([])
+    }
+  }, [selectedDate, doctorSchedule])
 
   async function handleBook(e) {
     e.preventDefault()
@@ -163,16 +201,58 @@ export default function AppointmentPage() {
                     {doctors.map(d => <option key={d.id} value={d.id}>{d.username}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="form-label">Date & Time</label>
-                  <input 
-                    type="datetime-local"
-                    className="form-input"
-                    value={form.appointment_time}
-                    onChange={e => setForm({...form, appointment_time: e.target.value})}
-                    required
-                  />
-                </div>
+                
+                {form.doctor_id && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="form-label">Available Date</label>
+                      <select 
+                        className="form-input"
+                        value={selectedDate}
+                        onChange={e => {
+                          setSelectedDate(e.target.value)
+                          setForm({...form, appointment_time: ""})
+                        }}
+                        required
+                      >
+                        <option value="">-- Select Date --</option>
+                        {[...new Set(doctorSchedule.map(d => d.available_date.split('T')[0]))].sort().map(date => (
+                           <option key={date} value={date}>{new Date(date).toLocaleDateString()}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="form-label">Time Slot</label>
+                      <select 
+                        className="form-input"
+                        value={form.appointment_time ? form.appointment_time.split('T')[1].substring(0,5) : ""}
+                        onChange={e => {
+                          if (e.target.value) {
+                             const datePart = selectedDate
+                             const timePart = e.target.value
+                             setForm({...form, appointment_time: `${datePart}T${timePart}:00`})
+                          } else {
+                             setForm({...form, appointment_time: ""})
+                          }
+                        }}
+                        disabled={!selectedDate}
+                        required
+                      >
+                        <option value="">-- Select Time --</option>
+                        {availableSlots.map(time => (
+                           <option key={time} value={time}>{time}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+                {!form.doctor_id && (
+                  <div>
+                    <label className="form-label text-zinc-400">Date & Time</label>
+                    <div className="form-input bg-zinc-50 dark:bg-zinc-800/50 text-zinc-400 flex items-center h-11 text-sm border-dashed">Select a doctor first</div>
+                  </div>
+                )}
+                
                 <div>
                   <label className="form-label">Reason for Visit</label>
                   <textarea 

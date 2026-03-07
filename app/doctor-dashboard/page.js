@@ -12,6 +12,8 @@ export default function DoctorDashboard() {
   const [logs, setLogs] = useState([])
   const [meds, setMeds] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activityStatus, setActivityStatus] = useState("AVAILABLE")
+  const [userId, setUserId] = useState(null)
 
   // Accordion state
   const [openSection, setOpenSection] = useState('urgent')
@@ -19,15 +21,24 @@ export default function DoctorDashboard() {
   useEffect(() => {
     async function init() {
       try {
-        const [patientsData, logsData, medsData] = await Promise.all([
+        const uid = localStorage.getItem("id")
+        setUserId(uid)
+        
+        const [patientsData, logsData, medsData, usersData] = await Promise.all([
           apiFetch("/patients"),
-          apiFetch("/vitals"), // Note: We might need a real dashboard aggregator route
-          apiFetch("/medication/schedule")
-        ]).catch(() => [[], [], []])
+          apiFetch("/vitals"),
+          apiFetch("/medication/schedule"),
+          apiFetch("/users")
+        ]).catch(() => [[], [], [], []])
 
         setPatients(Array.isArray(patientsData) ? patientsData : [])
         setLogs(Array.isArray(logsData) ? logsData : [])
         setMeds(Array.isArray(medsData) ? medsData : [])
+        
+        if (uid && Array.isArray(usersData)) {
+          const me = usersData.find(u => u.id === parseInt(uid))
+          if (me && me.activity_status) setActivityStatus(me.activity_status)
+        }
       } catch (err) {
         show("Failed to load dashboard data")
       } finally {
@@ -36,6 +47,20 @@ export default function DoctorDashboard() {
     }
     init()
   }, [])
+
+  async function updateActivity(newStatus) {
+    if (!userId) return
+    setActivityStatus(newStatus)
+    try {
+      await apiFetch(`/users/${userId}/activity`, {
+        method: "PUT",
+        body: JSON.stringify({ activity_status: newStatus })
+      })
+      show(`Status updated to ${newStatus}`)
+    } catch (e) {
+      show("Failed to update status")
+    }
+  }
 
   return (
     <ProtectedRoute>
@@ -51,10 +76,30 @@ export default function DoctorDashboard() {
         {/* Hero Alert Section */}
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-8 sm:p-10 text-white shadow-lg shadow-purple-500/20 mb-8 relative overflow-hidden flex items-center justify-between">
           <div className="relative z-10 max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold uppercase tracking-wider mb-4 border border-white/10">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-              On Call
-            </span>
+            <div className="flex items-center gap-2 mb-4">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold uppercase tracking-wider border border-white/10 ${
+                activityStatus === 'EMERGENCY' ? 'bg-red-500/80 border-red-500' : ''
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                  activityStatus === 'AVAILABLE' ? 'bg-green-400' :
+                  activityStatus === 'ON_ROUNDS' ? 'bg-blue-400' :
+                  activityStatus === 'IN_SURGERY' ? 'bg-orange-400' :
+                  'bg-white'
+                }`}></span>
+                {activityStatus.replace('_', ' ')}
+              </span>
+              <select 
+                value={activityStatus}
+                onChange={e => updateActivity(e.target.value)}
+                className="bg-black/20 text-white text-xs font-bold uppercase tracking-wider rounded-full px-3 py-1 outline-none border border-white/10 hover:bg-black/30 transition-colors backdrop-blur-md cursor-pointer appearance-none"
+              >
+                <option value="AVAILABLE" className="text-black">AVAILABLE</option>
+                <option value="ON_ROUNDS" className="text-black">ON ROUNDS</option>
+                <option value="IN_SURGERY" className="text-black">IN SURGERY</option>
+                <option value="EMERGENCY" className="text-black">EMERGENCY</option>
+                <option value="OFF_DUTY" className="text-black">OFF DUTY</option>
+              </select>
+            </div>
             <h3 className="text-2xl sm:text-3xl font-bold mb-2">Welcome Dr. {typeof window !== "undefined" ? localStorage.getItem("username") || "" : ""}</h3>
             <p className="text-purple-100 text-lg">You have {patients.length} active patients under your care today.</p>
           </div>

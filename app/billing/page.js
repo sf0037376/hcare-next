@@ -16,6 +16,8 @@ export default function BillingPage() {
   const [selectedPatientType, setSelectedPatientType] = useState("OP")
   const [insurance, setInsurance] = useState({ provider: "", policy_number: "", covered_amount: 0 })
   const [role, setRole] = useState("")
+  const [discountAmount, setDiscountAmount] = useState(0)
+  const [couponCode, setCouponCode] = useState("")
 
   useEffect(() => {
     async function loadData() {
@@ -61,8 +63,26 @@ export default function BillingPage() {
   }
 
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0)
-  const gstAmount = (subtotal * gstRate) / 100
-  const total = subtotal + gstAmount
+  const discountedSubtotal = Math.max(0, subtotal - (parseFloat(discountAmount) || 0))
+  const gstAmount = (discountedSubtotal * gstRate) / 100
+  const total = discountedSubtotal + gstAmount
+
+  function applyCoupon() {
+    const code = couponCode.toUpperCase().trim()
+    if (!subtotal) return show("Add items first to apply a coupon")
+    if (code === 'HCARE10') {
+      setDiscountAmount((subtotal * 0.10).toFixed(2))
+      show("10% discount applied!")
+    } else if (code === 'FLAT500') {
+      setDiscountAmount(500)
+      show("₹500 flat discount applied!")
+    } else if (code === 'STAFF25') {
+      setDiscountAmount((subtotal * 0.25).toFixed(2))
+      show("25% staff discount applied!")
+    } else {
+      show("Invalid or expired coupon code")
+    }
+  }
 
   function addItem() {
     setItems([...items, { description: "", quantity: 1, price: 0, serviceId: "", doctorId: "", searchQuery: "", showSuggestions: false }])
@@ -129,6 +149,9 @@ export default function BillingPage() {
       const orderData = { items }
       const invoiceData = { 
         subtotal, 
+        discount_amount: parseFloat(discountAmount) || 0,
+        coupon_applied: couponCode || null,
+        discounted_subtotal: discountedSubtotal,
         gstRate, 
         gstAmount, 
         total,
@@ -307,6 +330,37 @@ export default function BillingPage() {
                     />
                   </div>
                   <span>₹{gstAmount.toFixed(2)}</span>
+                </div>
+                
+                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white flex justify-between">
+                    Discounts & Offers
+                  </h4>
+                  <div className="flex gap-2 items-center">
+                    <input 
+                      type="text" 
+                      className="form-input text-xs flex-1 uppercase" 
+                      placeholder="Coupon Code" 
+                      value={couponCode}
+                      onChange={e => setCouponCode(e.target.value)}
+                    />
+                    <button onClick={applyCoupon} className="px-3 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-semibold rounded-lg transition-colors">
+                      Apply
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-medium text-sm">
+                    <span>Manual Discount</span>
+                    <div className="flex items-center gap-1">
+                      <span>- ₹</span>
+                      <input 
+                        type="number" 
+                        className="w-24 text-right text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-bold border-none rounded p-1" 
+                        placeholder="0.00"
+                        value={discountAmount || ''}
+                        onChange={e => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-3">

@@ -265,7 +265,7 @@ export default function AppointmentPage() {
                       >
                         <option value="">-- Select Date --</option>
                         {[...new Set(doctorSchedule.map(d => d.available_date.split('T')[0]))].sort().map(date => (
-                           <option key={date} value={date}>{new Date(date).toLocaleDateString()}</option>
+                           <option key={date} value={date}>{date.split('-').reverse().join('-')}</option>
                         ))}
                       </select>
                     </div>
@@ -340,10 +340,8 @@ export default function AppointmentPage() {
                   <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                     {appointments.map(appt => (
                       <tr key={appt.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                        <td className="px-6 py-4 text-sm font-medium text-blue-600 dark:text-blue-400">
-                          {new Date(appt.appointment_time).toLocaleString('en-US', { 
-                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-                          })}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100 font-medium">
+                          {appt.appointment_time.split('T')[0].split('-').reverse().join('-')} at {new Date(appt.appointment_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </td>
                         <td className="px-6 py-4">
                           <p className="font-semibold text-zinc-900 dark:text-white">{appt.patient_name}</p>

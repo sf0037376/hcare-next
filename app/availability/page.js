@@ -19,7 +19,7 @@ export default function AvailabilityPage() {
   })
 
   useEffect(() => {
-    const uid = localStorage.getItem("user_id") || 1
+    const uid = localStorage.getItem("userId") || 1
     const r = localStorage.getItem("role") || "doctor"
     setUserId(uid)
     setRole(r)
@@ -104,6 +104,7 @@ export default function AvailabilityPage() {
                     className="form-input" 
                     value={newSlot.available_date}
                     onChange={e => setNewSlot({...newSlot, available_date: e.target.value})}
+                    min={new Date().toISOString().split('T')[0]}
                     required
                   />
                 </div>

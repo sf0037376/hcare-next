@@ -15,6 +15,7 @@ function MedicationClient() {
   const [role, setRole] = useState("")
 
   const [patients, setPatients] = useState([])
+  const [patientMeds, setPatientMeds] = useState([])
   const [form, setForm] = useState({
     patient_id: initialPatientId,
     medicine: "",
@@ -42,6 +43,28 @@ function MedicationClient() {
     }
     loadPatients()
   }, [show])
+
+  // Fetch patient profile when patient_id changes to load prescriptions
+  useEffect(() => {
+    async function loadPatientProfile() {
+      if (!form.patient_id) {
+        setPatientMeds([])
+        return
+      }
+      try {
+        const fullData = await apiFetch(`/patients/${form.patient_id}/full-profile`)
+        if (fullData && fullData.medication_schedule) {
+          setPatientMeds(fullData.medication_schedule)
+        } else {
+          setPatientMeds([])
+        }
+      } catch (err) {
+        console.error("Failed to load patient meds", err)
+        setPatientMeds([])
+      }
+    }
+    loadPatientProfile()
+  }, [form.patient_id])
 
   async function submit(e) {
     e.preventDefault()
@@ -124,13 +147,34 @@ function MedicationClient() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="form-label">Medicine Name</label>
-                <input
-                  className="form-input"
-                  value={form.medicine}
-                  onChange={(e) => setForm({ ...form, medicine: e.target.value })}
-                  placeholder="e.g. Amoxicillin"
-                  required
-                />
+                {patientMeds.length > 0 ? (
+                  <select
+                    className="form-input"
+                    value={form.medicine}
+                    onChange={(e) => {
+                      const selectedMed = patientMeds.find(m => m.medicine === e.target.value)
+                      setForm({
+                        ...form,
+                        medicine: e.target.value,
+                        dose: selectedMed ? selectedMed.dosage : form.dose
+                      })
+                    }}
+                    required
+                  >
+                    <option value="">-- Select Prescribed Medicine --</option>
+                    {patientMeds.map(m => (
+                      <option key={m.id} value={m.medicine}>{m.medicine}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className="form-input"
+                    value={form.medicine}
+                    onChange={(e) => setForm({ ...form, medicine: e.target.value })}
+                    placeholder={form.patient_id ? "No prescriptions found. Enter manually..." : "Select a patient first"}
+                    required
+                  />
+                )}
               </div>
               
               <div>
@@ -139,7 +183,7 @@ function MedicationClient() {
                   className="form-input"
                   value={form.dose}
                   onChange={(e) => setForm({ ...form, dose: e.target.value })}
-                  placeholder="e.g. 5ml"
+                  placeholder="e.g. 5ml or 1 Tablet"
                   required
                 />
               </div>

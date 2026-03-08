@@ -1,0 +1,119 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: 🏥
+        - generic [ref=e6]:
+          - heading "NeoCare" [level=2] [ref=e7]
+          - paragraph [ref=e8]: Hospital Management
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - heading "Overview" [level=3] [ref=e11]
+          - navigation [ref=e12]:
+            - link "🏠 Dashboard" [ref=e13] [cursor=pointer]:
+              - /url: /dashboard
+              - generic [ref=e14]: 🏠
+              - text: Dashboard
+            - link "👥 Patients" [ref=e15] [cursor=pointer]:
+              - /url: /patients
+              - generic [ref=e16]: 👥
+              - text: Patients
+            - link "📋 Audit Logs" [ref=e17] [cursor=pointer]:
+              - /url: /billing/orders
+              - generic [ref=e18]: 📋
+              - text: Audit Logs
+            - link "📅 Appointments" [ref=e19] [cursor=pointer]:
+              - /url: /appointments
+              - generic [ref=e20]: 📅
+              - text: Appointments
+            - link "⏰ My Schedule" [ref=e21] [cursor=pointer]:
+              - /url: /availability
+              - generic [ref=e22]: ⏰
+              - text: My Schedule
+            - link "🔔 Alerts" [ref=e23] [cursor=pointer]:
+              - /url: /alerts
+              - generic [ref=e24]: 🔔
+              - text: Alerts
+            - link "🏥 Pharmacy" [ref=e25] [cursor=pointer]:
+              - /url: /pharmacy/inventory
+              - generic [ref=e26]: 🏥
+              - text: Pharmacy
+            - link "💰 Billing" [ref=e27] [cursor=pointer]:
+              - /url: /billing
+              - generic [ref=e28]: 💰
+              - text: Billing
+            - link "📑 IP Billing Log" [ref=e29] [cursor=pointer]:
+              - /url: /billing/ip-logs
+              - generic [ref=e30]: 📑
+              - text: IP Billing Log
+            - link "⚙️ Masters" [ref=e31] [cursor=pointer]:
+              - /url: /masters
+              - generic [ref=e32]: ⚙️
+              - text: Masters
+        - generic [ref=e33]:
+          - heading "Administration" [level=3] [ref=e34]
+          - navigation [ref=e35]:
+            - link "📝 Admission" [ref=e36] [cursor=pointer]:
+              - /url: /users/admission
+              - generic [ref=e37]: 📝
+              - text: Admission
+            - link "👥 Manage Staff" [ref=e38] [cursor=pointer]:
+              - /url: /users/manage
+              - generic [ref=e39]: 👥
+              - text: Manage Staff
+      - generic [ref=e41]:
+        - generic [ref=e42]: 👨‍⚕️
+        - generic [ref=e43]:
+          - paragraph [ref=e44]: User
+          - paragraph [ref=e45]: admin
+          - paragraph [ref=e46] [cursor=pointer]: Sign Out
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e50]:
+          - generic: 🔍
+          - textbox "Search patients, meds, or reports..." [ref=e51]
+        - generic [ref=e54] [cursor=pointer]: 🔔
+      - main [ref=e55]:
+        - generic [ref=e57]:
+          - link "← Back to Profile" [ref=e59] [cursor=pointer]:
+            - /url: /patients/5/profile
+          - generic [ref=e60]:
+            - heading "Discharge Summary" [level=2] [ref=e61]
+            - paragraph [ref=e62]: Finalize clinical notes for Arjun Patient
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - heading "Patient Information" [level=4] [ref=e65]
+              - generic [ref=e66]:
+                - generic [ref=e67]:
+                  - paragraph [ref=e68]: Name
+                  - paragraph [ref=e69]: Arjun Patient
+                - generic [ref=e70]:
+                  - paragraph [ref=e71]: Admission ID
+                  - paragraph [ref=e72]: "#ADM-5"
+            - generic [ref=e73]:
+              - generic [ref=e74]: Clinical Summary & Advise
+              - textbox "Enter detailed discharge instructions..." [active] [ref=e75]: Patient cleared for discharge.
+            - generic [ref=e76]:
+              - heading "Discharge Clearances" [level=4] [ref=e77]
+              - generic [ref=e78]:
+                - generic [ref=e79]:
+                  - generic [ref=e80]:
+                    - generic [ref=e81]: Clinical Approval
+                    - generic [ref=e82]: PENDING
+                  - paragraph [ref=e83]: Verification by Assigned Doctor
+                - generic [ref=e84]:
+                  - generic [ref=e85]:
+                    - generic [ref=e86]: Admin/Financial Clearance
+                    - generic [ref=e87]: WAITING
+                  - paragraph [ref=e88]: Verification by Hospital Admin
+                  - button "Authorize Clearance" [ref=e89]
+            - generic [ref=e90]:
+              - button "❌ Discharge Blocked" [disabled] [ref=e91]
+              - button "🖨️ Print Preview" [ref=e92]
+  - button "Open Next.js Dev Tools" [ref=e98] [cursor=pointer]:
+    - img [ref=e99]
+  - alert [ref=e102]
+```

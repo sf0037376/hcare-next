@@ -45,7 +45,7 @@ export default function Sidebar() {
     { href: getDashboardHref(), label: "Dashboard", icon: "🏠" },
     { href: "/patients", label: "Patients", icon: "👥", roles: ["admin"] },
     { href: "/billing/orders", label: "Audit Logs", icon: "📋", roles: ["admin"] },
-    { href: "/medication", label: "Medication", icon: "💊", roles: ["doctor"] },
+    { href: "/medication", label: "Medication", icon: "💊", roles: ["doctor", "nurse"] },
     { href: "/feeding", label: "Feeding", icon: "🍼", roles: ["doctor", "nurse"] },
     { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
     { href: "/appointments", label: "Appointments", icon: "📅", roles: ["admin", "doctor"] },

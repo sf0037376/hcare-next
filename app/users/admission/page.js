@@ -26,6 +26,7 @@ export default function PatientAdmission() {
     assigned_nurse_id: "",
     abha_id: "",
     abha_address: "",
+    aadhaar: "",
     email: "",
     create_login: false,
     patient_type: "OP",
@@ -87,6 +88,7 @@ export default function PatientAdmission() {
           assigned_nurse_id: form.assigned_nurse_id,
           abha_id: form.abha_id,
           abha_address: form.abha_address,
+          aadhaar: form.aadhaar,
           email: form.email,
           create_login: form.create_login,
           patient_type: form.patient_type,
@@ -189,6 +191,18 @@ export default function PatientAdmission() {
                   placeholder="user@abdm"
                   value={form.abha_address}
                   onChange={e => setForm({...form, abha_address: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="form-label">Aadhaar No. (12 Digits) <span className="text-red-500">*</span></label>
+                <input 
+                  className="form-input" 
+                  placeholder="Enter 12 digit Aadhaar"
+                  value={form.aadhaar}
+                  onChange={e => setForm({...form, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12)})}
+                  minLength={12}
+                  maxLength={12}
+                  required
                 />
               </div>
               <div>

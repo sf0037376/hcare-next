@@ -71,6 +71,7 @@ export default function PatientsModule() {
       p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.phone?.includes(searchTerm) ||
       p.id.toString().includes(searchTerm) ||
+      p.aadhaar?.includes(searchTerm) ||
       p.abha_id?.includes(searchTerm)
     )
 
@@ -95,7 +96,7 @@ export default function PatientsModule() {
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">🔍</span>
             <input 
               type="text" 
-              placeholder="Search by name, phone, ABHA ID or Patient ID..." 
+              placeholder="Search by name, phone, Aadhaar, ABHA ID or Patient ID..." 
               className="form-input !pl-12 !py-4 bg-zinc-50 dark:bg-zinc-800/50"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -136,6 +137,10 @@ export default function PatientsModule() {
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
+                    <span className="text-zinc-500">Aadhaar</span>
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">{p.aadhaar}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
                     <span className="text-zinc-500">ABHA ID</span>
                     <span className="font-semibold text-blue-600 dark:text-blue-400">{p.abha_id || "Not Linked"}</span>
                   </div>
@@ -171,8 +176,16 @@ export default function PatientsModule() {
                     <input className="form-input" value={editingPatient.name} onChange={e => setEditingPatient({...editingPatient, name: e.target.value})} required />
                   </div>
                   <div>
+                    <label className="form-label">Aadhaar No. (12 Digits) <span className="text-red-500">*</span></label>
+                    <input className="form-input" value={editingPatient.aadhaar} onChange={e => setEditingPatient({...editingPatient, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12)})} minLength={12} maxLength={12} required />
+                  </div>
+                  <div>
                     <label className="form-label">Phone</label>
                     <input className="form-input" value={editingPatient.phone} onChange={e => setEditingPatient({...editingPatient, phone: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="form-label">ABHA ID</label>
+                    <input className="form-input" value={editingPatient.abha_id || ""} onChange={e => setEditingPatient({...editingPatient, abha_id: e.target.value})} placeholder="Optional ABHA" />
                   </div>
                   <div>
                     <label className="form-label">Patient Type</label>

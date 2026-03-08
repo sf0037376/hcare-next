@@ -124,6 +124,8 @@ export default function PatientProfile() {
                 <span>Age: {patient.age}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
                 <span>ID: #{patient.id}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
+                <span className="text-zinc-800 dark:text-zinc-200">Aadhaar: {patient.aadhaar}</span>
                 {patient.abha_id && (
                   <>
                     <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>

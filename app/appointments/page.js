@@ -20,6 +20,7 @@ export default function AppointmentPage() {
     reason: "",
     patient_name: "",
     phone: "",
+    aadhaar: "",
     abha_id: "",
     abha_address: ""
   })
@@ -152,6 +153,16 @@ export default function AppointmentPage() {
                         value={form.patient_name}
                         onChange={e => setForm({...form, patient_name: e.target.value})}
                         required={isNewPatient}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label text-zinc-500">Aadhaar No. (Optional)</label>
+                      <input 
+                        className="form-input bg-white/50 dark:bg-zinc-950/50" 
+                        placeholder="Enter 12 digit Aadhaar"
+                        value={form.aadhaar}
+                        onChange={e => setForm({...form, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12)})}
+                        maxLength={12}
                       />
                     </div>
                     <div>

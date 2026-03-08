@@ -39,6 +39,7 @@ test.describe('E2E Hospital Workflows', () => {
     
     await page.goto('/users/admission');
     await page.fill('input[placeholder="Enter patient\'s full name"]', 'UI Test Patient');
+    await page.fill('input[placeholder="Enter 12 digit Aadhaar"]', '123412341234');
     await page.fill('input[placeholder="e.g. 5"]', '30');
     await page.locator('select').first().selectOption('Male'); 
     
@@ -58,6 +59,7 @@ test.describe('E2E Hospital Workflows', () => {
     // Admin creates appointment
     await page.check('#newPatientToggle');
     await page.fill('input[placeholder="Full Name"]', 'UI Appt Patient');
+    await page.fill('input[placeholder="Enter 12 digit Aadhaar"]', '987698769876');
     await page.fill('input[placeholder="10-digit mobile"]', '9999999999');
     
     // Select specific doctor by exact label

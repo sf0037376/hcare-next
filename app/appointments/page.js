@@ -169,7 +169,7 @@ export default function AppointmentPage() {
                         {patients
                           .filter(p => 
                             p.name.toLowerCase().includes(patientSearch.toLowerCase()) || 
-                            p.phone.includes(patientSearch)
+                            (p.phone || "").includes(patientSearch)
                           )
                           .map(p => (
                             <div 
@@ -186,7 +186,7 @@ export default function AppointmentPage() {
                             </div>
                           ))
                         }
-                        {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase()) || p.phone.includes(patientSearch)).length === 0 && (
+                        {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase()) || (p.phone || "").includes(patientSearch)).length === 0 && (
                           <div className="px-4 py-3 text-sm text-zinc-500">No patients found</div>
                         )}
                       </div>

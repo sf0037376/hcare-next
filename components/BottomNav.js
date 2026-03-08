@@ -38,6 +38,7 @@ export default function BottomNav() {
     { href: "/billing/orders", label: "Orders", icon: "📋", roles: ["admin"] },
     { href: "/medication", label: "Meds", icon: "💊", roles: ["doctor", "nurse"] },
     { href: "/appointments", label: "Appts", icon: "📅", roles: ["admin", "doctor", "nurse"] },
+    { href: "/availability", label: role === 'admin' ? "Shifts" : "My Schedule", icon: "⏰", roles: ["doctor", "nurse", "admin"] },
     { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
     { href: "/alerts", label: "Alerts", icon: "🔔" },
     { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },

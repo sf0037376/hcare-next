@@ -49,7 +49,7 @@ export default function Sidebar() {
     { href: "/feeding", label: "Feeding", icon: "🍼", roles: ["doctor", "nurse"] },
     { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
     { href: "/appointments", label: "Appointments", icon: "📅", roles: ["admin", "doctor"] },
-    { href: "/availability", label: "My Schedule", icon: "⏰", roles: ["doctor", "nurse", "admin"] },
+    { href: "/availability", label: role === 'admin' ? "Manage Staff Shifts" : "My Schedule", icon: "⏰", roles: ["doctor", "nurse", "admin"] },
     { href: "/alerts", label: "Alerts", icon: "🔔" },
     { href: "/pharmacy/inventory", label: "Pharmacy", icon: "🏥", roles: ["admin", "pharmacist"] },
     { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },

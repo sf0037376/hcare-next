@@ -10,6 +10,10 @@ export default function PharmacyInventory() {
   const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(true)
   
+  const [searchQuery, setSearchQuery] = useState("")
+  const [lowStockOnly, setLowStockOnly] = useState(false)
+  const [expiredOnly, setExpiredOnly] = useState(false)
+  
   const [newItem, setNewItem] = useState({
     medicine: "",
     category: "Medicine",
@@ -22,6 +26,13 @@ export default function PharmacyInventory() {
   useEffect(() => {
     loadInventory()
   }, [])
+
+  const filteredInventory = inventory.filter(item => {
+    if (searchQuery && !item.medicine.toLowerCase().includes(searchQuery.toLowerCase())) return false
+    if (lowStockOnly && item.stock >= 50) return false
+    if (expiredOnly && new Date(item.expiry_date) >= new Date()) return false
+    return true
+  })
 
   async function loadInventory() {
     setLoading(true)
@@ -143,11 +154,35 @@ export default function PharmacyInventory() {
           {/* Inventory Table */}
           <div className="lg:col-span-3">
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-800/50">
+              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex flex-col md:flex-row justify-between items-start md:items-center bg-zinc-50/50 dark:bg-zinc-800/50 gap-4">
                 <h3 className="text-lg font-semibold">Stock Directory</h3>
-                <div className="flex gap-2">
-                  <span className="px-3 py-1 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs font-medium">Low Stock: 2</span>
-                  <span className="px-3 py-1 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs font-medium">Expiring Soon: 1</span>
+                <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
+                  <input
+                    className="form-input py-2 px-3 rounded-xl text-sm w-full sm:w-64 border-zinc-200 dark:border-zinc-700 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="Search medicines by name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap text-zinc-600 dark:text-zinc-300 select-none">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                        checked={lowStockOnly}
+                        onChange={(e) => setLowStockOnly(e.target.checked)}
+                      />
+                      Low Stock (&lt; 50)
+                    </label>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap text-zinc-600 dark:text-zinc-300 select-none">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded text-red-600 focus:ring-red-500"
+                        checked={expiredOnly}
+                        onChange={(e) => setExpiredOnly(e.target.checked)}
+                      />
+                      Expired
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -164,7 +199,7 @@ export default function PharmacyInventory() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {inventory.map(item => (
+                    {filteredInventory.map(item => (
                       <tr key={item.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                         <td className="px-6 py-4 font-medium text-zinc-900 dark:text-white flex flex-col items-start gap-1">
                           <span>{item.medicine}</span>
@@ -189,6 +224,9 @@ export default function PharmacyInventory() {
                     ))}
                     {loading && (
                       <tr><td colSpan="6" className="px-6 py-10 text-center text-zinc-500">Scanning inventory...</td></tr>
+                    )}
+                    {!loading && filteredInventory.length === 0 && (
+                      <tr><td colSpan="6" className="px-6 py-10 text-center text-zinc-500">No matching medicines found in inventory.</td></tr>
                     )}
                   </tbody>
                 </table>

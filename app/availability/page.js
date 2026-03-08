@@ -160,7 +160,7 @@ export default function AvailabilityPage() {
                   {slots.map(slot => (
                     <tr key={slot.id} className="hover:bg-zinc-50/50 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium">
-                        {new Date(slot.available_date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {slot.available_date.split('T')[0].split('-').reverse().join('-')}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         {slot.slot_start} - {slot.slot_end}

@@ -14,6 +14,8 @@ export default function BillingPage() {
   const [pricingMaster, setPricingMaster] = useState([])
   const [doctors, setDoctors] = useState([])
   const [selectedPatientType, setSelectedPatientType] = useState("OP")
+  const [patientSearch, setPatientSearch] = useState("")
+  const [showPatientSuggestions, setShowPatientSuggestions] = useState(false)
   const [insurance, setInsurance] = useState({ provider: "", policy_number: "", covered_amount: 0 })
   const [role, setRole] = useState("")
   const [couponDiscount, setCouponDiscount] = useState(0)
@@ -238,6 +240,7 @@ export default function BillingPage() {
       setItems([{ description: "", quantity: 1, price: 0, serviceId: "", doctorId: "", searchQuery: "", showSuggestions: false }])
       setInsurance({ provider: "", policy_number: "", covered_amount: 0 })
       setSelectedPatientId("")
+      setPatientSearch("")
       setManualDiscount(0)
       setCouponDiscount(0)
       setCouponCode("")
@@ -298,14 +301,48 @@ export default function BillingPage() {
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
               <div className="mb-6 h-12">
                 <label className="form-label">Select Patient for Invoice</label>
-                <select 
-                  className="form-input"
-                  value={selectedPatientId}
-                  onChange={e => handlePatientSelect(e.target.value)}
-                >
-                  <option value="">-- Choose Patient --</option>
-                  {patients.map(p => <option key={p.id} value={p.id}>{p.name} ({p.patient_type || 'OP'})</option>)}
-                </select>
+                <div className="relative">
+                  <input 
+                    type="text"
+                    className="form-input"
+                    placeholder="Search patient by name or phone..."
+                    value={patientSearch}
+                    onChange={e => {
+                      setPatientSearch(e.target.value)
+                      setShowPatientSuggestions(true)
+                      if (!e.target.value) setSelectedPatientId("")
+                    }}
+                    onFocus={() => setShowPatientSuggestions(true)}
+                    required
+                  />
+                  {showPatientSuggestions && patientSearch && (
+                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                      {patients
+                        .filter(p => 
+                          p.name.toLowerCase().includes(patientSearch.toLowerCase()) || 
+                          p.phone.includes(patientSearch)
+                        )
+                        .map(p => (
+                          <div 
+                            key={p.id}
+                            className="px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+                            onClick={() => {
+                              handlePatientSelect(p.id)
+                              setPatientSearch(`${p.name} (${p.patient_type || 'OP'})`)
+                              setShowPatientSuggestions(false)
+                            }}
+                          >
+                            <p className="font-bold text-sm">{p.name}</p>
+                            <p className="text-xs text-zinc-500">{p.phone} • {p.patient_type || 'OP'}</p>
+                          </div>
+                        ))
+                      }
+                      {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase()) || p.phone.includes(patientSearch)).length === 0 && (
+                        <div className="px-4 py-3 text-sm text-zinc-500">No patients found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4">

@@ -30,6 +30,8 @@ export default function AppointmentPage() {
   const [selectedDate, setSelectedDate] = useState("")
   const [availableSlots, setAvailableSlots] = useState([])
   const [useCustomDate, setUseCustomDate] = useState(false)
+  const [patientSearch, setPatientSearch] = useState("")
+  const [showPatientSuggestions, setShowPatientSuggestions] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -55,7 +57,7 @@ export default function AppointmentPage() {
 
   useEffect(() => {
     if (form.doctor_id) {
-      apiFetch(`/availability/${form.doctor_id}`)
+      apiFetch(`/availability/${form.doctor_id}?future=1`)
         .then(data => {
            const sched = Array.isArray(data) ? data.filter(d => d.status === 'AVAILABLE') : []
            setDoctorSchedule(sched)
@@ -102,6 +104,7 @@ export default function AppointmentPage() {
         patient_name: "", phone: "", aadhaar: "", abha_id: "", abha_address: "" 
       })
       setSelectedDate("")
+      setPatientSearch("")
       setIsNewPatient(false)
       setUseCustomDate(false)
       loadData()
@@ -134,7 +137,11 @@ export default function AppointmentPage() {
                     id="newPatientToggle"
                     className="w-4 h-4 rounded text-blue-600"
                     checked={isNewPatient}
-                    onChange={e => setIsNewPatient(e.target.checked)}
+                    onChange={e => {
+                      setIsNewPatient(e.target.checked)
+                      setPatientSearch("")
+                      setForm(prev => ({...prev, patient_id: ""}))
+                    }}
                   />
                   <label htmlFor="newPatientToggle" className="text-sm font-medium text-zinc-600">New Patient</label>
                 </div>
@@ -142,17 +149,48 @@ export default function AppointmentPage() {
               
               <form onSubmit={handleBook} className="space-y-4">
                 {!isNewPatient ? (
-                  <div>
+                  <div className="relative">
                     <label className="form-label">Existing Patient</label>
-                    <select 
+                    <input 
+                      type="text"
                       className="form-input"
-                      value={form.patient_id}
-                      onChange={e => setForm({...form, patient_id: e.target.value})}
-                      required={!isNewPatient}
-                    >
-                      <option value="">-- Select Patient --</option>
-                      {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
+                      placeholder="Search patient by name or phone..."
+                      value={patientSearch}
+                      onChange={e => {
+                        setPatientSearch(e.target.value)
+                        setShowPatientSuggestions(true)
+                        if (!e.target.value) setForm({...form, patient_id: ""})
+                      }}
+                      onFocus={() => setShowPatientSuggestions(true)}
+                      required={!isNewPatient && !form.patient_id}
+                    />
+                    {showPatientSuggestions && patientSearch && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                        {patients
+                          .filter(p => 
+                            p.name.toLowerCase().includes(patientSearch.toLowerCase()) || 
+                            p.phone.includes(patientSearch)
+                          )
+                          .map(p => (
+                            <div 
+                              key={p.id}
+                              className="px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+                              onClick={() => {
+                                setForm({...form, patient_id: p.id})
+                                setPatientSearch(p.name)
+                                setShowPatientSuggestions(false)
+                              }}
+                            >
+                              <p className="font-bold text-sm">{p.name}</p>
+                              <p className="text-xs text-zinc-500">{p.phone} • {p.patient_type || 'OP'}</p>
+                            </div>
+                          ))
+                        }
+                        {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase()) || p.phone.includes(patientSearch)).length === 0 && (
+                          <div className="px-4 py-3 text-sm text-zinc-500">No patients found</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -264,7 +302,7 @@ export default function AppointmentPage() {
                         required
                       >
                         <option value="">-- Select Date --</option>
-                        {[...new Set(doctorSchedule.map(d => d.available_date.split('T')[0]))].sort().map(date => (
+                        {[...new Set(doctorSchedule.filter(d => d.available_date.split('T')[0] >= new Date().toISOString().split('T')[0]).map(d => d.available_date.split('T')[0]))].sort().map(date => (
                            <option key={date} value={date}>{date.split('-').reverse().join('-')}</option>
                         ))}
                       </select>

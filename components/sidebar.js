@@ -53,7 +53,7 @@ export default function Sidebar() {
     { href: "/alerts", label: "Alerts", icon: "🔔" },
     { href: "/pharmacy/inventory", label: "Pharmacy", icon: "🏥", roles: ["admin", "pharmacist"] },
     { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },
-    { href: "/billing/ip-logs", label: "IP Billing Log", icon: "📑", roles: ["admin"] },
+    { href: "/billing/ip-logs", label: "IP Billing Log", icon: "📑", roles: ["admin", "nurse"] },
     { href: "/patients/financials", label: "Financials", icon: "💳", roles: ["patient"] },
     { href: `/patients/${typeof window !== 'undefined' ? localStorage.getItem('patientId') : ''}/approvals`, label: "Approvals", icon: "✅", roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },

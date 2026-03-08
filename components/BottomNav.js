@@ -40,6 +40,8 @@ export default function BottomNav() {
     { href: "/appointments", label: "Appts", icon: "📅", roles: ["admin", "doctor", "nurse"] },
     { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
     { href: "/alerts", label: "Alerts", icon: "🔔" },
+    { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },
+    { href: "/billing/ip-logs", label: "IP Logs", icon: "📑", roles: ["admin", "nurse"] },
     { href: role === 'patient' ? "/patients/financials" : "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist", "patient"] },
     { href: `/patients/${typeof window !== 'undefined' ? localStorage.getItem('patientId') : ''}/approvals`, label: "Approvals", icon: "✅", roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },
@@ -47,7 +49,10 @@ export default function BottomNav() {
 
   const visibleItems = navItems.filter(
     (item) => !item.roles || item.roles.includes(role)
-  ).slice(0, 4) // Show up to 4 items in the bar
+  )
+
+  const barItems = visibleItems.slice(0, 4) // Show up to 4 items in the bar
+  const drawerItems = visibleItems.slice(4) // Show the rest in the drawer
 
   const handleLogout = () => {
     localStorage.clear()
@@ -59,7 +64,7 @@ export default function BottomNav() {
       {/* Mobile Bottom Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_-8px_30px_rgb(0,0,0,0.4)] md:hidden">
         <div className="flex justify-around items-center h-16 px-4">
-          {visibleItems.map((item) => {
+          {barItems.map((item) => {
             const isActive = pathname === item.href
             return (
               <Link
@@ -121,6 +126,25 @@ export default function BottomNav() {
               </div>
 
               <div className="grid grid-cols-1 gap-2">
+                {drawerItems.map((item) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link key={item.href} href={item.href} onClick={() => setShowMore(false)} className={`flex items-center gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-2xl transition-colors ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                      <span className="text-xl">{item.icon}</span>
+                      <span className="font-medium">{item.label}</span>
+                      {item.label === "Approvals" && pendingCount > 0 && (
+                        <span className="ml-auto w-5 h-5 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full font-black animate-pulse">
+                          {pendingCount}
+                        </span>
+                      )}
+                      {item.label === "Alerts" && unreadAlerts > 0 && (
+                        <span className="ml-auto w-5 h-5 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-black">
+                          {unreadAlerts}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
                 {role === "admin" && (
                   <>
                     <Link href="/users/manage" onClick={() => setShowMore(false)} className="flex items-center gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-2xl transition-colors">
@@ -132,12 +156,6 @@ export default function BottomNav() {
                       <span className="font-medium">Patient Admission</span>
                     </Link>
                   </>
-                )}
-                {(role === "admin" || role === "pharmacist") && (
-                  <Link href="/billing" onClick={() => setShowMore(false)} className="flex items-center gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-2xl transition-colors">
-                    <span className="text-xl">💰</span>
-                    <span className="font-medium">Billing</span>
-                  </Link>
                 )}
                 <button 
                   onClick={handleLogout}

@@ -106,7 +106,7 @@ test.describe('E2E Hospital Workflows', () => {
     await expect(page.getByText('Prescription and Lab Orders saved')).toBeVisible({ timeout: 10000 });
   });
 
-  test('Test 4: Nurse adding vital and feed logs', async ({ page }) => {
+  test('Test 4: Nurse adding vital, feed logs, and IP billing logs', async ({ page }) => {
     await loginProgrammatically(page, 'ns@test.com', 'admin123');
     await page.goto('/vitals');
     
@@ -116,6 +116,23 @@ test.describe('E2E Hospital Workflows', () => {
     await page.click('button:has-text("Save Vitals Record")');
     
     await expect(page.locator('text=Vitals saved')).toBeVisible({ timeout: 10000 });
+
+    // Test IP Billing log for nurse
+    await page.goto('/billing/ip-logs');
+    // First, select the patient from the sidebar list assuming there is at least 1.
+    // The patient cards are buttons with the patient name. We'll click the first one.
+    await page.locator('button:has-text("ID: #")').first().click();
+    
+    // Fill the charge form
+    await page.fill('input[placeholder="e.g. Consultation Fee / Consumables"]', 'Test Consumables');
+    
+    // Select the unit price input. Since they don't have good placeholders, we can use locators
+    const numberInputs = page.locator('input[type="number"]');
+    await numberInputs.nth(0).fill('2');
+    await numberInputs.nth(1).fill('250');
+    
+    await page.click('button:has-text("+ Log Charge")');
+    await expect(page.locator('text=Billing item logged successfully')).toBeVisible({ timeout: 10000 });
   });
 
   test('Test 9 & 10: Admit and Discharge', async ({ page }) => {

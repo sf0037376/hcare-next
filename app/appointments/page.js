@@ -29,6 +29,7 @@ export default function AppointmentPage() {
   const [doctorSchedule, setDoctorSchedule] = useState([])
   const [selectedDate, setSelectedDate] = useState("")
   const [availableSlots, setAvailableSlots] = useState([])
+  const [useCustomDate, setUseCustomDate] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -102,6 +103,7 @@ export default function AppointmentPage() {
       })
       setSelectedDate("")
       setIsNewPatient(false)
+      setUseCustomDate(false)
       loadData()
     } catch (err) {
       show(err.message || "Failed to book appointment")
@@ -223,10 +225,36 @@ export default function AppointmentPage() {
                 </div>
                 
                 {form.doctor_id && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="form-label">Available Date</label>
-                      <select 
+                  <>
+                    <div className="flex justify-end mb-2">
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setUseCustomDate(!useCustomDate)
+                          setForm({...form, appointment_time: ""})
+                          setSelectedDate("")
+                        }} 
+                        className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-colors bg-blue-50 px-3 py-1.5 rounded-full"
+                      >
+                        {useCustomDate ? "Use Doctor Schedule" : "Enter Custom / Past Date"}
+                      </button>
+                    </div>
+                    {useCustomDate ? (
+                      <div>
+                        <label className="form-label">Date & Time</label>
+                        <input 
+                          type="datetime-local"
+                          className="form-input"
+                          value={form.appointment_time}
+                          onChange={e => setForm({...form, appointment_time: e.target.value})}
+                          required
+                        />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="form-label">Available Date</label>
+                          <select 
                         className="form-input"
                         value={selectedDate}
                         onChange={e => {
@@ -265,6 +293,8 @@ export default function AppointmentPage() {
                       </select>
                     </div>
                   </div>
+                )}
+                  </>
                 )}
                 {!form.doctor_id && (
                   <div>

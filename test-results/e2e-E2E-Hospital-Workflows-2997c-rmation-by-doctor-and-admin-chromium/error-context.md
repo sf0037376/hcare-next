@@ -93,7 +93,7 @@
                   - generic [ref=e71]: Patient Name
                   - textbox "Full Name" [ref=e72]: UI Appt Patient
                 - generic [ref=e73]:
-                  - generic [ref=e74]: Aadhaar No. (12 Digits) *
+                  - generic [ref=e74]: Aadhaar No. (Optional)
                   - textbox "Enter 12 digit Aadhaar" [ref=e75]: "987698769876"
                 - generic [ref=e76]:
                   - generic [ref=e77]: Phone Number

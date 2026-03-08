@@ -23,6 +23,7 @@ export default function BillingPage() {
   const [panNumber, setPanNumber] = useState("")
   const [transactionRef, setTransactionRef] = useState("")
   const [billingType, setBillingType] = useState("One-Time") // Daily or One-Time
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -182,6 +183,8 @@ export default function BillingPage() {
       return show("PAN number is mandatory for cash payments over ₹2,00,000")
     }
 
+    setSubmitting(true)
+
     try {
       const isIP = selectedPatientType === "IP"
       const orderData = { 
@@ -242,7 +245,9 @@ export default function BillingPage() {
       setTransactionRef("")
       setPaymentMethod("Cash")
     } catch (err) {
-      show("Failed to generate invoice")
+      show(err.message || "Failed to generate invoice")
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -253,6 +258,8 @@ export default function BillingPage() {
 
     const amountNum = parseFloat(amt)
     if (!transactionRef) return show("Please enter a Transaction Reference (UTR/Ref) first")
+
+    setSubmitting(true)
 
     try {
       await apiFetch("/billing/payments", {
@@ -270,7 +277,9 @@ export default function BillingPage() {
       setPanNumber("")
       setTransactionRef("")
     } catch (err) {
-      show("Failed to log payment")
+      show(err.message || "Failed to log payment")
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -543,30 +552,34 @@ export default function BillingPage() {
                   <>
                     <button 
                       onClick={() => generateInvoice(false)}
-                      className="w-full btn-primary py-4 shadow-xl shadow-blue-500/20 bg-emerald-600 hover:bg-emerald-700"
+                      disabled={submitting}
+                      className="w-full btn-primary py-4 shadow-xl flex items-center justify-center gap-2 shadow-blue-500/20 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      📄 Generate Daily Summary Receipt
+                      {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "📄 Generate Daily Summary Receipt"}
                     </button>
                     <button 
                       onClick={() => generateInvoice(true)}
-                      className="w-full py-4 border-2 border-blue-600 text-blue-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-50 transition-all font-mono"
+                      disabled={submitting}
+                      className="w-full py-4 border-2 border-blue-600 text-blue-600 flex items-center justify-center gap-2 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-50 transition-all font-mono disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      🏦 Generate Final Discharge Invoice
+                      {submitting ? <div className="w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" /> : "🏦 Generate Final Discharge Invoice"}
                     </button>
                   </>
                 ) : (
                   <button 
                     onClick={() => generateInvoice(true)}
-                    className="w-full btn-primary py-4 shadow-xl shadow-blue-500/20"
+                    disabled={submitting}
+                    className="w-full btn-primary py-4 flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    Generate Invoice
+                    {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Generate Invoice"}
                   </button>
                 )}
                 <button 
                   onClick={logAdvance}
-                  className="w-full py-3.5 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400"
+                  disabled={submitting}
+                  className="w-full py-3.5 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  ➕ Log Advance Payment
+                  {submitting ? <div className="w-5 h-5 border-2 border-zinc-400/30 border-t-zinc-400 rounded-full animate-spin" /> : "➕ Log Advance Payment"}
                 </button>
                 <button 
                   onClick={() => {

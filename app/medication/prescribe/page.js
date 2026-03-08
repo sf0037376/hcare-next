@@ -30,6 +30,7 @@ function PrescribeClient() {
   })
 
   const [showAddMedicine, setShowAddMedicine] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [newMedicine, setNewMedicine] = useState({ name: "", category: "General", unit_price: 0 })
   
   const [labTestsList, setLabTestsList] = useState([])
@@ -114,6 +115,7 @@ function PrescribeClient() {
       setShowAddMedicine(false)
       loadMedicines()
       setForm({ ...form, medicine: newMedicine.name })
+      setMedicineQuery(newMedicine.name)
       setNewMedicine({ name: "", category: "General", unit_price: 0 })
     } catch (err) {
       show("Failed to add new medicine")
@@ -124,6 +126,8 @@ function PrescribeClient() {
     e.preventDefault()
     if (!form.patient_id) return show("Select a patient")
     if (!form.medicine) return show("Select or add a medicine")
+
+    setSubmitting(true)
 
     try {
       const promises = []
@@ -154,7 +158,12 @@ function PrescribeClient() {
       show("Prescription and Lab Orders saved")
       setTimeout(() => router.back(), 1500)
     } catch (err) {
-      show("Failed to save prescription/lab orders")
+      show(err.message || "Failed to save prescription/lab orders")
+    } finally {
+      if (!err || typeof err === 'undefined' || !err.message) {
+         // Usually if it's successful we are routing back anyway, but let's unlock
+      }
+      setSubmitting(false)
     }
   }
 
@@ -313,8 +322,8 @@ function PrescribeClient() {
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800">
-                  <button type="submit" className="w-full btn-primary py-4 text-lg">
-                    {isEdit ? 'Update & Prescribe' : 'Confirm & Prescribe'}
+                  <button type="submit" disabled={submitting} className="w-full btn-primary py-4 text-lg flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                    {submitting ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (isEdit ? 'Update & Prescribe' : 'Confirm & Prescribe')}
                   </button>
                 </div>
               </div>

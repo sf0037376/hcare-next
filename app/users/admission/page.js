@@ -38,6 +38,7 @@ export default function PatientAdmission() {
   const [nurses, setNurses] = useState([])
   const [wards, setWards] = useState([])
   const [beds, setBeds] = useState([])
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadStaff() {
@@ -71,6 +72,7 @@ export default function PatientAdmission() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    setSubmitting(true)
     try {
       // 1. Create Patient
       const patient = await apiFetch("/patients", {
@@ -106,7 +108,9 @@ export default function PatientAdmission() {
 
       setTimeout(() => router.push("/patients"), 2000)
     } catch (err) {
-      show("Failed to admit patient")
+      show(err.message || "Failed to admit patient")
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -407,8 +411,8 @@ export default function PatientAdmission() {
           </div>
 
           <div className="flex gap-4">
-            <button type="submit" className="flex-1 btn-primary py-4 text-lg shadow-xl shadow-blue-500/20">
-              Complete Admission
+            <button type="submit" disabled={submitting} className="flex-1 btn-primary py-4 text-lg shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+              {submitting ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Complete Admission"}
             </button>
           </div>
         </form>

@@ -12,6 +12,7 @@ export default function AppointmentPage() {
   const [patients, setPatients] = useState([])
   const [doctors, setDoctors] = useState([])
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
   
   const [form, setForm] = useState({
     patient_id: "",
@@ -88,16 +89,24 @@ export default function AppointmentPage() {
 
   async function handleBook(e) {
     e.preventDefault()
+    setSubmitting(true)
     try {
       await apiFetch("/appointments", {
         method: "POST",
         body: JSON.stringify(form)
       })
       show("Appointment booked and doctor notified")
-      setForm({ patient_id: "", doctor_id: "", appointment_time: "", reason: "" })
+      setForm({ 
+        patient_id: "", doctor_id: "", appointment_time: "", reason: "",
+        patient_name: "", phone: "", aadhaar: "", abha_id: "", abha_address: "" 
+      })
+      setSelectedDate("")
+      setIsNewPatient(false)
       loadData()
     } catch (err) {
-      show("Failed to book appointment")
+      show(err.message || "Failed to book appointment")
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -273,8 +282,8 @@ export default function AppointmentPage() {
                     onChange={e => setForm({...form, reason: e.target.value})}
                   />
                 </div>
-                <button type="submit" className="w-full btn-primary py-3 mt-2 shadow-blue-500/20">
-                  Confirm Booking
+                <button type="submit" disabled={submitting} className="w-full btn-primary py-3 mt-2 shadow-blue-500/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                  {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Confirm Booking"}
                 </button>
               </form>
             </div>

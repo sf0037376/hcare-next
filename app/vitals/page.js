@@ -13,6 +13,7 @@ function VitalsClient() {
   const searchParams = useSearchParams()
   const initialPatientId = searchParams.get("patient_id") || ""
   const [role, setRole] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   const [patients, setPatients] = useState([])
   const [form, setForm] = useState({
@@ -110,6 +111,8 @@ function VitalsClient() {
       return
     }
 
+    setSubmitting(true)
+
     try {
       await apiFetch("/vitals", { 
         method: "POST", 
@@ -118,7 +121,9 @@ function VitalsClient() {
       show("Vitals saved successfully")
       setTimeout(() => router.back(), 1500)
     } catch (err) {
-      show("Failed to save vitals")
+      show(err.message || "Failed to save vitals")
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -267,9 +272,10 @@ function VitalsClient() {
             <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
               <button 
                 type="submit"
-                className="w-full btn-primary"
+                disabled={submitting}
+                className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Save Vitals Record
+                {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Save Vitals Record"}
               </button>
             </div>
           </form>

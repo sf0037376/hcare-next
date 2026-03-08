@@ -19,6 +19,7 @@ export default function IPLogs() {
   const [recentItems, setRecentItems] = useState([])
   const [pricingMaster, setPricingMaster] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     loadPatients()
@@ -58,6 +59,7 @@ export default function IPLogs() {
     if (!selectedPatient) return show("Select a patient first")
     if (!form.description || !form.unit_price) return show("Description and Price are required")
 
+    setSubmitting(true)
     try {
       await apiFetch("/billing/ip-items", {
         method: "POST",
@@ -70,7 +72,9 @@ export default function IPLogs() {
       setForm({ description: "", quantity: 1, unit_price: "" })
       loadPatientLogs(selectedPatient.id)
     } catch (err) {
-      show("Failed to log item")
+      show(err.message || "Failed to log item")
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -196,8 +200,12 @@ export default function IPLogs() {
                         />
                       </div>
                       <div className="md:col-span-4 mt-2">
-                        <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-lg shadow-blue-500/20">
-                          + Log Charge & Notify Patient
+                        <button 
+                          type="submit" 
+                          disabled={submitting} 
+                          className="w-full h-[52px] bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                          {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "+ Log Charge & Notify Patient"}
                         </button>
                       </div>
                     </form>

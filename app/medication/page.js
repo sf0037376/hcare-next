@@ -77,7 +77,12 @@ function MedicationClient() {
     try {
       await apiFetch("/medication/medication", {
         method: "POST",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          patient_id: form.patient_id,
+          scheduleId: form.scheduleId || null,
+          medicine: form.medicine,
+          dose: form.dose
+        }),
       })
       show("Medication administration logged")
       setTimeout(() => router.back(), 1500)
@@ -156,7 +161,8 @@ function MedicationClient() {
                       setForm({
                         ...form,
                         medicine: e.target.value,
-                        dose: selectedMed ? selectedMed.dosage : form.dose
+                        dose: selectedMed ? selectedMed.dosage : form.dose,
+                        scheduleId: selectedMed ? selectedMed.id : null
                       })
                     }}
                     required

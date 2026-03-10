@@ -120,6 +120,7 @@ export default function PatientProfile() {
                   {patient.status}
                 </span>
               </div>
+              </div>
               <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-zinc-500 dark:text-zinc-400">
                 <span>Age: {patient.age}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
@@ -129,9 +130,30 @@ export default function PatientProfile() {
                 {patient.abha_id && (
                   <>
                     <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
-                    <span className="text-blue-600 dark:text-blue-400">ABHA: {patient.abha_id}</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-black">ABHA: {patient.abha_id}</span>
                   </>
                 )}
+                <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-xl border border-orange-100 dark:border-orange-800/50">
+                  <span className="text-[10px] uppercase tracking-tighter text-orange-600 dark:text-orange-400">Feeding Interval:</span>
+                  <input 
+                    type="number" 
+                    step="0.5" 
+                    className="w-12 bg-transparent text-orange-700 dark:text-orange-300 font-black focus:outline-none"
+                    value={patient.feeding_interval_hours}
+                    onChange={async (e) => {
+                       const val = parseFloat(e.target.value);
+                       setPatient({...patient, feeding_interval_hours: val});
+                       try {
+                         await apiFetch(`/patients/${id}`, {
+                           method: 'PUT',
+                           body: JSON.stringify({ ...patient, feeding_interval_hours: val })
+                         });
+                         show("Feeding interval updated");
+                       } catch(e) { show("Failed to update interval"); }
+                    }}
+                  />
+                  <span className="text-[10px] text-orange-500 font-bold uppercase">Hrs</span>
+                </div>
               </div>
             </div>
           </div>

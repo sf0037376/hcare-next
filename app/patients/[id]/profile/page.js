@@ -120,7 +120,6 @@ export default function PatientProfile() {
                   {patient.status}
                 </span>
               </div>
-              </div>
               <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-zinc-500 dark:text-zinc-400">
                 <span>Age: {patient.age}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>

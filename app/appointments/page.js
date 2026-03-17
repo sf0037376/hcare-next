@@ -53,16 +53,18 @@ export default function AppointmentPage() {
 
   useEffect(() => {
     loadData()
-    // Handle query params for patient booking
+  }, [loadData])
+
+  useEffect(() => {
+    // Handle query params for patient booking separately
     const params = new URLSearchParams(window.location.search)
     const pid = params.get('patient_id')
-    if (pid) {
+    if (pid && patients.length > 0) {
       setForm(f => ({ ...f, patient_id: pid }))
-      // Find patient name for search input if not new
       const p = patients.find(p => String(p.id) === String(pid))
       if (p) setPatientSearch(p.name)
     }
-  }, [loadData, patients])
+  }, [patients]) // Runs only when patients list is loaded/updated
 
   useEffect(() => {
     if (form.doctor_id) {
@@ -129,6 +131,12 @@ export default function AppointmentPage() {
       <div className="animate-in fade-in duration-500 max-w-6xl mx-auto pb-20">
         {Toast}
         
+        <div className="mb-6">
+          <Link href="/dashboard" className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-medium text-sm flex items-center gap-1 transition-colors">
+            &larr; Back to Dashboard
+          </Link>
+        </div>
+
         <div className="mb-8">
           <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Appointments & Scheduling</h2>
           <p className="text-zinc-500 dark:text-zinc-400 mt-2">Manage patient visits and notify doctors of new bookings. Aligning with ABDM standards.</p>

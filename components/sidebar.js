@@ -11,15 +11,18 @@ export default function Sidebar() {
   const [userName, setUserName] = useState("")
   const [pendingCount, setPendingCount] = useState(0)
   const [unreadAlerts, setUnreadAlerts] = useState(0)
+  const [patientId, setPatientId] = useState("")
 
   useEffect(() => {
     const savedRole = (localStorage.getItem("role") || "").toLowerCase()
     setRole(savedRole)
-    const savedName = localStorage.getItem("name") || ""
+    const savedName = localStorage.getItem("username") || localStorage.getItem("name") || ""
     setUserName(savedName)
-
+    const savedPid = localStorage.getItem("patientId") || ""
+    setPatientId(savedPid)
+    
     if (savedRole === "patient") {
-      const pid = localStorage.getItem("patientId")
+      const pid = savedPid
       if (pid) {
         apiFetch(`/billing/ip-items/${pid}`).then(data => {
           if (Array.isArray(data)) {
@@ -55,7 +58,7 @@ export default function Sidebar() {
     { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },
     { href: "/billing/ip-logs", label: "IP Billing Log", icon: "📑", roles: ["admin", "nurse"] },
     { href: "/patients/financials", label: "Financials", icon: "💳", roles: ["patient"] },
-    { href: `/patients/${typeof window !== 'undefined' ? localStorage.getItem('patientId') : ''}/approvals`, label: "Approvals", icon: "✅", roles: ["patient"] },
+    { href: `/patients/${patientId}/approvals`, label: "Approvals", icon: "✅", roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },
   ]
   
@@ -146,7 +149,7 @@ export default function Sidebar() {
             👨‍⚕️
           </div>
           <div>
-            <p className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[120px]">{userName || localStorage.getItem("username") || 'User'}</p>
+            <p className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[120px]">{userName || 'User'}</p>
             <p className="text-xs font-medium text-zinc-500 capitalize">{role}</p>
             <p className="text-[10px] text-zinc-400 cursor-pointer hover:text-red-500 mt-1 uppercase tracking-wider font-bold" onClick={() => {
               localStorage.clear();

@@ -10,18 +10,23 @@ export default function BottomNav() {
   const [showMore, setShowMore] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
   const [unreadAlerts, setUnreadAlerts] = useState(0)
+  const [patientId, setPatientId] = useState("")
 
   useEffect(() => {
     const savedRole = (localStorage.getItem("role") || "").toLowerCase()
     setRole(savedRole)
+    // Also ensure username is set if we ever use it here
 
     // Fetch unread alerts for all
     apiFetch("/notifications/unread-count").then(data => {
       setUnreadAlerts(data.count || 0)
     }).catch(() => {})
 
+    const savedPid = localStorage.getItem("patientId") || ""
+    setPatientId(savedPid)
+
     if (savedRole === "patient") {
-      const pid = localStorage.getItem("patientId")
+      const pid = savedPid
       if (pid) {
         apiFetch(`/billing/ip-items/${pid}`).then(data => {
           if (Array.isArray(data)) {
@@ -44,7 +49,7 @@ export default function BottomNav() {
     { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },
     { href: "/billing/ip-logs", label: "IP Logs", icon: "📑", roles: ["admin", "nurse"] },
     { href: role === 'patient' ? "/patients/financials" : "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist", "patient"] },
-    { href: `/patients/${typeof window !== 'undefined' ? localStorage.getItem('patientId') : ''}/approvals`, label: "Approvals", icon: "✅", roles: ["patient"] },
+    { href: `/patients/${patientId}/approvals`, label: "Approvals", icon: "✅", roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },
   ]
 

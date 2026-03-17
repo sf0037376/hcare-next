@@ -14,13 +14,17 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body>
+      <body className="antialiased font-sans">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:bg-white focus:text-blue-600 focus:p-4 focus:z-50 focus:rounded-xl focus:shadow-2xl focus:font-black focus:uppercase focus:text-xs focus:tracking-widest">
+          Skip to content
+        </a>
+        
         {showShell ? (
           <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-black font-sans antialiased text-zinc-900 dark:text-zinc-50">
             <Sidebar />
             <div className="flex-1 flex flex-col md:ml-64 relative w-full h-full overflow-hidden">
               <Topbar />
-              <main className="flex-1 overflow-y-auto pb-24 md:pb-6 relative w-full h-full custom-scrollbar">
+              <main id="main-content" className="flex-1 overflow-y-auto pb-24 md:pb-6 relative w-full h-full custom-scrollbar">
                 <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-full">
                   {children}
                 </div>
@@ -29,7 +33,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
         ) : (
-          <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center font-sans antialiased text-zinc-900 dark:text-zinc-50 p-4">
+          <div id="main-content" className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center font-sans antialiased text-zinc-900 dark:text-zinc-50 p-4">
             {children}
           </div>
         )}

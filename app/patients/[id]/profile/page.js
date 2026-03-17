@@ -20,6 +20,7 @@ export default function PatientProfile() {
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState('')
   const [pendingCount, setPendingCount] = useState(0)
+  const [showPhone, setShowPhone] = useState(false)
 
   useEffect(() => {
     setRole((localStorage.getItem('role') || '').toLowerCase())
@@ -125,11 +126,33 @@ export default function PatientProfile() {
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
                 <span>ID: #{patient.id}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
-                <span className="text-zinc-800 dark:text-zinc-200">Aadhaar: {patient.aadhaar}</span>
+                <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                  <span className="text-[10px] uppercase tracking-tighter text-zinc-500">Phone:</span>
+                  <span className="text-zinc-900 dark:text-white font-black font-mono">
+                    {showPhone ? patient.phone : (patient.phone ? `${patient.phone.slice(0, 3)}XXXX${patient.phone.slice(-3)}` : 'N/A')}
+                  </span>
+                  {!showPhone && patient.phone && (
+                    <button 
+                      onClick={() => {
+                        const pwd = prompt("Enter your password to unmask phone number:");
+                        if (pwd) setShowPhone(true); 
+                      }}
+                      className="text-[10px] text-blue-600 font-bold uppercase underline ml-1"
+                    >
+                      Show
+                    </button>
+                  )}
+                </div>
                 {patient.abha_id && (
                   <>
                     <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
-                    <span className="text-blue-600 dark:text-blue-400 font-black">ABHA: {patient.abha_id}</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-black italic">ABHA: {patient.abha_id}</span>
+                  </>
+                )}
+                {patient.aadhaar && (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
+                    <span className="text-zinc-800 dark:text-zinc-200">Aadhaar: {patient.aadhaar}</span>
                   </>
                 )}
                 <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-xl border border-orange-100 dark:border-orange-800/50">
@@ -163,6 +186,9 @@ export default function PatientProfile() {
               
               {role === 'patient' && (
                 <>
+                  <Link href={`/appointments?patient_id=${id}&book=true`} className="bg-blue-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+                    <span>📅</span> Book Appointment
+                  </Link>
                   <Link href={`/vitals?patient_id=${id}`} className="bg-red-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:scale-105 transition-transform flex items-center gap-2">
                     <span>❤️</span> Log Vitals
                   </Link>
@@ -175,8 +201,57 @@ export default function PatientProfile() {
                 </>
               )}
               {role === 'doctor' && (
-                <Link href={`/medication/prescribe?patient_id=${id}`} className="bg-blue-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
-                  <span>💊</span> Prescribe Medicines
+                <div className="flex gap-3">
+                  <Link href={`/medication/prescribe?patient_id=${id}`} className="bg-blue-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+                    <span>💊</span> Prescribe Medicines
+                  </Link>
+                  {(patient.discharge_status === 'NONE' || !patient.discharge_status) && (
+                    <button 
+                      onClick={async () => {
+                         try {
+                           await apiFetch(`/patients/${id}/request-discharge`, { method: 'POST' });
+                           show("Discharge approved by you");
+                           window.location.reload();
+                         } catch(e) { show("Failed to initiate discharge"); }
+                      }}
+                      className="bg-orange-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform"
+                    >
+                      Discharge Patient
+                    </button>
+                  )}
+                  {patient.discharge_status === 'REQUESTED' && (
+                    <button 
+                      onClick={async () => {
+                         try {
+                           await apiFetch(`/patients/${id}/approve-discharge`, { method: 'POST' });
+                           show("Discharge approved");
+                           window.location.reload();
+                         } catch(e) { show("Failed to approve discharge"); }
+                      }}
+                      className="bg-emerald-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 transition-transform"
+                    >
+                      Approve Discharge
+                    </button>
+                  )}
+                </div>
+              )}
+              {(role === 'nurse' || role === 'staff') && (patient.discharge_status === 'NONE' || !patient.discharge_status) && (
+                 <button 
+                    onClick={async () => {
+                      try {
+                        await apiFetch(`/patients/${id}/request-discharge`, { method: 'POST' });
+                        show("Discharge requested from doctor");
+                        window.location.reload();
+                      } catch(e) { show("Failed to request discharge"); }
+                    }}
+                    className="bg-orange-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform"
+                 >
+                   Request Discharge
+                 </button>
+              )}
+              {(role === 'admin' || role === 'super_admin') && patient.discharge_status === 'DOCTOR_APPROVED' && (
+                <Link href={`/patients/${id}/discharge`} className="bg-red-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:scale-105 transition-transform">
+                   Finalize Discharge
                 </Link>
               )}
             </div>
@@ -233,7 +308,7 @@ export default function PatientProfile() {
                         </div>
                         <div>
                           <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-1.5">
-                            {new Date(log.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                           {new Date(log.recorded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
                           </p>
                           <div className="inline-block px-4 py-2 bg-zinc-50 dark:bg-zinc-800/40 rounded-2xl border border-zinc-100 dark:border-zinc-800">
                              <span className="font-bold text-zinc-900 dark:text-zinc-100">
@@ -356,6 +431,11 @@ export default function PatientProfile() {
                   <div>
                     <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Assigned Doctor</p>
                     <p className="font-bold text-zinc-900 dark:text-white">{patient.doctor_name || 'Unassigned'}</p>
+                    {patient.doctor_phone && (
+                      <p className="text-[9px] font-bold text-zinc-500 mt-1">
+                        📞 {patient.doctor_phone} {patient.doctor_hospital ? ` @ ${patient.doctor_hospital}` : ''}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-4 group">
@@ -363,6 +443,11 @@ export default function PatientProfile() {
                   <div>
                     <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Assigned Nurse</p>
                     <p className="font-bold text-zinc-900 dark:text-white">{patient.nurse_name || 'Unassigned'}</p>
+                    {patient.nurse_phone && (
+                      <p className="text-[9px] font-bold text-zinc-500 mt-1">
+                        📞 {patient.nurse_phone}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

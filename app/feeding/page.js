@@ -17,10 +17,14 @@ function FeedingClient() {
   const [patients, setPatients] = useState([])
   const [form, setForm] = useState({
     patient_id: initialPatientId,
-    type: "",
-    quantity: "",
-    recorded_at: new Date().toISOString().slice(0, 16)
+    type: "Mixed",
+    quantity: 0,
+    items: [{ type: "", quantity: "" }],
+    recorded_at: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour12: false }).replace(',', '').slice(0, 16),
+    start_time: "",
+    end_time: ""
   })
+  const [isTimerRunning, setIsTimerRunning] = useState(false)
 
   useEffect(() => {
     const userRole = (localStorage.getItem("role") || "").toLowerCase()
@@ -43,12 +47,44 @@ function FeedingClient() {
     loadPatients()
   }, [show])
 
+  const addItem = () => {
+    setForm(prev => ({ ...prev, items: [...prev.items, { type: "", quantity: "" }] }))
+  }
+
+  const removeItem = (index) => {
+    const newItems = form.items.filter((_, i) => i !== index)
+    setForm(prev => ({ ...prev, items: newItems }))
+  }
+
+  const updateItem = (index, field, value) => {
+    const newItems = [...form.items]
+    newItems[index][field] = value
+    const total = newItems.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0)
+    setForm(prev => ({ ...prev, items: newItems, quantity: total }))
+  }
+
+  const toggleTimer = () => {
+    const now = new Date().toISOString().slice(0, 16)
+    if (!isTimerRunning) {
+      setForm(prev => ({ ...prev, start_time: now, end_time: "" }))
+      setIsTimerRunning(true)
+    } else {
+      setForm(prev => ({ ...prev, end_time: now }))
+      setIsTimerRunning(false)
+    }
+  }
+
   async function submit(e) {
     e.preventDefault()
 
     if (!form.patient_id) {
       show("Please select a patient")
       return
+    }
+
+    if (form.items.some(item => !item.type || !item.quantity)) {
+        show("Please fill all feed item details")
+        return
     }
 
     try {
@@ -128,53 +164,96 @@ function FeedingClient() {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">Feed Taxonomy</label>
-                <select
-                  className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-100 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-bold text-zinc-900 dark:text-white appearance-none"
-                  value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
-                  required
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">Feed Components</label>
+                <button 
+                  type="button" 
+                  onClick={addItem}
+                  className="text-[10px] font-black uppercase tracking-widest text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-3 py-1.5 rounded-xl border border-orange-100 dark:border-orange-800 hover:scale-105 transition-transform"
                 >
-                  <option value="">Select type</option>
-                  <option value="EBM">EBM (Breast Milk)</option>
-                  <option value="Formula">Formula</option>
-                  <option value="IV_FLUIDS">IV Fluids</option>
-                </select>
+                  + Add Item
+                </button>
               </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">Volumetric Quantity (ml)</label>
-                <input
-                  className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-100 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-bold text-zinc-900 dark:text-white placeholder:text-zinc-500"
-                  value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                  placeholder="e.g. 50"
-                  type="number"
-                  min="0"
-                  required
-                />
+              
+              <div className="space-y-4">
+                {form.items.map((item, idx) => (
+                  <div key={idx} className="flex flex-col sm:flex-row gap-4 items-end bg-zinc-50 dark:bg-zinc-800/30 p-4 rounded-3xl border border-zinc-100 dark:border-zinc-800">
+                    <div className="flex-1 space-y-2 w-full">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Type</label>
+                      <input
+                        className="w-full px-4 py-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800 font-bold text-sm"
+                        value={item.type}
+                        onChange={(e) => updateItem(idx, "type", e.target.value)}
+                        placeholder="e.g. EBM, Formula, Dialysate..."
+                        required
+                      />
+                    </div>
+                    <div className="w-full sm:w-32 space-y-2">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Qty (ml)</label>
+                      <input
+                        type="number"
+                        className="w-full px-4 py-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800 font-bold text-sm"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(idx, "quantity", e.target.value)}
+                        placeholder="0"
+                        required
+                      />
+                    </div>
+                    {form.items.length > 1 && (
+                      <button 
+                        type="button" 
+                        onClick={() => removeItem(idx)}
+                        className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-between items-center p-6 bg-zinc-900 dark:bg-white rounded-3xl text-white dark:text-zinc-900">
+                <span className="text-xs font-black uppercase tracking-widest">Total Volume</span>
+                <span className="text-2xl font-black font-mono">{form.quantity} ml</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">Duration: Start</label>
-                <input
-                  type="datetime-local"
-                  className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-100 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-bold text-zinc-900 dark:text-white"
-                  value={form.start_time}
-                  onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-                />
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">Feed Duration Timer</label>
+                <button
+                  type="button"
+                  onClick={toggleTimer}
+                  className={`px-6 py-2 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg ${
+                    isTimerRunning 
+                    ? 'bg-red-500 text-white shadow-red-500/20' 
+                    : 'bg-emerald-500 text-white shadow-emerald-500/20'
+                  }`}
+                >
+                  {isTimerRunning ? '⏹️ Stop Timer' : '▶️ Start Timer'}
+                </button>
               </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">Duration: End</label>
-                <input
-                  type="datetime-local"
-                  className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-100 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-bold text-zinc-900 dark:text-white"
-                  value={form.end_time}
-                  onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-                />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">Duration: Start</label>
+                  <input
+                    type="datetime-local"
+                    className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-100 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-bold text-zinc-900 dark:text-white"
+                    value={form.start_time}
+                    onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">Duration: End</label>
+                  <input
+                    type="datetime-local"
+                    className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-100 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-bold text-zinc-900 dark:text-white"
+                    value={form.end_time}
+                    onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
             

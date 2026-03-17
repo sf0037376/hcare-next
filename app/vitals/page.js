@@ -24,8 +24,9 @@ function VitalsClient() {
     head: "",
     height: "",
     bmi: "",
+    bmi: "",
     notes: "",
-    recorded_at: new Date().toISOString().slice(0, 16)
+    recorded_at: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour12: false }).replace(',', '').slice(0, 16)
   })
 
   useEffect(() => {

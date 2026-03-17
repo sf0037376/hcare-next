@@ -53,7 +53,16 @@ export default function AppointmentPage() {
 
   useEffect(() => {
     loadData()
-  }, [loadData])
+    // Handle query params for patient booking
+    const params = new URLSearchParams(window.location.search)
+    const pid = params.get('patient_id')
+    if (pid) {
+      setForm(f => ({ ...f, patient_id: pid }))
+      // Find patient name for search input if not new
+      const p = patients.find(p => String(p.id) === String(pid))
+      if (p) setPatientSearch(p.name)
+    }
+  }, [loadData, patients])
 
   useEffect(() => {
     if (form.doctor_id) {
@@ -116,7 +125,7 @@ export default function AppointmentPage() {
   }
 
   return (
-    <ProtectedRoute roles={["admin", "doctor"]}>
+    <ProtectedRoute roles={["admin", "doctor", "patient"]}>
       <div className="animate-in fade-in duration-500 max-w-6xl mx-auto pb-20">
         {Toast}
         
@@ -230,7 +239,7 @@ export default function AppointmentPage() {
                   <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30 space-y-3">
                     <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">ABDM Details</p>
                     <div>
-                      <label className="text-[10px] font-semibold text-zinc-500 uppercase mb-1 block">ABHA ID</label>
+                      <label className="text-[10px] font-semibold text-zinc-500 uppercase mb-1 block">ABHA ID (Optional)</label>
                       <input 
                         className="form-input text-sm py-2"
                         placeholder="1234-5678-9012-34"
@@ -376,7 +385,14 @@ export default function AppointmentPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {appointments.map(appt => (
+                    {appointments
+                      .filter(appt => {
+                        const role = (localStorage.getItem('role') || '').toLowerCase()
+                        const patientId = localStorage.getItem('patientId')
+                        if (role === 'patient') return String(appt.patient_id) === String(patientId)
+                        return true
+                      })
+                      .map(appt => (
                       <tr key={appt.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100 font-medium">
                           {appt.appointment_time.split('T')[0].split('-').reverse().join('-')} at {new Date(appt.appointment_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}

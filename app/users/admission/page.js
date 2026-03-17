@@ -178,7 +178,7 @@ export default function PatientAdmission() {
                 />
               </div>
               <div>
-                <label className="form-label text-blue-600">ABHA ID (14 digits)</label>
+                <label className="form-label text-blue-600">ABHA ID (Optional - 14 digits)</label>
                 <input 
                   type="text" 
                   className="form-input border-blue-200"

@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children, roles = [] }) {
     const role = (localStorage.getItem('role') || '').toUpperCase()
 
     if (!token) {
-      router.replace('/login')
+      router.replace('/')
       return
     }
 

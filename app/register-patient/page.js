@@ -30,9 +30,9 @@ export default function RegisterPatient() {
   useEffect(() => {
     async function init() {
       try {
-        const orgData = await apiFetch("/orgs")
+        const orgData = await apiFetch("/auth/orgs")
         setOrgs(orgData)
-        const docData = await apiFetch("/doctors")
+        const docData = await apiFetch("/auth/doctors")
         setDoctors(docData)
       } catch (err) {
         show("Failed to load registration metadata")
@@ -195,7 +195,7 @@ export default function RegisterPatient() {
         </div>
         
         <p className="mt-8 text-center text-xs font-bold text-zinc-500 uppercase tracking-widest">
-            Already have an account? <Link href="/" className="text-blue-600 underline">Sign In instead</Link>
+            Already have an account? <Link href="/?login=true" className="text-blue-600 underline">Sign In instead</Link>
         </p>
       </div>
     </div>

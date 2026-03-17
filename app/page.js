@@ -16,6 +16,13 @@ export default function LandingPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('login') === 'true') {
+      setShowLogin(true)
+    }
+  }, [])
 
   async function handleLogin(e) {
     if (e) e.preventDefault()

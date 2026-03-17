@@ -146,11 +146,11 @@ export default function Sidebar() {
             👨‍⚕️
           </div>
           <div>
-            <p className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[120px]">{userName || 'User'}</p>
+            <p className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[120px]">{userName || localStorage.getItem("username") || 'User'}</p>
             <p className="text-xs font-medium text-zinc-500 capitalize">{role}</p>
             <p className="text-[10px] text-zinc-400 cursor-pointer hover:text-red-500 mt-1 uppercase tracking-wider font-bold" onClick={() => {
               localStorage.clear();
-              window.location.href = "/login";
+              window.location.href = "/";
             }}>Sign Out</p>
           </div>
         </div>

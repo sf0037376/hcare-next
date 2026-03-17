@@ -75,7 +75,7 @@ export default function Sidebar() {
           🏥
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">NeoCare</h2>
+          <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">NEOCARE</h2>
           <p className="text-xs text-zinc-500 font-medium">Hospital Management</p>
         </div>
       </div>

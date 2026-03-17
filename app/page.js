@@ -57,7 +57,7 @@ export default function LandingPage() {
       {Toast}
 
       {/* SEO & Meta Simulation */}
-      <title>HCare | Premium Patient Care & Remote Monitoring</title>
+      <title>NEOCARE | Premium Patient Care & Remote Monitoring</title>
       <meta name="description" content="Next-generation healthcare platform for neonatal, pediatric, and dialysis care. Monitor your loved ones remotely with real-time vitals and expert care teams." />
 
       {/* Navigation */}
@@ -65,7 +65,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🏥</span>
-            <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">HCare<span className="text-blue-600">.</span></span>
+            <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">NEOCARE<span className="text-blue-600">.</span></span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
             <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
@@ -223,7 +223,7 @@ export default function LandingPage() {
               </button>
             </form>
             <p className="mt-8 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-              New to HCare? <Link href="/register-patient" className="text-blue-600 underline">Register Now</Link>
+              New to NEOCARE? <Link href="/register-patient" className="text-blue-600 underline">Register Now</Link>
             </p>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function LandingPage() {
       <footer className="py-20 px-6 border-t border-zinc-100 dark:border-zinc-800">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
           <div className="text-center md:text-left">
-            <span className="text-2xl font-black tracking-tighter uppercase italic dark:text-white">HCare.</span>
+            <span className="text-2xl font-black tracking-tighter uppercase italic dark:text-white">NEOCARE.</span>
             <p className="text-xs text-zinc-500 font-bold mt-2 uppercase tracking-widest">© 2026 Global Healthcare Solutions Inc.</p>
           </div>
           <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-zinc-400">

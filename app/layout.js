@@ -10,7 +10,7 @@ import BottomNav from '@/components/BottomNav'
 // It does NOT perform any redirects to avoid loops.
 export default function RootLayout({ children }) {
   const pathname = usePathname()
-  const showShell = pathname !== '/login'
+  const showShell = pathname !== '/' && pathname !== '/login'
 
   return (
     <html lang="en">

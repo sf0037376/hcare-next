@@ -67,7 +67,7 @@ export default function RegisterPatient() {
       
       <div className="max-w-xl w-full">
         <div className="mb-12 text-center">
-            <h1 className="text-5xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter italic">Join HCare</h1>
+            <h1 className="text-5xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter italic">Join NEOCARE</h1>
             <p className="text-zinc-500 mt-2 font-bold uppercase tracking-widest text-xs">Standalone Patient Enrollment System</p>
         </div>
 

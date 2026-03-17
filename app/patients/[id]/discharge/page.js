@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { apiFetch } from "../../../lib/api"
-import useToast from "../../../components/toast"
+import { apiFetch } from "../../../../lib/api"
+import useToast from "../../../../components/toast"
 
 export default function FinalizeDischarge() {
   const { id } = useParams()

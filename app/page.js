@@ -93,7 +93,7 @@ export default function LandingPage() {
       />
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-3xl border-b border-zinc-100 dark:border-zinc-800 px-6 py-4">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-3xl border-b border-zinc-100 dark:border-zinc-800 px-8 md:px-16 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <span className="text-2xl" aria-hidden="true">🏥</span>
@@ -117,7 +117,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-48 pb-32 px-6 relative overflow-hidden">
+      <section className="pt-48 pb-32 px-8 md:px-16 relative overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div className="relative z-10 animate-in fade-in slide-in-from-left-8 duration-700">
             <span className="inline-block px-4 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-widest rounded-full mb-8 border border-blue-100 dark:border-blue-800">
@@ -142,7 +142,7 @@ export default function LandingPage() {
           
           <div className="relative animate-in fade-in zoom-in duration-1000">
             <div className="aspect-[4/5] bg-gradient-to-tr from-blue-600/40 to-indigo-600/40 rounded-[100px] blur-[100px] absolute -inset-20 opacity-20"></div>
-            <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[80px] p-12 shadow-2xl transform lg:rotate-6 hover:rotate-0 transition-transform duration-1000 ease-out">
+            <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[80px] p-12 shadow-2xl transform lg:rotate-1 hover:rotate-0 transition-transform duration-1000 ease-out">
               <div className="flex items-center justify-between mb-12">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-[24px] bg-emerald-500 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20">❤️</div>
@@ -185,7 +185,7 @@ export default function LandingPage() {
       </section>
 
       {/* Specialties Breakdown */}
-      <section id="specialties" className="py-40 px-6 bg-zinc-50 dark:bg-zinc-950">
+      <section id="specialties" className="py-40 px-8 md:px-16 bg-zinc-50 dark:bg-zinc-950">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-24">
             <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter italic mb-6 dark:text-white">Expertise in every <span className="text-blue-600">Ward.</span></h2>
@@ -210,7 +210,7 @@ export default function LandingPage() {
       </section>
 
       {/* Deep Dive: Remote Monitoring */}
-      <section id="monitoring" className="py-40 px-6 bg-white dark:bg-black overflow-hidden">
+      <section id="monitoring" className="py-40 px-8 md:px-16 bg-white dark:bg-black overflow-hidden">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20 items-center">
            <div className="flex-1 order-2 lg:order-1">
               <div className="relative">
@@ -259,7 +259,7 @@ export default function LandingPage() {
       </section>
 
       {/* The App Experience */}
-      <section id="experience" className="py-40 px-6 bg-blue-600 text-white relative">
+      <section id="experience" className="py-40 px-8 md:px-16 bg-blue-600 text-white relative">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20 items-center">
            <div className="flex-1">
               <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.85] italic mb-10">One Portal <br />to rule them all.</h2>
@@ -281,7 +281,7 @@ export default function LandingPage() {
            </div>
            <div className="flex-1 relative">
               <div className="absolute inset-0 bg-white/20 rounded-full blur-[200px]"></div>
-              <div className="relative p-1 bg-white/10 border border-white/20 rounded-[60px] backdrop-blur-3xl lg:translate-x-10">
+              <div className="relative p-1 bg-white/10 border border-white/20 rounded-[60px] backdrop-blur-3xl">
                  <div className="bg-white dark:bg-zinc-950 rounded-[58px] overflow-hidden p-10">
                     <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest mb-10">Patient Dashboard 2.0</p>
                     <div className="space-y-6">
@@ -357,7 +357,7 @@ export default function LandingPage() {
       )}
 
       {/* Footer */}
-      <footer className="py-24 px-6 border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-black">
+      <footer className="py-24 px-8 md:px-16 border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-black">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-20">
           <div className="text-center md:text-left flex-1">
             <span className="text-2xl font-black tracking-tighter uppercase italic dark:text-white">NEOCARE.</span>

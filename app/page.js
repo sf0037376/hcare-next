@@ -388,8 +388,3 @@ export default function LandingPage() {
     </div>
   )
 }
-iv>
-      </footer>
-    </div>
-  )
-}

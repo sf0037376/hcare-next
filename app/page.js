@@ -17,11 +17,36 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
   
+  // Branding State
+  const [orgBranding, setOrgBranding] = useState(null)
+  const [brandingLoading, setBrandingLoading] = useState(true)
+  
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('login') === 'true') {
       setShowLogin(true)
     }
+
+    // Domain-based Branding Detection
+    async function checkDomainBranding() {
+      const hostname = window.location.hostname
+      if (hostname === "localhost" || hostname === "127.0.0.1") {
+        setBrandingLoading(false)
+        return
+      }
+      
+      try {
+        const data = await apiFetch(`/auth/orgs/by-domain?domain=${hostname}`)
+        if (data && data.id) {
+          setOrgBranding(data)
+        }
+      } catch (err) {
+        console.log("No custom branding for this domain.")
+      } finally {
+        setBrandingLoading(false)
+      }
+    }
+    checkDomainBranding()
   }, [])
 
   async function handleLogin(e) {
@@ -92,7 +117,15 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Navigation */}
+      {brandingLoading ? (
+        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : orgBranding ? (
+        <BrandedView org={orgBranding} showLogin={showLogin} setShowLogin={setShowLogin} handleLogin={handleLogin} loginLoading={loading} username={username} setUsername={setUsername} password={password} setPassword={setPassword} Toast={Toast} />
+      ) : (
+        <>
+          {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-3xl border-b border-zinc-100 dark:border-zinc-800 px-8 md:px-16 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -392,6 +425,107 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+        </>
+      )}
     </div>
+  )
+}
+
+function BrandedView({ org, showLogin, setShowLogin, handleLogin, loginLoading, username, setUsername, password, setPassword, Toast }) {
+  const primaryColor = org?.primary_color || "#2563eb"
+  const secondaryColor = org?.secondary_color || "#4f46e5"
+
+  return (
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-3xl border-b border-zinc-100 dark:border-zinc-800 px-8 md:px-16 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            {org.logo_url ? (
+               <img src={org.logo_url} alt={org.name} className="h-10 w-auto object-contain" />
+            ) : (
+               <span className="text-2xl" aria-hidden="true">🏥</span>
+            )}
+            <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">
+              {org.name}<span style={{ color: primaryColor }}>.</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setShowLogin(true)}
+              className="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all text-white"
+              style={{ backgroundColor: primaryColor }}
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <section className="pt-48 pb-32 px-8 md:px-16 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <div className="relative z-10">
+            <span className="inline-block px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full mb-8 border"
+                  style={{ backgroundColor: `${primaryColor}10`, color: primaryColor, borderColor: `${primaryColor}30` }}>
+              Official Healthcare Partner
+            </span>
+            <h1 className="text-7xl md:text-9xl font-black text-zinc-900 dark:text-white leading-[0.85] tracking-tighter mb-10 italic">
+              {org.name.split(' ')[0]} <br />
+              <span style={{ color: primaryColor }}>Care.</span>
+            </h1>
+            <p className="text-2xl text-zinc-500 dark:text-zinc-400 font-bold mb-12 leading-tight max-w-xl">
+              {org.description || "Providing premium medical attention and remote monitoring for your loved ones."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <Link href={`/register-patient?orgId=${org.id}`} 
+                    className="px-10 py-6 text-white rounded-[32px] font-black uppercase text-xs tracking-[0.1em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all text-center"
+                    style={{ backgroundColor: primaryColor }}>
+                Enroll New Patient
+              </Link>
+              <Link href="/contact" className="px-10 py-6 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-[32px] font-black uppercase text-xs tracking-[0.1em] hover:bg-zinc-200 transition-all text-center">
+                Contact Us
+              </Link>
+            </div>
+          </div>
+          <div className="relative">
+             <div className="aspect-[4/5] rounded-[100px] blur-[100px] absolute -inset-20 opacity-20"
+                  style={{ background: `linear-gradient(to top right, ${primaryColor}, ${secondaryColor})` }}></div>
+             {org.banner_url ? (
+                <img src={org.banner_url} alt="Hospital" className="relative w-full h-auto rounded-[80px] shadow-2xl" />
+             ) : (
+                <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200 rounded-[80px] p-12 shadow-2xl">
+                   <div className="h-48 flex items-center justify-center text-6xl">🏥</div>
+                </div>
+             )}
+          </div>
+        </div>
+      </section>
+
+      {showLogin && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-white/40 dark:bg-black/40 backdrop-blur-2xl" onClick={() => setShowLogin(false)}></div>
+          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[48px] p-10 shadow-2xl">
+            <button onClick={() => setShowLogin(false)} className="absolute top-8 right-8 text-zinc-400 text-2xl font-bold">&times;</button>
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-black uppercase tracking-tighter italic">Sign In</h2>
+              <p className="text-xs font-black text-zinc-500 mt-2">{org.name} Portal</p>
+            </div>
+            <form onSubmit={handleLogin} className="space-y-8">
+              <input className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 font-bold outline-none" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
+              <input type="password" className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 font-bold outline-none" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+              <button type="submit" disabled={loginLoading} className="w-full py-5 text-white rounded-3xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl transition-all" style={{ backgroundColor: primaryColor }}>
+                {loginLoading ? "Authenticating..." : "Enter Portal →"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <footer className="py-24 px-8 md:px-16 border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-black">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <span className="text-2xl font-black italic">{org.name}.</span>
+          <span className="text-[10px] font-black uppercase text-zinc-400">© 2026 {org.name}</span>
+        </div>
+      </footer>
+    </>
   )
 }

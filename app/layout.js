@@ -10,7 +10,10 @@ import BottomNav from '@/components/BottomNav'
 // It does NOT perform any redirects to avoid loops.
 export default function RootLayout({ children }) {
   const pathname = usePathname()
-  const showShell = !['/', '/login', '/contact', '/terms', '/privacy', '/register-patient'].includes(pathname)
+  
+  // Exclude landing pages, auth, and dynamic org pages from the shell
+  const isOrgRoute = /^\/\d+$/.test(pathname)
+  const showShell = !['/', '/login', '/contact', '/terms', '/privacy', '/register-patient'].includes(pathname) && !isOrgRoute
 
   return (
     <html lang="en">

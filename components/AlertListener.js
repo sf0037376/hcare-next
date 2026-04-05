@@ -77,7 +77,9 @@ export default function AlertListener() {
                                n.title.toLowerCase().includes('reminder') || 
                                n.title.toLowerCase().includes('abnormal')
 
-        const isUrgent = isHigh && isCriticalType && !n.isSilenced
+        const userRole = (localStorage.getItem("role") || "").toUpperCase()
+        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN'
+        const isUrgent = isHigh && isCriticalType && !n.isSilenced && !isAdmin
 
         if (isUrgent) {
           setHighPriorityQueue(prev => [...prev, n])

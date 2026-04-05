@@ -378,6 +378,8 @@ export default function PatientProfile() {
                   const endOfShift = new Date(startOfShift);
                   endOfShift.setDate(endOfShift.getDate() + 1);
 
+                  const fourHoursFromNow = new Date(now.getTime() + 4 * 60 * 60 * 1000);
+
                   // Helper to check if a date is within the current 6AM-6AM shift
                   const isInShift = (dateStr) => {
                     const d = new Date(dateStr);
@@ -391,9 +393,9 @@ export default function PatientProfile() {
                       ...item,
                       type: 'DONE',
                       time: new Date(item.recorded_at),
-                      label: 'medicine' in item ? `${item.medicine} - ${item.dosage || item.dose}` : `${item.type} Feed - ${item.quantity}ml`,
-                      icon: 'medicine' in item ? '💊' : '🍼',
-                      isMed: 'medicine' in item
+                      label: item.medicine ? `${item.medicine} - ${item.dosage}` : `${item.quantity}ml ${item.type || 'Feed'}`,
+                      icon: item.medicine ? '💊' : '🍼',
+                      isMed: !!item.medicine
                     }));
 
                   // 2. Process Medication Schedule (PENDING/OVERDUE)
@@ -427,7 +429,7 @@ export default function PatientProfile() {
                             pendingFeeds.push({
                                 type: isOverdue ? 'OVERDUE' : 'PENDING',
                                 icon: '🍼',
-                                label: 'Next Filtered Feed',
+                                label: 'Next Feed',
                                 time: nextFeedTime,
                                 id: 'next-feed',
                                 isMed: false,
@@ -435,7 +437,6 @@ export default function PatientProfile() {
                             });
                         }
                     } else {
-                        // If no feed in this shift yet, default to start of shift + interval
                         const firstFeedTime = new Date(startOfShift.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
                         if (isInShift(firstFeedTime)) {
                             pendingFeeds.push({
@@ -451,7 +452,11 @@ export default function PatientProfile() {
                     }
                   }
 
-                  // 4. Sort: OVERDUE > PENDING > DONE
+                  // 4. Clinical Task Sheet (Next 4 Hours Forecast)
+                  const taskSheet = [...pendingMeds, ...pendingFeeds]
+                    .filter(item => item.time <= fourHoursFromNow)
+                    .sort((a, b) => a.time - b.time);
+                  // 5. Timeline Assembly
                   const timeline = [...doneItems, ...pendingMeds, ...pendingFeeds].sort((a, b) => {
                     const priority = { 'OVERDUE': 1, 'PENDING': 2, 'DONE': 3 };
                     if (priority[a.type] !== priority[b.type]) return priority[a.type] - priority[b.type];
@@ -462,49 +467,113 @@ export default function PatientProfile() {
                     return <div className="py-10 text-center text-zinc-400 italic">No clinical activity recorded for this shift (6AM-6AM).</div>;
                   }
 
-                  return timeline.map((item, idx) => (
-                    <div key={idx} className="relative pl-14 group">
-                      <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center text-xl z-10 transition-transform group-hover:scale-110 shadow-sm ${item.type === 'DONE'
-                          ? (item.isMed ? 'bg-purple-100 dark:bg-purple-900/30' : 'bg-orange-100 dark:bg-orange-900/30')
-                          : (item.type === 'OVERDUE' ? 'bg-red-100 dark:bg-red-900/30 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-700')
-                        }`}>
-                        {item.icon}
-                      </div>
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="min-w-[200px]">
-                          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                            {item.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
-                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${item.type === 'DONE' ? 'bg-emerald-100 text-emerald-600' :
-                                item.type === 'OVERDUE' ? 'bg-red-500 text-white' : 'bg-blue-100 text-blue-600'
-                              }`}>
-                              {item.type}
-                            </span>
-                          </p>
-                          <div className={`inline-block px-4 py-2 rounded-2xl border ${item.type === 'OVERDUE' ? 'bg-red-50 border-red-200' : 'bg-zinc-50 dark:bg-zinc-800/40 border-zinc-100 dark:border-zinc-800'
+                  return (
+                    <div className="space-y-10">
+                      {timeline.map((item, idx) => (
+                        <div key={idx} className="relative pl-14 group">
+                          <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center text-xl z-10 transition-transform group-hover:scale-110 shadow-sm ${item.type === 'DONE'
+                              ? (item.isMed ? 'bg-purple-100 dark:bg-purple-900/30' : 'bg-orange-100 dark:bg-orange-900/30')
+                              : (item.type === 'OVERDUE' ? 'bg-red-100 dark:bg-red-900/30 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-700')
                             }`}>
-                            <span className={`font-bold ${item.type === 'OVERDUE' ? 'text-red-700' : 'text-zinc-900 dark:text-zinc-100'}`}>
-                              {item.label}
-                            </span>
+                            {item.icon}
+                          </div>
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="min-w-[200px]">
+                              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                                {item.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
+                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${item.type === 'DONE' ? 'bg-emerald-100 text-emerald-600' :
+                                    item.type === 'OVERDUE' ? 'bg-red-500 text-white' : 'bg-blue-100 text-blue-600'
+                                  }`}>
+                                  {item.type}
+                                </span>
+                              </p>
+                              <div className={`inline-block px-4 py-2 rounded-2xl border ${item.type === 'OVERDUE' ? 'bg-red-50 border-red-200' : 'bg-zinc-50 dark:bg-zinc-800/40 border-zinc-100 dark:border-zinc-800'
+                                }`}>
+                                <span className={`font-bold ${item.type === 'OVERDUE' ? 'text-red-700' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                                  {item.label}
+                                </span>
+                              </div>
+                            </div>
+
+                            {(item.type === 'OVERDUE' || item.type === 'PENDING') && (
+                              <button
+                                onClick={() => {
+                                  if (item.isMed) {
+                                    window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(item.medicine)}&dose=${encodeURIComponent(item.dosage)}&scheduleId=${item.id}`;
+                                  } else {
+                                    window.location.href = `/feeding?patient_id=${id}`;
+                                  }
+                                }}
+                                className={`${item.type === 'OVERDUE' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'} text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg`}
+                              >
+                                Mark {item.type === 'OVERDUE' ? 'Done' : 'Now'}
+                              </button>
+                            )}
                           </div>
                         </div>
+                      ))}
 
-                        {(item.type === 'OVERDUE' || item.type === 'PENDING') && (
-                          <button
-                            onClick={() => {
-                              if (item.isMed) {
-                                window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(item.medicine)}&dose=${encodeURIComponent(item.dosage)}&scheduleId=${item.id}`;
-                              } else {
-                                window.location.href = `/feeding?patient_id=${id}`;
-                              }
-                            }}
-                            className={`${item.type === 'OVERDUE' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'} text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg`}
-                          >
-                            Mark {item.type === 'OVERDUE' ? 'Done' : 'Now'}
-                          </button>
-                        )}
-                      </div>
+                      {/* Nurse Task Sheet Section (Next 4h) */}
+                      {(role === 'nurse' || role === 'staff' || role === 'doctor' || role === 'admin') && taskSheet.length > 0 && (
+                        <div className="mt-16 pt-16 border-t border-zinc-100 dark:border-zinc-800">
+                          <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
+                              Clinical Task Sheet <span className="bg-blue-600 text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-widest font-black">Next 4 Hours</span>
+                            </h3>
+                          </div>
+                          
+                          <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="bg-zinc-100 dark:bg-zinc-800/50">
+                                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Due Time</th>
+                                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Task</th>
+                                  <th className="px-6 py-5 text-right text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Action</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                {taskSheet.map((task, tidx) => {
+                                  const isVerySoon = task.time.getTime() < (now.getTime() + 30 * 60 * 1000);
+                                  return (
+                                    <tr key={tidx} className={`group transition-colors ${isVerySoon ? 'bg-red-50/30 dark:bg-red-500/5' : 'hover:bg-white dark:hover:bg-zinc-800/50'}`}>
+                                      <td className="px-6 py-5">
+                                        <div className="flex items-center gap-3">
+                                          <span className="text-xl">{task.icon}</span>
+                                          <div>
+                                            <p className={`text-sm font-black ${isVerySoon ? 'text-red-600 animate-pulse' : 'text-zinc-900 dark:text-white'}`}>
+                                              {task.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
+                                            </p>
+                                            {isVerySoon && <p className="text-[8px] font-black text-red-500 uppercase tracking-widest mt-0.5">Due Soon</p>}
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-5">
+                                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{task.label}</p>
+                                      </td>
+                                      <td className="px-6 py-5 text-right">
+                                        <button
+                                          onClick={() => {
+                                            if (task.isMed) {
+                                              window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(task.medicine)}&dose=${encodeURIComponent(task.dosage)}&scheduleId=${task.id}`;
+                                            } else {
+                                              window.location.href = `/feeding?patient_id=${id}`;
+                                            }
+                                          }}
+                                          className="text-[10px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all shadow-md active:scale-95"
+                                        >
+                                          Mark Now
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ));
+                  );
                 })()}
               </div>
             </div>

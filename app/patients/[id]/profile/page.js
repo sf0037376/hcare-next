@@ -88,22 +88,44 @@ export default function PatientProfile() {
     }
   }
 
+  async function deactivateMed(scheduleId) {
+    if (!confirm("Are you sure you want to deactivate this medication?")) return
+    try {
+      await apiFetch(`/medication/schedule/${scheduleId}`, { method: 'DELETE' })
+      show("Medication deactivated")
+      setMeds(meds.filter(m => m.id !== scheduleId))
+    } catch (err) {
+      show("Failed to deactivate medication")
+    }
+  }
+
   async function generateSummary() {
     setIsGeneratingSummary(true)
     try {
       const data = await apiFetch(`/reports/discharge-summary/${id}`)
       if (data.summary) {
-        // Create a simple text file for now, or display in a modal if available
-        const blob = new Blob([data.summary], { type: 'text/markdown' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `discharge-summary-${id}.md`
-        a.click()
-        show("Discharge summary generated")
+        const { default: jsPDF } = await import("jspdf")
+        const doc = new jsPDF()
+        
+        doc.setFontSize(22)
+        doc.setTextColor(40, 44, 52)
+        doc.text("Discharge Summary", 14, 22)
+        
+        doc.setFontSize(12)
+        doc.setTextColor(100)
+        doc.text(`Patient: ${patient.name} (#${patient.id})`, 14, 32)
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 38)
+        
+        doc.setFontSize(10)
+        doc.setTextColor(50)
+        const splitText = doc.splitTextToSize(data.summary, 180)
+        doc.text(splitText, 14, 50)
+        
+        doc.save(`Discharge_Summary_${patient.name}_${id}.pdf`)
+        show("Discharge summary generated as PDF")
       }
     } catch (err) {
-      show("Failed to generate summary")
+      show("Failed to generate PDF summary")
     } finally {
       setIsGeneratingSummary(false)
     }
@@ -529,12 +551,20 @@ export default function PatientProfile() {
                       <p className="text-xs text-zinc-400 font-bold mt-1 uppercase tracking-widest opacity-80">{med.dosage} • {med.times_per_day} times/day</p>
                     </div>
                     {role === 'doctor' && (
-                      <Link 
-                        href={`/medication/prescribe?patient_id=${id}&schedule_id=${med.id}`}
-                        className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-blue-400 transition-colors bg-zinc-900/50 px-2 py-1 rounded-lg border border-zinc-800"
-                      >
-                        Edit
-                      </Link>
+                      <div className="flex gap-2">
+                        <Link 
+                          href={`/medication/prescribe?patient_id=${id}&schedule_id=${med.id}`}
+                          className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-blue-400 transition-colors bg-zinc-900/50 px-2 py-1 rounded-lg border border-zinc-800"
+                        >
+                          Edit
+                        </Link>
+                        <button 
+                          onClick={() => deactivateMed(med.id)}
+                          className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors bg-red-900/10 px-2 py-1 rounded-lg border border-red-900/20"
+                        >
+                          Deactivate
+                        </button>
+                      </div>
                     )}
                   </div>
                 ))}

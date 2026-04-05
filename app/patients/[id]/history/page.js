@@ -13,6 +13,8 @@ export default function PatientHistory() {
   const [patient, setPatient] = useState(null)
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
 
   useEffect(() => {
     async function loadHistory() {
@@ -36,6 +38,85 @@ export default function PatientHistory() {
     loadHistory()
   }, [id, show])
 
+  const filteredHistory = history.filter(item => {
+    const itemDate = new Date(item.time).toISOString().split('T')[0]
+    if (startDate && itemDate < startDate) return false
+    if (endDate && itemDate > endDate) return false
+    return true
+  })
+
+  const exportPDF = async () => {
+    try {
+      const { default: jsPDF } = await import("jspdf")
+      const { default: autoTable } = await import("jspdf-autotable")
+      
+      const doc = new jsPDF()
+      
+      // Header
+      doc.setFontSize(22)
+      doc.setTextColor(40, 44, 52)
+      doc.text("NeoCare Clinical History Report", 14, 22)
+      
+      doc.setFontSize(12)
+      doc.setTextColor(100)
+      doc.text(`Patient: ${patient?.name || id}`, 14, 32)
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 38)
+      if (startDate || endDate) {
+        doc.text(`Range: ${startDate || 'Start'} to ${endDate || 'End'}`, 14, 44)
+      }
+
+      const tableData = filteredHistory.map(item => [
+        new Date(item.time).toLocaleString(),
+        item.type,
+        item.summary,
+        item.notes || "-",
+        item.recorder || "-"
+      ])
+
+      autoTable(doc, {
+        startY: 50,
+        head: [['Time', 'Type', 'Summary', 'Notes', 'Staff']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillStyle: [59, 130, 246] }, // NeoCare Blue
+        styles: { fontSize: 9 }
+      })
+
+      doc.save(`NeoCare_History_${patient?.name || id}_${new Date().toISOString().split('T')[0]}.pdf`)
+      show("PDF report generated successfully", { variant: "success" })
+    } catch (err) {
+      console.error("PDF generation failed:", err)
+      show("Failed to generate PDF. Ensure jspdf is installed.", { variant: "error" })
+    }
+  }
+
+  const exportCSV = () => {
+    try {
+      const headers = ["Time", "Type", "Summary", "Notes", "Staff"]
+      const rows = filteredHistory.map(item => [
+        `"${new Date(item.time).toLocaleString()}"`,
+        `"${item.type}"`,
+        `"${item.summary}"`,
+        `"${item.notes || ''}"`,
+        `"${item.recorder || ''}"`
+      ])
+      
+      const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `NeoCare_History_${patient?.name || id}.csv`)
+      link.style.visibility = "hidden"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      show("CSV export downloaded")
+    } catch (err) {
+      show("CSV export failed")
+    }
+  }
+
   return (
     <ProtectedRoute roles={["admin", "doctor", "nurse", "patient"]}>
       <div className="animate-in fade-in duration-500 pb-safe max-w-4xl mx-auto">
@@ -48,13 +129,58 @@ export default function PatientHistory() {
           <div className="mt-4 flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Patient Clinical History</h2>
-              <p className="text-zinc-500 dark:text-zinc-400 mt-1">Full clinical timeline for {patient?.name || `Patient #${id}`}</p>
             </div>
           </div>
         </div>
 
+        <div className="mb-8 bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 ml-1">From Date</label>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => setStartDate(e.target.value)}
+                className="block w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition-all px-4 py-2"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 ml-1">To Date</label>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => setEndDate(e.target.value)}
+                className="block w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition-all px-4 py-2"
+              />
+            </div>
+            {(startDate || endDate) && (
+              <button 
+                onClick={() => { setStartDate(""); setEndDate(""); }}
+                className="mt-6 text-zinc-400 hover:text-zinc-600 text-xs font-bold uppercase tracking-wider underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={exportCSV}
+              className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-xl text-sm font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all flex items-center gap-2"
+            >
+              📊 Export CSV
+            </button>
+            <button 
+              onClick={exportPDF}
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 transition-all flex items-center gap-2"
+            >
+              📄 Download PDF
+            </button>
+          </div>
+        </div>
+
         <div className="space-y-6 relative before:absolute before:left-8 before:top-2 before:bottom-2 before:w-px before:bg-zinc-200 dark:before:bg-zinc-800">
-          {history.map(item => (
+          {filteredHistory.map(item => (
             <div key={item.id} className="relative pl-16 group">
               {/* Dot */}
               <div className={`absolute left-[30px] top-4 w-4 h-4 rounded-full border-4 border-white dark:border-zinc-900 group-hover:scale-125 transition-transform z-10 ${

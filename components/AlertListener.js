@@ -17,6 +17,13 @@ export default function AlertListener() {
 
   useEffect(() => {
     setIsMounted(true)
+    
+    // Restore alarm state from session
+    const savedState = sessionStorage.getItem("hospital_alarms_active")
+    if (savedState === "true") {
+      setIsAudioEnabled(true)
+    }
+
     // Initialize Audio
     if (typeof window !== "undefined") {
       audioRef.current = new Audio("/sounds/alert.mp3")
@@ -109,7 +116,10 @@ export default function AlertListener() {
       */}
       {!isAudioEnabled && typeof window !== "undefined" && localStorage.getItem("token") && (
         <button 
-          onClick={() => setIsAudioEnabled(true)}
+          onClick={() => {
+            setIsAudioEnabled(true)
+            sessionStorage.setItem("hospital_alarms_active", "true")
+          }}
           className="fixed bottom-24 right-6 z-[100] bg-red-600 text-white px-5 py-4 rounded-full shadow-2xl flex items-center gap-2 font-black text-xs uppercase tracking-widest animate-bounce hover:bg-red-700 transition-colors"
         >
           <Bell className="w-5 h-5 fill-current" />

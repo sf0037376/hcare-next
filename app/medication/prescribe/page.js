@@ -125,7 +125,7 @@ function PrescribeClient() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.patient_id) return show("Select a patient")
-    if (!form.medicine) return show("Select or add a medicine")
+    if (!form.medicine && selectedLabs.length === 0) return show("Enter a medicine or select at least one lab test")
 
     setSubmitting(true)
 
@@ -213,12 +213,11 @@ function PrescribeClient() {
                     <div className="relative">
                       <input
                         className="form-input"
-                        placeholder="Type to search medicine..."
+                        placeholder="Type to search medicine (optional if ordering labs)..."
                         value={medicineQuery || form.medicine}
                         onFocus={() => setShowMedDropdown(true)}
                         onChange={e => { setMedicineQuery(e.target.value); setForm({...form, medicine: e.target.value}); setShowMedDropdown(true) }}
                         onBlur={() => setTimeout(() => setShowMedDropdown(false), 150)}
-                        required
                       />
                       {showMedDropdown && filteredMedicines.length > 0 && (
                         <div className="absolute z-20 top-full mt-1 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
@@ -243,7 +242,6 @@ function PrescribeClient() {
                       placeholder="e.g. 1.5ml or 250mg"
                       value={form.dosage}
                       onChange={e => setForm({...form, dosage: e.target.value})}
-                      required
                     />
                   </div>
                   <div>

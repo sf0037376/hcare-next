@@ -365,36 +365,104 @@ export default function PatientProfile() {
               <div className="space-y-8 relative">
                 <div className="absolute left-6 top-2 bottom-2 w-0.5 bg-zinc-100 dark:bg-zinc-800"></div>
                 
-                {/* Unified List logic */}
-                {[...logs, ...feeds]
-                  .sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at))
-                  .slice(0, 10)
-                  .map((log, idx) => {
-                    const isMed = 'medicine' in log;
-                    return (
-                      <div key={idx} className="relative pl-14 group">
-                        <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center text-xl z-10 transition-transform group-hover:scale-110 shadow-sm ${
-                          isMed ? 'bg-purple-100 dark:bg-purple-900/30 font-bold' : 'bg-orange-100 dark:bg-orange-900/30'
-                        }`}>
-                          {isMed ? '💊' : '🍼'}
-                        </div>
+                {(() => {
+                  const now = new Date();
+                  const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                  
+                  // 1. Process Logs (DONE)
+                  const doneItems = [...logs, ...feeds]
+                    .filter(item => new Date(item.recorded_at) > last24h)
+                    .map(item => ({
+                      ...item,
+                      type: 'DONE',
+                      time: new Date(item.recorded_at),
+                      label: 'medicine' in item ? `${item.medicine} - ${item.dosage || item.dose}` : `${item.type} Feed - ${item.quantity}ml`,
+                      icon: 'medicine' in item ? '💊' : '🍼',
+                      isMed: 'medicine' in item
+                    }));
+
+                  // 2. Process Medication Schedule (PENDING/OVERDUE)
+                  const pendingItems = meds
+                    .filter(m => m.next_due && new Date(m.next_due) > last24h)
+                    .map(m => {
+                      const due = new Date(m.next_due);
+                      const isOverdue = due < now;
+                      return {
+                        id: m.id,
+                        type: isOverdue ? 'OVERDUE' : 'PENDING',
+                        time: due,
+                        label: `${m.medicine} - ${m.dosage}`,
+                        icon: '💊',
+                        isMed: true,
+                        medicine: m.medicine,
+                        dosage: m.dosage
+                      };
+                    });
+
+                  const timeline = [...doneItems, ...pendingItems].sort((a, b) => b.time - a.time);
+
+                  if (timeline.length === 0) {
+                    return <div className="py-10 text-center text-zinc-400 italic">No clinical activity in the last 24 hours.</div>;
+                  }
+
+                  return timeline.map((item, idx) => (
+                    <div key={idx} className="relative pl-14 group">
+                      <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center text-xl z-10 transition-transform group-hover:scale-110 shadow-sm ${
+                        item.type === 'DONE' 
+                          ? (item.isMed ? 'bg-purple-100 dark:bg-purple-900/30' : 'bg-orange-100 dark:bg-orange-900/30')
+                          : (item.type === 'OVERDUE' ? 'bg-red-100 dark:bg-red-900/30 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-800')
+                      }`}>
+                        {item.icon}
+                      </div>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                          <p className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-1.5">
-                           {new Date(log.recorded_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
+                          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                             {item.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
+                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${
+                               item.type === 'DONE' ? 'bg-emerald-100 text-emerald-600' : 
+                               item.type === 'OVERDUE' ? 'bg-red-500 text-white' : 'bg-zinc-200 text-zinc-600'
+                             }`}>
+                               {item.type}
+                             </span>
                           </p>
-                          <div className="inline-block px-4 py-2 bg-zinc-50 dark:bg-zinc-800/40 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                             <span className="font-bold text-zinc-900 dark:text-zinc-100">
-                               {isMed ? `${log.medicine} - ${log.dosage || log.dose}` : `${log.type} Feed - ${log.quantity}ml`}
+                          <div className={`inline-block px-4 py-2 rounded-2xl border ${
+                            item.type === 'OVERDUE' ? 'bg-red-50 border-red-200' : 'bg-zinc-50 dark:bg-zinc-800/40 border-zinc-100 dark:border-zinc-800'
+                          }`}>
+                             <span className={`font-bold ${item.type === 'OVERDUE' ? 'text-red-700' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                               {item.label}
                              </span>
                           </div>
                         </div>
-                      </div>
-                    )
-                  })}
 
-                  {logs.length === 0 && feeds.length === 0 && (
-                    <div className="py-10 text-center text-zinc-400 italic">No clinical logs in the last 24 hours.</div>
-                  )}
+                        {item.type === 'OVERDUE' && (
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await apiFetch("/medication/medication", {
+                                  method: "POST",
+                                  body: {
+                                    patient_id: id,
+                                    scheduleId: item.id,
+                                    medicine: item.medicine,
+                                    dose: item.dosage,
+                                    recorded_at: new Date().toISOString()
+                                  }
+                                });
+                                show("✅ Medication logged successfully");
+                                window.location.reload();
+                              } catch (err) {
+                                show(`❌ Error: ${err.message}`);
+                              }
+                            }}
+                            className="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-500/20"
+                          >
+                            Mark as Done
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
 

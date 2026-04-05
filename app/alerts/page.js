@@ -35,6 +35,63 @@ export default function AlertsPage() {
     }
   }
 
+  async function handleAction(alert) {
+    if (!alert.metadata) return;
+    
+    let metadata = alert.metadata;
+    if (typeof metadata === 'string') {
+      try { metadata = JSON.parse(metadata); } catch(e) { console.error("Metadata parse error", e); }
+    }
+
+    try {
+      if (metadata.schedule_id) {
+        // Medication Action
+        await apiFetch("/medication/medication", {
+          method: "POST",
+          body: {
+            patient_id: metadata.patient_id,
+            scheduleId: metadata.schedule_id,
+            medicine: metadata.medicine,
+            dose: metadata.dosage,
+            recorded_at: new Date().toISOString()
+          }
+        });
+        show("✅ Medication logged successfully");
+      } else if (metadata.patient_id && alert.title.includes("Feeding")) {
+        // Feeding Action
+        await apiFetch("/feeding/feeding", {
+          method: "POST",
+          body: {
+            patient_id: metadata.patient_id,
+            type: metadata.type || 'Mixed',
+            quantity: metadata.quantity || 60,
+            recorded_at: new Date().toISOString()
+          }
+        });
+        show("✅ Feeding logged successfully");
+      }
+      
+      // Auto-dismiss/read after action
+      await markAsRead(alert.id);
+      fetchAlerts(); // Refresh list
+    } catch (err) {
+      show(`❌ Failed: ${err.message}`);
+    }
+  }
+
+  const formatTimeIST = (dateStr) => {
+    return new Date(dateStr).toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    });
+  }
+
   return (
     <ProtectedRoute>
       <div className="animate-in fade-in duration-500 max-w-4xl mx-auto pb-20 px-4">
@@ -61,48 +118,61 @@ export default function AlertsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {alerts.map(alert => (
-              <div 
-                key={alert.id} 
-                className={`bg-white dark:bg-zinc-900 border ${alert.status === 'unread' ? 'border-blue-500 shadow-lg shadow-blue-500/5' : 'border-zinc-200 dark:border-zinc-800'} p-6 rounded-[32px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-all group hover:border-zinc-400`}
-              >
-                <div className="flex gap-5">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 ${alert.status === 'unread' ? 'bg-blue-600 text-white animate-pulse' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'}`}>
-                    {alert.title.includes("Charge") ? "🧾" : alert.title.includes("Med") ? "💊" : "🔔"}
+            {alerts.map(alert => {
+              const hasMetadata = !!alert.metadata;
+              return (
+                <div 
+                  key={alert.id} 
+                  className={`bg-white dark:bg-zinc-900 border ${alert.status === 'unread' ? 'border-blue-500 shadow-lg shadow-blue-500/5' : 'border-zinc-200 dark:border-zinc-800'} p-6 rounded-[32px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-all group hover:border-zinc-400`}
+                >
+                  <div className="flex gap-5">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 ${alert.status === 'unread' ? 'bg-blue-600 text-white animate-pulse' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'}`}>
+                      {alert.title.includes("Charge") ? "🧾" : alert.title.includes("Med") ? "💊" : alert.title.includes("Feed") ? "🍼" : "🔔"}
+                    </div>
+                    <div>
+                      <h4 className={`text-lg font-black ${alert.status === 'unread' ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                        {alert.title}
+                      </h4>
+                      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mt-1 max-w-xl">
+                        {alert.message}
+                      </p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mt-2">
+                        {formatTimeIST(alert.created_at)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className={`text-lg font-black ${alert.status === 'unread' ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>
-                      {alert.title}
-                    </h4>
-                    <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mt-1 max-w-xl">
-                      {alert.message}
-                    </p>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mt-2">
-                      {new Date(alert.created_at).toLocaleString()}
-                    </p>
+                  
+                  <div className="flex items-center gap-3 w-full md:w-auto shrink-0 mt-4 md:mt-0">
+                    {/* Actionable buttons based on metadata */}
+                    {hasMetadata && alert.status === 'unread' && (
+                      <button 
+                        onClick={() => handleAction(alert)}
+                        className="flex-1 md:flex-none px-6 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+                      >
+                        {alert.title.includes("Med") ? "Mark Taken" : "Log Feed"}
+                      </button>
+                    )}
+
+                    {alert.title.includes("Charge") && (
+                      <Link 
+                        href={localStorage.getItem("role") === 'patient' ? "/patients/financials" : "/billing"}
+                        className="flex-1 md:flex-none px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:opacity-90 transition-all text-center"
+                      >
+                        Review
+                      </Link>
+                    )}
+                    {alert.status === 'unread' && (
+                      <button 
+                        onClick={() => markAsRead(alert.id)}
+                        className="flex-1 md:flex-none px-6 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-zinc-200 transition-all"
+                      >
+                        Dismiss
+                      </button>
+                    )}
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-3 w-full md:w-auto shrink-0 mt-4 md:mt-0">
-                  {alert.title.includes("Charge") && (
-                    <Link 
-                      href={localStorage.getItem("role") === 'patient' ? "/patients/financials" : "/billing"}
-                      className="flex-1 md:flex-none px-6 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all text-center"
-                    >
-                      Review
-                    </Link>
-                  )}
-                  {alert.status === 'unread' && (
-                    <button 
-                      onClick={() => markAsRead(alert.id)}
-                      className="flex-1 md:flex-none px-6 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-zinc-200 transition-all"
-                    >
-                      Dismiss
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {alerts.length === 0 && (
               <div className="py-32 border-4 border-dashed border-zinc-100 dark:border-zinc-800 rounded-[64px] flex flex-col items-center justify-center opacity-40">

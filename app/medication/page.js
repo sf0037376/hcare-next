@@ -12,15 +12,21 @@ function MedicationClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialPatientId = searchParams.get("patient_id") || ""
+  const initialMedicine = searchParams.get("medicine") || ""
+  const initialDose = searchParams.get("dose") || ""
+  const initialScheduleId = searchParams.get("scheduleId") || ""
+
   const [role, setRole] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   const [patients, setPatients] = useState([])
   const [patientMeds, setPatientMeds] = useState([])
   const [form, setForm] = useState({
     patient_id: initialPatientId,
-    medicine: "",
-    dose: "",
-    recorded_at: new Date().toISOString().slice(0, 16)
+    medicine: initialMedicine,
+    dose: initialDose,
+    scheduleId: initialScheduleId,
+    recorded_at: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour12: false }).replace(',', '').slice(0, 16)
   })
 
   useEffect(() => {
@@ -74,6 +80,7 @@ function MedicationClient() {
       return
     }
 
+    setSubmitting(true)
     try {
       await apiFetch("/medication/medication", {
         method: "POST",
@@ -85,10 +92,11 @@ function MedicationClient() {
           recorded_at: form.recorded_at
         }),
       })
-      show("Medication administration logged")
+      show("✅ Medication administration logged successfully")
       setTimeout(() => router.back(), 1500)
     } catch (err) {
-      show("Failed to log medication")
+      show("❌ Failed to log medication")
+      setSubmitting(false)
     }
   }
 
@@ -199,9 +207,10 @@ function MedicationClient() {
             <div className="pt-10 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
               <button 
                 type="submit"
-                className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black uppercase text-xs tracking-[0.25em] rounded-2xl shadow-xl shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-95"
+                disabled={submitting}
+                className={`w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black uppercase text-xs tracking-[0.25em] rounded-2xl shadow-xl shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-95 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Execute Log →
+                {submitting ? 'Logging...' : 'Execute Log →'}
               </button>
             </div>
           </form>

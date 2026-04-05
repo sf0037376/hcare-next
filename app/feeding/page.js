@@ -13,6 +13,7 @@ function FeedingClient() {
   const searchParams = useSearchParams()
   const initialPatientId = searchParams.get("patient_id") || ""
   const [role, setRole] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   const [patients, setPatients] = useState([])
   const [form, setForm] = useState({
@@ -87,15 +88,17 @@ function FeedingClient() {
         return
     }
 
+    setSubmitting(true)
     try {
       await apiFetch("/feeding/feeding", {
         method: "POST",
         body: JSON.stringify(form),
       })
-      show("Feeding record saved")
+      show("✅ Feeding record saved successfully")
       setTimeout(() => router.back(), 1500)
     } catch (err) {
-      show("Failed to save feeding record")
+      show("❌ Failed to save feeding record")
+      setSubmitting(false)
     }
   }
 
@@ -271,9 +274,10 @@ function FeedingClient() {
             <div className="pt-10 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
               <button 
                 type="submit"
-                className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black uppercase text-xs tracking-[0.25em] rounded-2xl shadow-xl shadow-orange-500/20 transition-all hover:scale-[1.02] active:scale-95"
+                disabled={submitting}
+                className={`w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black uppercase text-xs tracking-[0.25em] rounded-2xl shadow-xl shadow-orange-500/20 transition-all hover:scale-[1.02] active:scale-95 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Commit Record →
+                {submitting ? 'Committing...' : 'Commit Record →'}
               </button>
             </div>
           </form>

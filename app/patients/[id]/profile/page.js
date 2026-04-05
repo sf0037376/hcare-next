@@ -367,11 +367,12 @@ export default function PatientProfile() {
                 
                 {(() => {
                   const now = new Date();
-                  const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                  const startOfToday = new Date(now);
+                  startOfToday.setHours(0, 0, 0, 0); // Local time start of day
                   
                   // 1. Process Logs (DONE)
                   const doneItems = [...logs, ...feeds]
-                    .filter(item => new Date(item.recorded_at) > last24h)
+                    .filter(item => new Date(item.recorded_at) >= startOfToday)
                     .map(item => ({
                       ...item,
                       type: 'DONE',
@@ -383,7 +384,7 @@ export default function PatientProfile() {
 
                   // 2. Process Medication Schedule (PENDING/OVERDUE)
                   const pendingMeds = meds
-                    .filter(m => m.next_due && new Date(m.next_due) > last24h)
+                    .filter(m => m.next_due && new Date(m.next_due) >= startOfToday)
                     .map(m => {
                       const due = new Date(m.next_due);
                       const isOverdue = due.getTime() < (now.getTime() - 1000 * 60 * 5); // 5 min grace
@@ -402,10 +403,10 @@ export default function PatientProfile() {
                   // 3. Process Feeding Schedule (Calculate Next Feed)
                   let pendingFeeds = [];
                   if (patient && patient.feeding_interval_hours) {
-                    const lastFeed = feeds.length > 0 ? new Date(feeds[0].recorded_at) : last24h;
+                    const lastFeed = feeds.length > 0 ? new Date(feeds[0].recorded_at) : startOfToday;
                     const nextFeedTime = new Date(lastFeed.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
                     
-                    if (nextFeedTime > last24h) {
+                    if (nextFeedTime >= startOfToday) {
                       const isOverdue = nextFeedTime.getTime() < (now.getTime() - 1000 * 60 * 5);
                       pendingFeeds.push({
                         type: isOverdue ? 'OVERDUE' : 'PENDING',
@@ -426,7 +427,7 @@ export default function PatientProfile() {
                   });
 
                   if (timeline.length === 0) {
-                    return <div className="py-10 text-center text-zinc-400 italic">No clinical activity in the last 24 hours.</div>;
+                    return <div className="py-10 text-center text-zinc-400 italic">No clinical activity recorded for today.</div>;
                   }
 
                   return timeline.map((item, idx) => (
@@ -460,34 +461,11 @@ export default function PatientProfile() {
 
                         {(item.type === 'OVERDUE' || item.type === 'PENDING') && (
                           <button 
-                            onClick={async () => {
-                              try {
-                                if (item.isMed) {
-                                  await apiFetch("/medication/medication", {
-                                    method: "POST",
-                                    body: {
-                                      patient_id: id,
-                                      scheduleId: item.id,
-                                      medicine: item.medicine,
-                                      dose: item.dosage,
-                                      recorded_at: new Date().toISOString()
-                                    }
-                                  });
-                                } else {
-                                  await apiFetch("/feeding/feeding", {
-                                    method: "POST",
-                                    body: {
-                                      patient_id: id,
-                                      type: 'Mixed',
-                                      quantity: 60,
-                                      recorded_at: new Date().toISOString()
-                                    }
-                                  });
-                                }
-                                show("✅ Action logged successfully");
-                                window.location.reload();
-                              } catch (err) {
-                                show(`❌ Error: ${err.message}`);
+                            onClick={() => {
+                              if (item.isMed) {
+                                window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(item.medicine)}&dose=${encodeURIComponent(item.dosage)}&scheduleId=${item.id}`;
+                              } else {
+                                window.location.href = `/feeding?patient_id=${id}`;
                               }
                             }}
                             className={`${item.type === 'OVERDUE' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'} text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg`}

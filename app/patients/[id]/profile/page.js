@@ -367,12 +367,26 @@ export default function PatientProfile() {
 
                 {(() => {
                   const now = new Date();
-                  const startOfToday = new Date(now);
-                  startOfToday.setHours(0, 0, 0, 0); // Local time start of day
+                  
+                  // Clinical Day Rule: 6:00 AM to 6:00 AM
+                  const startOfShift = new Date(now);
+                  if (now.getHours() < 6) {
+                    startOfShift.setDate(startOfShift.getDate() - 1);
+                  }
+                  startOfShift.setHours(6, 0, 0, 0);
+                  
+                  const endOfShift = new Date(startOfShift);
+                  endOfShift.setDate(endOfShift.getDate() + 1);
+
+                  // Helper to check if a date is within the current 6AM-6AM shift
+                  const isInShift = (dateStr) => {
+                    const d = new Date(dateStr);
+                    return d >= startOfShift && d < endOfShift;
+                  };
 
                   // 1. Process Logs (DONE)
                   const doneItems = [...logs, ...feeds]
-                    .filter(item => new Date(item.recorded_at) >= startOfToday)
+                    .filter(item => isInShift(item.recorded_at))
                     .map(item => ({
                       ...item,
                       type: 'DONE',
@@ -384,7 +398,7 @@ export default function PatientProfile() {
 
                   // 2. Process Medication Schedule (PENDING/OVERDUE)
                   const pendingMeds = meds
-                    .filter(m => m.next_due && new Date(m.next_due) >= startOfToday)
+                    .filter(m => m.next_due && isInShift(m.next_due))
                     .map(m => {
                       const due = new Date(m.next_due);
                       const isOverdue = due.getTime() < (now.getTime() - 1000 * 60 * 5); // 5 min grace
@@ -403,19 +417,37 @@ export default function PatientProfile() {
                   // 3. Process Feeding Schedule (Calculate Next Feed)
                   let pendingFeeds = [];
                   if (patient && patient.feeding_interval_hours) {
-                    const lastFeed = feeds.length > 0 ? new Date(feeds[0].recorded_at) : startOfToday;
-                    const nextFeedTime = new Date(lastFeed.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
-
-                    if (nextFeedTime >= startOfToday) {
-                      const isOverdue = nextFeedTime.getTime() < (now.getTime() - 1000 * 60 * 5);
-                      pendingFeeds.push({
-                        type: isOverdue ? 'OVERDUE' : 'PENDING',
-                        time: nextFeedTime,
-                        label: `Next Filtered Feed`,
-                        icon: '🍼',
-                        isMed: false,
-                        isFeed: true
-                      });
+                    const shiftFeeds = feeds.filter(f => isInShift(f.recorded_at));
+                    const lastFeed = shiftFeeds.length > 0 ? new Date(shiftFeeds[0].recorded_at) : null;
+                    
+                    if (lastFeed) {
+                        const nextFeedTime = new Date(lastFeed.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
+                        if (isInShift(nextFeedTime)) {
+                            const isOverdue = nextFeedTime.getTime() < (now.getTime() - 1000 * 60 * 5);
+                            pendingFeeds.push({
+                                type: isOverdue ? 'OVERDUE' : 'PENDING',
+                                icon: '🍼',
+                                label: 'Next Filtered Feed',
+                                time: nextFeedTime,
+                                id: 'next-feed',
+                                isMed: false,
+                                isFeed: true
+                            });
+                        }
+                    } else {
+                        // If no feed in this shift yet, default to start of shift + interval
+                        const firstFeedTime = new Date(startOfShift.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
+                        if (isInShift(firstFeedTime)) {
+                            pendingFeeds.push({
+                                type: 'PENDING',
+                                icon: '🍼',
+                                label: 'First Shift Feed',
+                                time: firstFeedTime,
+                                id: 'first-feed',
+                                isMed: false,
+                                isFeed: true
+                            });
+                        }
                     }
                   }
 
@@ -427,7 +459,7 @@ export default function PatientProfile() {
                   });
 
                   if (timeline.length === 0) {
-                    return <div className="py-10 text-center text-zinc-400 italic">No clinical activity recorded for today.</div>;
+                    return <div className="py-10 text-center text-zinc-400 italic">No clinical activity recorded for this shift (6AM-6AM).</div>;
                   }
 
                   return timeline.map((item, idx) => (

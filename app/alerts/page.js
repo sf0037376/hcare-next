@@ -13,7 +13,17 @@ export default function AlertsPage() {
 
   useEffect(() => {
     fetchAlerts()
+    markAllRead()
   }, [])
+
+  async function markAllRead() {
+    try {
+      await apiFetch("/notifications/all/read", { method: "PUT" })
+      window.dispatchEvent(new Event("refresh-notifications"))
+    } catch (err) {
+      console.error("Failed to clear notifications", err)
+    }
+  }
 
   async function fetchAlerts() {
     try {

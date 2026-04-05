@@ -90,9 +90,15 @@ function FeedingClient() {
 
     setSubmitting(true)
     try {
+      const payload = {
+        ...form,
+        recorded_at: new Date(form.recorded_at).toISOString(),
+        start_time: form.start_time ? new Date(form.start_time).toISOString() : "",
+        end_time: form.end_time ? new Date(form.end_time).toISOString() : ""
+      }
       await apiFetch("/feeding/feeding", {
         method: "POST",
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       })
       show("✅ Feeding record saved successfully")
       setTimeout(() => router.back(), 1500)

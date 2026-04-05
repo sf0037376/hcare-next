@@ -89,7 +89,7 @@ function MedicationClient() {
           scheduleId: form.scheduleId || null,
           medicine: form.medicine,
           dose: form.dose,
-          recorded_at: form.recorded_at
+          recorded_at: new Date(form.recorded_at).toISOString()
         }),
       })
       show("✅ Medication administration logged successfully")

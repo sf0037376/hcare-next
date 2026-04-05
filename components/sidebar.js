@@ -33,9 +33,15 @@ export default function Sidebar() {
     }
 
     // Fetch unread alerts for all roles
-    apiFetch("/notifications/unread-count").then(data => {
-      setUnreadAlerts(data.count || 0)
-    }).catch(() => {})
+    const fetchUnread = () => {
+      apiFetch("/notifications/unread-count").then(data => {
+        setUnreadAlerts(data.count || 0)
+      }).catch(() => {})
+    }
+    
+    fetchUnread()
+    window.addEventListener('refresh-notifications', fetchUnread)
+    return () => window.removeEventListener('refresh-notifications', fetchUnread)
   }, [])
 
   const getDashboardHref = () => {

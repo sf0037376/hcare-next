@@ -21,6 +21,7 @@ export default function PatientProfile() {
   const [role, setRole] = useState('')
   const [pendingCount, setPendingCount] = useState(0)
   const [showPhone, setShowPhone] = useState(false)
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
 
   useEffect(() => {
     setRole((localStorage.getItem('role') || '').toLowerCase())
@@ -69,6 +70,42 @@ export default function PatientProfile() {
       // }
     } catch (err) {
       show("Failed to accept charge")
+    }
+  }
+
+  async function downloadHistory() {
+    try {
+      const data = await apiFetch(`/reports/patient-history/${id}`)
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `patient-history-${id}.json`
+      a.click()
+      show("History downloaded as JSON")
+    } catch (err) {
+      show("Failed to download history")
+    }
+  }
+
+  async function generateSummary() {
+    setIsGeneratingSummary(true)
+    try {
+      const data = await apiFetch(`/reports/discharge-summary/${id}`)
+      if (data.summary) {
+        // Create a simple text file for now, or display in a modal if available
+        const blob = new Blob([data.summary], { type: 'text/markdown' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `discharge-summary-${id}.md`
+        a.click()
+        show("Discharge summary generated")
+      }
+    } catch (err) {
+      show("Failed to generate summary")
+    } finally {
+      setIsGeneratingSummary(false)
     }
   }
 
@@ -233,6 +270,19 @@ export default function PatientProfile() {
                       Approve Discharge
                     </button>
                   )}
+                  <button 
+                    onClick={generateSummary}
+                    disabled={isGeneratingSummary}
+                    className={`bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-transform flex items-center gap-2 ${isGeneratingSummary ? 'opacity-50' : ''}`}
+                  >
+                    <span>📄</span> {isGeneratingSummary ? 'Generating...' : 'Discharge Summary'}
+                  </button>
+                  <button 
+                    onClick={downloadHistory}
+                    className="bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-md hover:scale-105 transition-transform flex items-center gap-2"
+                  >
+                    <span>⬇️</span> Download History
+                  </button>
                 </div>
               )}
               {(role === 'nurse' || role === 'staff') && (patient.discharge_status === 'NONE' || !patient.discharge_status) && (

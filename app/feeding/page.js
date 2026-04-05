@@ -185,9 +185,20 @@ function FeedingClient() {
                         className="w-full px-4 py-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800 font-bold text-sm"
                         value={item.type}
                         onChange={(e) => updateItem(idx, "type", e.target.value)}
-                        placeholder="e.g. EBM, Formula, Dialysate..."
+                        placeholder="e.g. EBM, Formula, HMS..."
+                        list="feed-suggestions"
                         required
                       />
+                      <datalist id="feed-suggestions">
+                        <option value="EBM (Express Breast Milk)" />
+                        <option value="Formula" />
+                        <option value="HMS (Human Milk Supplement)" />
+                        <option value="Donor Milk" />
+                        <option value="Fortified EBM" />
+                        <option value="Dialysate" />
+                        <option value="Normal Saline" />
+                        <option value="Dextrose 10%" />
+                      </datalist>
                     </div>
                     <div className="w-full sm:w-32 space-y-2">
                       <label className="text-[9px] font-bold uppercase text-zinc-400">Qty (ml)</label>

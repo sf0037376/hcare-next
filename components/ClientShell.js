@@ -1,0 +1,39 @@
+"use client"
+
+import { usePathname } from "next/navigation"
+import Sidebar from "./sidebar"
+import Topbar from "./topbar"
+import BottomNav from "./BottomNav"
+import AlertListener from "./AlertListener"
+
+export default function ClientShell({ children }) {
+  const pathname = usePathname()
+  
+  // Exclude landing pages, auth, and dynamic org pages from the clinical shell
+  const isOrgRoute = /^\/\d+$/.test(pathname)
+  const showShell = !['/', '/login', '/contact', '/terms', '/privacy', '/register-patient'].includes(pathname) && !isOrgRoute
+
+  return (
+    <>
+      {showShell ? (
+        <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-black font-sans antialiased text-zinc-900 dark:text-zinc-50">
+          <AlertListener />
+          <Sidebar />
+          <div className="flex-1 flex flex-col md:ml-64 relative w-full h-full overflow-hidden">
+            <Topbar />
+            <main id="main-content" className="flex-1 overflow-y-auto pb-24 md:pb-6 relative w-full h-full custom-scrollbar">
+              <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-full">
+                {children}
+              </div>
+            </main>
+            <BottomNav />
+          </div>
+        </div>
+      ) : (
+        <div id="main-content" className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center font-sans antialiased text-zinc-900 dark:text-zinc-50 p-0">
+          {children}
+        </div>
+      )}
+    </>
+  )
+}

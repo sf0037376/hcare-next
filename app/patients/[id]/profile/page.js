@@ -382,11 +382,11 @@ export default function PatientProfile() {
                     }));
 
                   // 2. Process Medication Schedule (PENDING/OVERDUE)
-                  const pendingItems = meds
+                  const pendingMeds = meds
                     .filter(m => m.next_due && new Date(m.next_due) > last24h)
                     .map(m => {
                       const due = new Date(m.next_due);
-                      const isOverdue = due < now;
+                      const isOverdue = due.getTime() < (now.getTime() - 1000 * 60 * 5); // 5 min grace
                       return {
                         id: m.id,
                         type: isOverdue ? 'OVERDUE' : 'PENDING',
@@ -399,7 +399,31 @@ export default function PatientProfile() {
                       };
                     });
 
-                  const timeline = [...doneItems, ...pendingItems].sort((a, b) => b.time - a.time);
+                  // 3. Process Feeding Schedule (Calculate Next Feed)
+                  let pendingFeeds = [];
+                  if (patient && patient.feeding_interval_hours) {
+                    const lastFeed = feeds.length > 0 ? new Date(feeds[0].recorded_at) : last24h;
+                    const nextFeedTime = new Date(lastFeed.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
+                    
+                    if (nextFeedTime > last24h) {
+                      const isOverdue = nextFeedTime.getTime() < (now.getTime() - 1000 * 60 * 5);
+                      pendingFeeds.push({
+                        type: isOverdue ? 'OVERDUE' : 'PENDING',
+                        time: nextFeedTime,
+                        label: `Next Filtered Feed`,
+                        icon: '🍼',
+                        isMed: false,
+                        isFeed: true
+                      });
+                    }
+                  }
+
+                  // 4. Sort: OVERDUE > PENDING > DONE
+                  const timeline = [...doneItems, ...pendingMeds, ...pendingFeeds].sort((a, b) => {
+                    const priority = { 'OVERDUE': 1, 'PENDING': 2, 'DONE': 3 };
+                    if (priority[a.type] !== priority[b.type]) return priority[a.type] - priority[b.type];
+                    return b.time - a.time;
+                  });
 
                   if (timeline.length === 0) {
                     return <div className="py-10 text-center text-zinc-400 italic">No clinical activity in the last 24 hours.</div>;
@@ -410,17 +434,17 @@ export default function PatientProfile() {
                       <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center text-xl z-10 transition-transform group-hover:scale-110 shadow-sm ${
                         item.type === 'DONE' 
                           ? (item.isMed ? 'bg-purple-100 dark:bg-purple-900/30' : 'bg-orange-100 dark:bg-orange-900/30')
-                          : (item.type === 'OVERDUE' ? 'bg-red-100 dark:bg-red-900/30 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-800')
+                          : (item.type === 'OVERDUE' ? 'bg-red-100 dark:bg-red-900/30 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-700')
                       }`}>
                         {item.icon}
                       </div>
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
+                        <div className="min-w-[200px]">
                           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
                              {item.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
                              <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${
                                item.type === 'DONE' ? 'bg-emerald-100 text-emerald-600' : 
-                               item.type === 'OVERDUE' ? 'bg-red-500 text-white' : 'bg-zinc-200 text-zinc-600'
+                               item.type === 'OVERDUE' ? 'bg-red-500 text-white' : 'bg-blue-100 text-blue-600'
                              }`}>
                                {item.type}
                              </span>
@@ -434,29 +458,41 @@ export default function PatientProfile() {
                           </div>
                         </div>
 
-                        {item.type === 'OVERDUE' && (
+                        {(item.type === 'OVERDUE' || item.type === 'PENDING') && (
                           <button 
                             onClick={async () => {
                               try {
-                                await apiFetch("/medication/medication", {
-                                  method: "POST",
-                                  body: {
-                                    patient_id: id,
-                                    scheduleId: item.id,
-                                    medicine: item.medicine,
-                                    dose: item.dosage,
-                                    recorded_at: new Date().toISOString()
-                                  }
-                                });
-                                show("✅ Medication logged successfully");
+                                if (item.isMed) {
+                                  await apiFetch("/medication/medication", {
+                                    method: "POST",
+                                    body: {
+                                      patient_id: id,
+                                      scheduleId: item.id,
+                                      medicine: item.medicine,
+                                      dose: item.dosage,
+                                      recorded_at: new Date().toISOString()
+                                    }
+                                  });
+                                } else {
+                                  await apiFetch("/feeding/feeding", {
+                                    method: "POST",
+                                    body: {
+                                      patient_id: id,
+                                      type: 'Mixed',
+                                      quantity: 60,
+                                      recorded_at: new Date().toISOString()
+                                    }
+                                  });
+                                }
+                                show("✅ Action logged successfully");
                                 window.location.reload();
                               } catch (err) {
                                 show(`❌ Error: ${err.message}`);
                               }
                             }}
-                            className="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-500/20"
+                            className={`${item.type === 'OVERDUE' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'} text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg`}
                           >
-                            Mark as Done
+                            Mark {item.type === 'OVERDUE' ? 'Done' : 'Now'}
                           </button>
                         )}
                       </div>

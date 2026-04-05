@@ -91,7 +91,7 @@ export default function PatientProfile() {
   async function deactivateMed(scheduleId) {
     if (!confirm("Are you sure you want to deactivate this medication?")) return
     try {
-      await apiFetch(`/medication/schedule/${scheduleId}`, { method: 'DELETE' })
+      await apiFetch(`/medication/schedule/${scheduleId}/deactivate`, { method: 'PUT' })
       show("Medication deactivated")
       setMeds(meds.filter(m => m.id !== scheduleId))
     } catch (err) {
@@ -145,7 +145,7 @@ export default function PatientProfile() {
 
   return (
     <ProtectedRoute>
-      <div className="animate-in fade-in duration-700 pb-24 max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-7xl mx-auto px-4 sm:px-6">
         {Toast}
 
         {/* Pending Approvals Alert Banner */}
@@ -175,8 +175,8 @@ export default function PatientProfile() {
             </div>
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white uppercase">{patient.name}</h1>
-                <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-full uppercase tracking-widest border border-emerald-200 dark:border-emerald-800">
+                <h1 className="text-4xl font-black tracking-tight uppercase premium-text-gradient">{patient.name}</h1>
+                <span className="px-3 py-1 glass text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-full uppercase tracking-widest border border-emerald-200/50 dark:border-emerald-800/50">
                   {patient.status}
                 </span>
               </div>
@@ -240,8 +240,8 @@ export default function PatientProfile() {
           </div>
           {role !== 'pharmacist' && (
             <div className="flex flex-wrap gap-3">
-              <Link href={`/patients/${id}/history`} className="btn-secondary px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800">History Log</Link>
-              <Link href={`/patients/${id}/reports`} className="btn-primary px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest bg-blue-600 shadow-blue-500/20">Lab Reports</Link>
+              <Link href={`/patients/${id}/history`} className="glass-card hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest bg-zinc-100/50 dark:bg-zinc-800/50">History Log</Link>
+              <Link href={`/patients/${id}/reports`} className="btn-primary hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest premium-bg-blue shadow-blue-500/20 shadow-lg">Lab Reports</Link>
               
               {role === 'patient' && (
                 <>
@@ -261,7 +261,7 @@ export default function PatientProfile() {
               )}
               {role === 'doctor' && (
                 <div className="flex gap-3">
-                  <Link href={`/medication/prescribe?patient_id=${id}`} className="bg-blue-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+                  <Link href={`/medication/prescribe?patient_id=${id}`} className="hover-scale premium-bg-indigo text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-500/20 flex items-center gap-2">
                     <span>💊</span> Prescribe Medicines
                   </Link>
                   {(patient.discharge_status === 'NONE' || !patient.discharge_status) && (
@@ -343,9 +343,9 @@ export default function PatientProfile() {
                 { label: "Weight", val: latestVitals.weight || "--", unit: "kg", icon: "⚖️", color: "emerald" },
                 { label: "Head Circ.", val: latestVitals.head || "--", unit: "cm", icon: "🧠", color: "purple" }
               ].map((m) => (
-                <div key={m.label} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-3xl shadow-sm group hover:border-zinc-400 dark:hover:border-zinc-500 transition-all">
+                <div key={m.label} className="glass-card p-6 rounded-3xl shadow-sm group border-zinc-200/50 dark:border-zinc-800/50">
                   <div className="flex justify-between items-start mb-4">
-                    <span className="text-2xl">{m.icon}</span>
+                    <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{m.icon}</span>
                     <span className={`text-[10px] font-black text-${m.color}-500 uppercase tracking-widest opacity-60`}>{m.label}</span>
                   </div>
                   <div className="flex items-baseline gap-1">
@@ -357,9 +357,9 @@ export default function PatientProfile() {
             </div>
 
             {/* Clinical Timeline (Medications & Feeding) */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm">
+            <div className="glass-card rounded-[40px] p-8 shadow-sm border-zinc-200/50 dark:border-zinc-800/50">
               <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-8 tracking-tight flex items-center gap-3">
-                 Recent Clinical Activity <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">(24h)</span>
+                 Clinical Progress <span className="premium-bg-blue w-8 h-1 rounded-full"></span>
               </h3>
               
               <div className="space-y-8 relative">
@@ -482,12 +482,12 @@ export default function PatientProfile() {
             
             {/* Financial Quick Access (Visibile to Patient/Admin) */}
             {(role === 'patient' || role === 'admin' || role === 'super_admin') && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-[40px] p-8 shadow-2xl mt-10 text-white relative overflow-hidden group">
+              <div className="premium-bg-blue border border-white/10 rounded-[40px] p-8 shadow-2xl mt-10 text-white relative overflow-hidden group hover:scale-[1.02] transition-all duration-500">
                 <div className="relative z-10">
-                  <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-4">Financial Overview</h3>
-                  <p className="text-xl font-bold mb-6 italic">Review ledger, advance credits, and pending dues.</p>
-                  <Link href={`/patients/${id}/financials`} className="inline-flex items-center gap-3 bg-white text-zinc-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform">
-                    💳 View Financial Statement
+                  <h3 className="text-xs font-black text-blue-100 uppercase tracking-[.25em] mb-4">Financial Overview</h3>
+                  <p className="text-xl font-bold mb-6 italic">Secure ledger & billing management.</p>
+                  <Link href={`/patients/${id}/financials`} className="inline-flex items-center gap-3 bg-white text-blue-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-white/10">
+                    💳 Open Financial Statement
                   </Link>
                 </div>
                 <div className="absolute -bottom-10 -right-10 text-9xl opacity-10 grayscale group-hover:rotate-12 transition-transform duration-1000 select-none">💰</div>

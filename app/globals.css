@@ -15,7 +15,17 @@
   :root {
     --background: #09090b; /* zinc-950 */
     --foreground: #fafafa; /* zinc-50 */
+    --glass-bg: rgba(24, 24, 27, 0.7);
+    --glass-border: rgba(63, 63, 70, 0.4);
   }
+}
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(228, 228, 231, 0.5);
+  --premium-blue: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  --premium-purple: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  --premium-indigo: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
 }
 
 body {
@@ -294,4 +304,80 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: .5; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Premium Glassmorphism */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.dark .glass-card:hover {
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.premium-bg-blue { background: var(--premium-blue); }
+.premium-bg-purple { background: var(--premium-purple); }
+.premium-bg-indigo { background: var(--premium-indigo); }
+
+.premium-text-gradient {
+  background: var(--premium-blue);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hover Haptics */
+.hover-scale {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+.hover-scale:active {
+  transform: scale(0.98);
+}
+
+/* Smooth Shimmer Effect */
+.shimmer-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .shimmer-container::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
 }

@@ -57,7 +57,13 @@ export default function AlertListener() {
 
     if (token && userId) {
       socketRef.current = io(apiUrl, {
-        auth: { token }
+        auth: { token },
+        transports: ["websocket", "polling"],
+        withCredentials: true
+      })
+
+      socketRef.current.on("connect_error", (err) => {
+        console.error("📡 WebSocket connection error:", err.message)
       })
 
       socketRef.current.on("connect", () => {

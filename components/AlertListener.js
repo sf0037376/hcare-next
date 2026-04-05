@@ -56,8 +56,24 @@ export default function AlertListener() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 
     if (token && userId) {
-      socketRef.current = io(apiUrl, {
+      // SANITIZE URL: Extract origin to avoid "Invalid Namespace" errors if apiUrl has a path (like /api)
+      let origin = apiUrl
+      let socketPath = "/socket.io"
+      
+      try {
+        const urlObj = new URL(apiUrl)
+        origin = urlObj.origin
+        // If your API is at /api, socket.io should be at /api/socket.io
+        if (urlObj.pathname !== "/") {
+          socketPath = `${urlObj.pathname.replace(/\/$/, "")}/socket.io`
+        }
+      } catch (e) {
+        console.warn("📡 Could not parse apiUrl for socket, using defaults")
+      }
+
+      socketRef.current = io(origin, {
         auth: { token },
+        path: socketPath,
         transports: ["websocket", "polling"],
         withCredentials: true
       })

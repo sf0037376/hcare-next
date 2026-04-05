@@ -4,16 +4,21 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import NotificationBell from "./notification"
 import { apiFetch } from "../lib/api"
 import Link from "next/link"
+import { Volume2, VolumeX } from "lucide-react"
 
 export default function Topbar() {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
+  const [alarmsEnabled, setAlarmsEnabled] = useState(true)
   const debounceRef = useRef(null)
   const wrapperRef = useRef(null)
 
-  // Close dropdown on outside click
+  // Initialize alarms state
   useEffect(() => {
+    const saved = localStorage.getItem("hospital_alarms_enabled")
+    setAlarmsEnabled(saved !== "false") // Default to true
+    
     function handleClickOutside(e) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
         setShowDropdown(false)
@@ -22,6 +27,28 @@ export default function Topbar() {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  const handleToggleAlarms = async () => {
+    const newState = !alarmsEnabled
+    setAlarmsEnabled(newState)
+    localStorage.setItem("hospital_alarms_enabled", String(newState))
+    
+    // Dispatch event to AlertListener
+    window.dispatchEvent(new CustomEvent('hospital-alarms-toggle', { detail: { enabled: newState } }))
+    
+    // Sync with backend
+    try {
+      const userId = localStorage.getItem("userId")
+      if (userId) {
+        await apiFetch(`/users/${userId}/notifications`, {
+          method: 'PUT',
+          body: JSON.stringify({ alarms_enabled: newState })
+        })
+      }
+    } catch (err) {
+      console.error("[Topbar] Failed to sync alarm preference:", err)
+    }
+  }
 
   const handleSearch = useCallback((value) => {
     clearTimeout(debounceRef.current)
@@ -91,13 +118,26 @@ export default function Topbar() {
       </div>
 
       <div className="flex items-center gap-4">
+        {/* ALARM TOGGLE */}
+        <div 
+          onClick={handleToggleAlarms}
+          title={alarmsEnabled ? "Silence Health Alarms" : "Enable Health Alarms"}
+          className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all ${
+            alarmsEnabled 
+              ? "bg-red-50 text-red-600 hover:bg-red-100" 
+              : "bg-zinc-100 dark:bg-zinc-900 text-zinc-400 hover:bg-zinc-200"
+          }`}
+        >
+          {alarmsEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+        </div>
+
         <div
           onClick={handleNotificationClick}
           className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
         >
           <NotificationBell />
         </div>
-        <div className="md:hidden w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700">
+        <div className="md:hidden w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border border-zinc-200 dark:border-zinc-700">
           👨‍⚕️
         </div>
       </div>

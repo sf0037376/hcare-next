@@ -71,6 +71,7 @@ export default function LandingPage() {
       localStorage.setItem("username", data.username || data.name || username)
       localStorage.setItem("userId", String(data.user_id))
       localStorage.setItem("orgId", String(data.organisation_id))
+      localStorage.setItem("hospital_alarms_enabled", data.alarms_enabled ? "true" : "false")
       if (data.patient_id) localStorage.setItem("patientId", String(data.patient_id))
 
       const userRole = (data.role || "").toLowerCase()

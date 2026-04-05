@@ -351,7 +351,7 @@ export default function Dashboard() {
         )}
 
         {/* NEW: Global Task Sheet (Next 4 Hours) for all patients */}
-        {(role === 'nurse' || role === 'staff' || role === 'doctor' || role === 'admin') && globalTasks.length > 0 && (
+        {(role === 'nurse' || role === 'staff') && globalTasks.length > 0 && (
           <div className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex items-center justify-between mb-8 px-2">
               <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">

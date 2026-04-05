@@ -106,21 +106,21 @@ export default function PatientProfile() {
       if (data.summary) {
         const { default: jsPDF } = await import("jspdf")
         const doc = new jsPDF()
-        
+
         doc.setFontSize(22)
         doc.setTextColor(40, 44, 52)
         doc.text("Discharge Summary", 14, 22)
-        
+
         doc.setFontSize(12)
         doc.setTextColor(100)
         doc.text(`Patient: ${patient.name} (#${patient.id})`, 14, 32)
         doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 38)
-        
+
         doc.setFontSize(10)
         doc.setTextColor(50)
         const splitText = doc.splitTextToSize(data.summary, 180)
         doc.text(splitText, 14, 50)
-        
+
         doc.save(`Discharge_Summary_${patient.name}_${id}.pdf`)
         show("Discharge summary generated as PDF")
       }
@@ -158,8 +158,8 @@ export default function PatientProfile() {
                 <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mt-1">Please review and approve the latest billing items for your stay.</p>
               </div>
             </div>
-            <Link 
-              href={`/patients/${id}/approvals`} 
+            <Link
+              href={`/patients/${id}/approvals`}
               className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-lg shadow-amber-500/20 whitespace-nowrap"
             >
               Review & Approve Now →
@@ -191,10 +191,10 @@ export default function PatientProfile() {
                     {showPhone ? patient.phone : (patient.phone ? `${patient.phone.slice(0, 3)}XXXX${patient.phone.slice(-3)}` : 'N/A')}
                   </span>
                   {!showPhone && patient.phone && (
-                    <button 
+                    <button
                       onClick={() => {
                         const pwd = prompt("Enter your password to unmask phone number:");
-                        if (pwd) setShowPhone(true); 
+                        if (pwd) setShowPhone(true);
                       }}
                       className="text-[10px] text-blue-600 font-bold uppercase underline ml-1"
                     >
@@ -216,21 +216,21 @@ export default function PatientProfile() {
                 )}
                 <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-xl border border-orange-100 dark:border-orange-800/50">
                   <span className="text-[10px] uppercase tracking-tighter text-orange-600 dark:text-orange-400">Feeding Interval:</span>
-                  <input 
-                    type="number" 
-                    step="0.5" 
+                  <input
+                    type="number"
+                    step="0.5"
                     className="w-12 bg-transparent text-orange-700 dark:text-orange-300 font-black focus:outline-none"
                     value={patient.feeding_interval_hours}
                     onChange={async (e) => {
-                       const val = parseFloat(e.target.value);
-                       setPatient({...patient, feeding_interval_hours: val});
-                       try {
-                         await apiFetch(`/patients/${id}`, {
-                           method: 'PUT',
-                           body: JSON.stringify({ ...patient, feeding_interval_hours: val })
-                         });
-                         show("Feeding interval updated");
-                       } catch(e) { show("Failed to update interval"); }
+                      const val = parseFloat(e.target.value);
+                      setPatient({ ...patient, feeding_interval_hours: val });
+                      try {
+                        await apiFetch(`/patients/${id}`, {
+                          method: 'PUT',
+                          body: JSON.stringify({ ...patient, feeding_interval_hours: val })
+                        });
+                        show("Feeding interval updated");
+                      } catch (e) { show("Failed to update interval"); }
                     }}
                   />
                   <span className="text-[10px] text-orange-500 font-bold uppercase">Hrs</span>
@@ -242,7 +242,7 @@ export default function PatientProfile() {
             <div className="flex flex-wrap gap-3">
               <Link href={`/patients/${id}/history`} className="glass-card hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest bg-zinc-100/50 dark:bg-zinc-800/50">History Log</Link>
               <Link href={`/patients/${id}/reports`} className="btn-primary hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest premium-bg-blue shadow-blue-500/20 shadow-lg">Lab Reports</Link>
-              
+
               {role === 'patient' && (
                 <>
                   <Link href={`/appointments?patient_id=${id}&book=true`} className="bg-blue-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
@@ -265,13 +265,13 @@ export default function PatientProfile() {
                     <span>💊</span> Prescribe Medicines
                   </Link>
                   {(patient.discharge_status === 'NONE' || !patient.discharge_status) && (
-                    <button 
+                    <button
                       onClick={async () => {
-                         try {
-                           await apiFetch(`/patients/${id}/request-discharge`, { method: 'POST' });
-                           show("Discharge approved by you");
-                           window.location.reload();
-                         } catch(e) { show("Failed to initiate discharge"); }
+                        try {
+                          await apiFetch(`/patients/${id}/request-discharge`, { method: 'POST' });
+                          show("Discharge approved by you");
+                          window.location.reload();
+                        } catch (e) { show("Failed to initiate discharge"); }
                       }}
                       className="bg-orange-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform"
                     >
@@ -279,27 +279,27 @@ export default function PatientProfile() {
                     </button>
                   )}
                   {patient.discharge_status === 'REQUESTED' && (
-                    <button 
+                    <button
                       onClick={async () => {
-                         try {
-                           await apiFetch(`/patients/${id}/approve-discharge`, { method: 'POST' });
-                           show("Discharge approved");
-                           window.location.reload();
-                         } catch(e) { show("Failed to approve discharge"); }
+                        try {
+                          await apiFetch(`/patients/${id}/approve-discharge`, { method: 'POST' });
+                          show("Discharge approved");
+                          window.location.reload();
+                        } catch (e) { show("Failed to approve discharge"); }
                       }}
                       className="bg-emerald-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 transition-transform"
                     >
                       Approve Discharge
                     </button>
                   )}
-                  <button 
+                  <button
                     onClick={generateSummary}
                     disabled={isGeneratingSummary}
                     className={`bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-transform flex items-center gap-2 ${isGeneratingSummary ? 'opacity-50' : ''}`}
                   >
                     <span>📄</span> {isGeneratingSummary ? 'Generating...' : 'Discharge Summary'}
                   </button>
-                  <button 
+                  <button
                     onClick={downloadHistory}
                     className="bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-md hover:scale-105 transition-transform flex items-center gap-2"
                   >
@@ -308,22 +308,22 @@ export default function PatientProfile() {
                 </div>
               )}
               {(role === 'nurse' || role === 'staff') && (patient.discharge_status === 'NONE' || !patient.discharge_status) && (
-                 <button 
-                    onClick={async () => {
-                      try {
-                        await apiFetch(`/patients/${id}/request-discharge`, { method: 'POST' });
-                        show("Discharge requested from doctor");
-                        window.location.reload();
-                      } catch(e) { show("Failed to request discharge"); }
-                    }}
-                    className="bg-orange-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform"
-                 >
-                   Request Discharge
-                 </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      await apiFetch(`/patients/${id}/request-discharge`, { method: 'POST' });
+                      show("Discharge requested from doctor");
+                      window.location.reload();
+                    } catch (e) { show("Failed to request discharge"); }
+                  }}
+                  className="bg-orange-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform"
+                >
+                  Request Discharge
+                </button>
               )}
               {(role === 'admin' || role === 'super_admin') && patient.discharge_status === 'DOCTOR_APPROVED' && (
                 <Link href={`/patients/${id}/discharge`} className="bg-red-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:scale-105 transition-transform">
-                   Finalize Discharge
+                  Finalize Discharge
                 </Link>
               )}
             </div>
@@ -331,10 +331,10 @@ export default function PatientProfile() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
+
           {/* Left Column: Metrics & Active Care */}
           <div className={`${role === 'pharmacist' ? 'hidden' : 'lg:col-span-8 space-y-10'}`}>
-            
+
             {/* Latest Vitals Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
@@ -359,17 +359,17 @@ export default function PatientProfile() {
             {/* Clinical Timeline (Medications & Feeding) */}
             <div className="glass-card rounded-[40px] p-8 shadow-sm border-zinc-200/50 dark:border-zinc-800/50">
               <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-8 tracking-tight flex items-center gap-3">
-                 Clinical Progress <span className="premium-bg-blue w-8 h-1 rounded-full"></span>
+                Today's Clinical Progress <span className="premium-bg-blue w-8 h-1 rounded-full"></span>
               </h3>
-              
+
               <div className="space-y-8 relative">
                 <div className="absolute left-6 top-2 bottom-2 w-0.5 bg-zinc-100 dark:bg-zinc-800"></div>
-                
+
                 {(() => {
                   const now = new Date();
                   const startOfToday = new Date(now);
                   startOfToday.setHours(0, 0, 0, 0); // Local time start of day
-                  
+
                   // 1. Process Logs (DONE)
                   const doneItems = [...logs, ...feeds]
                     .filter(item => new Date(item.recorded_at) >= startOfToday)
@@ -405,7 +405,7 @@ export default function PatientProfile() {
                   if (patient && patient.feeding_interval_hours) {
                     const lastFeed = feeds.length > 0 ? new Date(feeds[0].recorded_at) : startOfToday;
                     const nextFeedTime = new Date(lastFeed.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
-                    
+
                     if (nextFeedTime >= startOfToday) {
                       const isOverdue = nextFeedTime.getTime() < (now.getTime() - 1000 * 60 * 5);
                       pendingFeeds.push({
@@ -432,35 +432,32 @@ export default function PatientProfile() {
 
                   return timeline.map((item, idx) => (
                     <div key={idx} className="relative pl-14 group">
-                      <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center text-xl z-10 transition-transform group-hover:scale-110 shadow-sm ${
-                        item.type === 'DONE' 
+                      <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center text-xl z-10 transition-transform group-hover:scale-110 shadow-sm ${item.type === 'DONE'
                           ? (item.isMed ? 'bg-purple-100 dark:bg-purple-900/30' : 'bg-orange-100 dark:bg-orange-900/30')
                           : (item.type === 'OVERDUE' ? 'bg-red-100 dark:bg-red-900/30 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-700')
-                      }`}>
+                        }`}>
                         {item.icon}
                       </div>
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="min-w-[200px]">
                           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                             {item.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
-                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${
-                               item.type === 'DONE' ? 'bg-emerald-100 text-emerald-600' : 
-                               item.type === 'OVERDUE' ? 'bg-red-500 text-white' : 'bg-blue-100 text-blue-600'
-                             }`}>
-                               {item.type}
-                             </span>
+                            {item.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
+                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${item.type === 'DONE' ? 'bg-emerald-100 text-emerald-600' :
+                                item.type === 'OVERDUE' ? 'bg-red-500 text-white' : 'bg-blue-100 text-blue-600'
+                              }`}>
+                              {item.type}
+                            </span>
                           </p>
-                          <div className={`inline-block px-4 py-2 rounded-2xl border ${
-                            item.type === 'OVERDUE' ? 'bg-red-50 border-red-200' : 'bg-zinc-50 dark:bg-zinc-800/40 border-zinc-100 dark:border-zinc-800'
-                          }`}>
-                             <span className={`font-bold ${item.type === 'OVERDUE' ? 'text-red-700' : 'text-zinc-900 dark:text-zinc-100'}`}>
-                               {item.label}
-                             </span>
+                          <div className={`inline-block px-4 py-2 rounded-2xl border ${item.type === 'OVERDUE' ? 'bg-red-50 border-red-200' : 'bg-zinc-50 dark:bg-zinc-800/40 border-zinc-100 dark:border-zinc-800'
+                            }`}>
+                            <span className={`font-bold ${item.type === 'OVERDUE' ? 'text-red-700' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                              {item.label}
+                            </span>
                           </div>
                         </div>
 
                         {(item.type === 'OVERDUE' || item.type === 'PENDING') && (
-                          <button 
+                          <button
                             onClick={() => {
                               if (item.isMed) {
                                 window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(item.medicine)}&dose=${encodeURIComponent(item.dosage)}&scheduleId=${item.id}`;
@@ -495,9 +492,9 @@ export default function PatientProfile() {
                       </div>
                       <div className="flex gap-2">
                         {report.file_path && (
-                          <a 
-                            href={`http://localhost:5000${report.file_path}`} 
-                            target="_blank" 
+                          <a
+                            href={`http://localhost:5000${report.file_path}`}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-3 py-1.5 rounded-xl hover:bg-blue-100 transition-colors"
                           >
@@ -525,11 +522,11 @@ export default function PatientProfile() {
                   </div>
                 )}
               </div>
-              
+
               {/* Upload Report Button */}
               <div className="mt-6 flex justify-end">
-                <Link 
-                  href={`/patients/${id}/reports`} 
+                <Link
+                  href={`/patients/${id}/reports`}
                   className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 flex items-center gap-2 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg hover:scale-[1.02] transition-transform"
                 >
                   <span className="text-base">📤</span> Upload New Report
@@ -540,7 +537,7 @@ export default function PatientProfile() {
 
           {/* Right Column: Case Info & Schedule */}
           <div className={`${role === 'pharmacist' ? 'lg:col-span-12 max-w-2xl' : 'lg:col-span-4'} space-y-10`}>
-            
+
             {/* Quick Actions (Patient Only) */}
             {role === 'patient' && (
               <div className="bg-blue-600 rounded-[40px] p-8 shadow-xl text-white">
@@ -561,7 +558,7 @@ export default function PatientProfile() {
                 </div>
               </div>
             )}
-            
+
             {/* Financial Quick Access (Visibile to Patient/Admin) */}
             {(role === 'patient' || role === 'admin' || role === 'super_admin') && (
               <div className="premium-bg-blue border border-white/10 rounded-[40px] p-8 shadow-2xl mt-10 text-white relative overflow-hidden group hover:scale-[1.02] transition-all duration-500">
@@ -610,7 +607,7 @@ export default function PatientProfile() {
             {/* Medication Schedule (Active) */}
             <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 dark:border dark:border-zinc-800 rounded-[40px] p-8 shadow-2xl text-white">
               <h3 className="text-xs font-black text-zinc-500 uppercase tracking-[.25em] mb-8">Prescribed Regimen</h3>
-              
+
               {/* Reminder Highlight (Patient Only) */}
               {role === 'patient' && meds.length > 0 && (
                 <div className="mb-8 p-6 bg-blue-500/10 border border-blue-500/20 rounded-3xl">
@@ -634,13 +631,13 @@ export default function PatientProfile() {
                     </div>
                     {role === 'doctor' && (
                       <div className="flex gap-2">
-                        <Link 
+                        <Link
                           href={`/medication/prescribe?patient_id=${id}&schedule_id=${med.id}`}
                           className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-blue-400 transition-colors bg-zinc-900/50 px-2 py-1 rounded-lg border border-zinc-800"
                         >
                           Edit
                         </Link>
-                        <button 
+                        <button
                           onClick={() => deactivateMed(med.id)}
                           className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors bg-red-900/10 px-2 py-1 rounded-lg border border-red-900/20"
                         >
@@ -659,24 +656,24 @@ export default function PatientProfile() {
             {/* Upcoming Appointments */}
             {role !== 'pharmacist' && (
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm">
-                 <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8">Next Consults</h3>
-                 <div className="space-y-6">
-                   {appts && appts.filter(a => new Date(a.appointment_time) > new Date()).slice(0, 3).map(appt => (
-                     <div key={appt.id} className="flex gap-4 group">
-                       <div className="flex flex-col items-center justify-center w-12 h-14 bg-blue-50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                          <span className="text-[10px] font-black uppercase text-blue-600">{new Date(appt.appointment_time).toLocaleString('en-US', { month: 'short' })}</span>
-                          <span className="text-lg font-black text-blue-900 dark:text-blue-100 leading-none">{new Date(appt.appointment_time).getDate()}</span>
-                       </div>
-                       <div>
-                          <p className="font-bold text-zinc-900 dark:text-white text-sm">Consult with Dr. {appt.doctor_name}</p>
-                          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">
-                            {appt.is_confirmed ? '✅ Confirmed' : '⏳ Pending'}
-                          </p>
-                        </div>
+                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8">Next Consults</h3>
+                <div className="space-y-6">
+                  {appts && appts.filter(a => new Date(a.appointment_time) > new Date()).slice(0, 3).map(appt => (
+                    <div key={appt.id} className="flex gap-4 group">
+                      <div className="flex flex-col items-center justify-center w-12 h-14 bg-blue-50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                        <span className="text-[10px] font-black uppercase text-blue-600">{new Date(appt.appointment_time).toLocaleString('en-US', { month: 'short' })}</span>
+                        <span className="text-lg font-black text-blue-900 dark:text-blue-100 leading-none">{new Date(appt.appointment_time).getDate()}</span>
                       </div>
-                    ))}
-                    {appts.length === 0 && <p className="text-xs text-zinc-400 italic text-center py-2">No upcoming visits.</p>}
-                  </div>
+                      <div>
+                        <p className="font-bold text-zinc-900 dark:text-white text-sm">Consult with Dr. {appt.doctor_name}</p>
+                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">
+                          {appt.is_confirmed ? '✅ Confirmed' : '⏳ Pending'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {appts.length === 0 && <p className="text-xs text-zinc-400 italic text-center py-2">No upcoming visits.</p>}
+                </div>
               </div>
             )}
 

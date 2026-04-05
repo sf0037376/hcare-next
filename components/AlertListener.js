@@ -4,8 +4,23 @@ import { useState, useEffect, useRef } from "react"
 import { apiFetch } from "../lib/api"
 import { Bell } from "lucide-react"
 import { io } from "socket.io-client"
+import { initializeApp } from "firebase/app"
+import { getMessaging, getToken, onMessage } from "firebase/messaging"
 import useToast from "./toast"
 import GlobalAlertOverlay from "./GlobalAlertOverlay"
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyDLuU8Xmo9Co6_tsWU7uFw1OeeXwdG0gLk",
+  authDomain: "hcare-7ca08.firebaseapp.com",
+  projectId: "hcare-7ca08",
+  storageBucket: "hcare-7ca08.firebasestorage.app",
+  messagingSenderId: "31424477293",
+  appId: "1:31424477293:web:f48b240552896a6b942764",
+  measurementId: "G-WQCK4TDJT8"
+};
+
+const VAPID_KEY = "BKP7XCN5bILnw0kSnX_NpICwal8LYIcojwkldGFXRYFtTMidZaZiwFbCcx1NtvY5OlRYp4VIGG-HzPoM8LBtHnI";
 
 export default function AlertListener() {
   const { Toast, show } = useToast()
@@ -50,6 +65,29 @@ export default function AlertListener() {
       window.addEventListener('click', primeAudio)
     }
 
+    // 2.5 Initialize Firebase Messaging & Register Token
+    const setupFCM = async (userId) => {
+      try {
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+        
+        // Request Permission
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          const fcm_token = await getToken(messaging, { vapidKey: VAPID_KEY });
+          if (fcm_token) {
+            console.log("🔥 Browser FCM Token registered:", fcm_token);
+            await apiFetch(`/users/${userId}/fcm-token`, {
+              method: 'PUT',
+              body: { fcm_token }
+            });
+          }
+        }
+      } catch (err) {
+        console.error("🔥 Firebase Messaging failed:", err.message);
+      }
+    };
+
     // 3. Socket.IO Connection
     const token = localStorage.getItem("token")
     const userId = localStorage.getItem("userId")
@@ -87,21 +125,25 @@ export default function AlertListener() {
         socketRef.current.emit("join", { userId })
       })
 
-      socketRef.current.on("new_notification", (n) => {
+        // 2.5 Setup FCM if userId exists
+        if (userId) setupFCM(userId);
+
+        socketRef.current.on("new_notification", (n) => {
         console.log("🔔 Received Real-time Alert:", n.title)
         
         if (processedIdsRef.current.has(n.id)) return
         processedIdsRef.current.add(n.id)
 
-        // FILTER LOGIC: High Priority + Specific Keywords
+        // FILTER LOGIC: Adjusted for Admin Oversight
         const isHigh = n.priority === 'HIGH' || n.priority === 'high'
         const isCriticalType = n.title.toLowerCase().includes('due') || 
                                n.title.toLowerCase().includes('reminder') || 
-                               n.title.toLowerCase().includes('abnormal')
+                               n.title.toLowerCase().includes('abnormal') ||
+                               n.title.toLowerCase().includes('missed')
 
-        const userRole = (localStorage.getItem("role") || "").toUpperCase()
-        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN'
-        const isUrgent = isHigh && isCriticalType && !n.isSilenced && !isAdmin
+        // If backend says isSilenced=true, we don't trigger intrusive UI/Sound.
+        // For Admins, backend now only silences routine items.
+        const isUrgent = isHigh && isCriticalType && !n.isSilenced
 
         if (isUrgent) {
           setHighPriorityQueue(prev => [...prev, n])
@@ -110,7 +152,7 @@ export default function AlertListener() {
             audioRef.current.play().catch(e => console.warn("Audio blocked", e))
           }
         } else {
-          // Normal Notification / Silenced Admin Alert
+          // Normal Notification / Silenced Routine Alert
           show(`🔔 ${n.title}`, { variant: 'info' })
         }
       })

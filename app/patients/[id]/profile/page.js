@@ -103,29 +103,24 @@ export default function PatientProfile() {
     setIsGeneratingSummary(true)
     try {
       const data = await apiFetch(`/reports/discharge-summary/${id}`)
-      if (data.summary) {
-        const { default: jsPDF } = await import("jspdf")
-        const doc = new jsPDF()
-
-        doc.setFontSize(22)
-        doc.setTextColor(40, 44, 52)
-        doc.text("Discharge Summary", 14, 22)
-
-        doc.setFontSize(12)
-        doc.setTextColor(100)
-        doc.text(`Patient: ${patient.name} (#${patient.id})`, 14, 32)
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 38)
-
-        doc.setFontSize(10)
-        doc.setTextColor(50)
-        const splitText = doc.splitTextToSize(data.summary, 180)
-        doc.text(splitText, 14, 50)
-
-        doc.save(`Discharge_Summary_${patient.name}_${id}.pdf`)
-        show("Discharge summary generated as PDF")
+      if (data && data.summary) {
+        // Create a blob for the markdown content
+        const blob = new Blob([data.summary], { type: "text/markdown" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `Discharge_Summary_${patient.name}_${id}.md`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        show("Discharge summary downloaded as .md")
+      } else {
+        show("No summary content received from API")
       }
     } catch (err) {
-      show("Failed to generate PDF summary")
+      console.error("Discharge Summary Error:", err)
+      show("Failed to download summary")
     } finally {
       setIsGeneratingSummary(false)
     }
@@ -513,8 +508,8 @@ export default function PatientProfile() {
                         </div>
                       ))}
 
-                      {/* Nurse Task Sheet Section (Next 4h) */}
-                      {(role === 'nurse' || role === 'staff' || role === 'doctor' || role === 'admin') && taskSheet.length > 0 && (
+                      {/* Next Dues Section (Next 4h) - Visible to all who can see profile */}
+                      {taskSheet.length > 0 && (
                         <div className="mt-16 pt-16 border-t border-zinc-100 dark:border-zinc-800">
                           <div className="flex items-center justify-between mb-8">
                             <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">

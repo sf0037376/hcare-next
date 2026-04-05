@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [selectedPatientName, setSelectedPatientName] = useState("")
   const [modalType, setModalType] = useState(null) // 'feed' | 'vitals' | 'med'
   const [role, setRole] = useState("")
+  const [globalTasks, setGlobalTasks] = useState([])
   const [medOptions, setMedOptions] = useState([])
   const [formState, setFormState] = useState({
     type: "",
@@ -58,6 +59,16 @@ export default function Dashboard() {
 
     if (userRole !== 'patient') {
       loadPatients()
+      loadGlobalTasks()
+    }
+    
+    async function loadGlobalTasks() {
+      try {
+        const data = await apiFetch("/patients/global-tasks")
+        setGlobalTasks(Array.isArray(data) ? data : [])
+      } catch (err) {
+        console.error("Failed to load global tasks", err)
+      }
     }
   }, [show])
 
@@ -334,6 +345,69 @@ export default function Dashboard() {
                  <div className="h-1 w-20 bg-white/30 rounded-full overflow-hidden">
                     <div className="h-full bg-white w-1/3 animate-progress transition-all"></div>
                  </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NEW: Global Task Sheet (Next 4 Hours) for all patients */}
+        {(role === 'nurse' || role === 'staff' || role === 'doctor' || role === 'admin') && globalTasks.length > 0 && (
+          <div className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex items-center justify-between mb-8 px-2">
+              <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
+                Nursing Task Sheet <span className="bg-red-600 text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-widest font-black">Next 4 Hours</span>
+              </h3>
+              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Global Care Plan</span>
+            </div>
+            
+            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-zinc-100 dark:bg-zinc-800/50">
+                      <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Due Time</th>
+                      <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Patient</th>
+                      <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Task</th>
+                      <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {globalTasks.map((task, tidx) => {
+                      const taskTime = new Date(task.time);
+                      const isVerySoon = taskTime.getTime() < (Date.now() + 30 * 60 * 1000);
+                      return (
+                        <tr key={tidx} className={`group transition-colors ${isVerySoon ? 'bg-red-50/50 dark:bg-red-500/5' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/40'}`}>
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-4">
+                              <span className="text-2xl">{task.icon}</span>
+                              <div>
+                                <p className={`text-base font-black ${isVerySoon ? 'text-red-600 animate-pulse' : 'text-zinc-900 dark:text-white'}`}>
+                                  {taskTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
+                                </p>
+                                {isVerySoon && <p className="text-[8px] font-black text-red-500 uppercase tracking-widest mt-0.5">Immediate Due</p>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">{task.patient_name}</p>
+                            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">ID: #{task.patient_id}</p>
+                          </td>
+                          <td className="px-8 py-6">
+                            <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{task.label}</p>
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                            <Link
+                              href={`/patients/${task.patient_id}/profile`}
+                              className="text-[10px] font-black uppercase tracking-widest bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-2xl transition-all shadow-lg active:scale-95 inline-block"
+                            >
+                              Go to Profile
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

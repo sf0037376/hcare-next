@@ -22,6 +22,9 @@ export default function PatientProfile() {
   const [pendingCount, setPendingCount] = useState(0)
   const [showPhone, setShowPhone] = useState(false)
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
+  const [showWearableModal, setShowWearableModal] = useState(false)
+  const [wearableId, setWearableId] = useState("")
+  const [wearableProvider, setWearableProvider] = useState("APPLE")
 
   useEffect(() => {
     setRole((localStorage.getItem('role') || '').toLowerCase())
@@ -123,6 +126,26 @@ export default function PatientProfile() {
       show("Failed to download summary")
     } finally {
       setIsGeneratingSummary(false)
+    }
+  }
+
+  async function handleLinkWearable() {
+    if (!wearableId) return show("Please enter a Wearable ID")
+    try {
+      await apiFetch("/health-sync/link", {
+        method: "PATCH",
+        body: JSON.stringify({
+          patient_id: id,
+          wearable_id: wearableId,
+          provider: wearableProvider
+        })
+      })
+      show("Smartwatch linked successfully! Syncing will begin automatically.")
+      setShowWearableModal(false)
+      // Update local state
+      setPatient({ ...patient, wearable_id: wearableId, wearable_provider: wearableProvider })
+    } catch (err) {
+      show("Failed to link wearable")
     }
   }
 
@@ -321,6 +344,13 @@ export default function PatientProfile() {
                   Finalize Discharge
                 </Link>
               )}
+              {/* Wearable Sync Button */}
+              <button
+                onClick={() => setShowWearableModal(true)}
+                className={`px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 flex items-center gap-2 ${patient?.wearable_id ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600' : 'premium-bg-blue text-white shadow-lg shadow-blue-500/20'}`}
+              >
+                <span>{patient?.wearable_id ? '⌚ Linked' : '⌚ Link Watch'}</span>
+              </button>
             </div>
           )}
         </div>
@@ -347,6 +377,12 @@ export default function PatientProfile() {
                     <span className="text-3xl font-black text-zinc-900 dark:text-white font-mono">{m.val}</span>
                     <span className="text-xs font-bold text-zinc-400">{m.unit}</span>
                   </div>
+                  {latestVitals.source === 'WEARABLE' && (
+                    <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 flex items-center gap-1.5 grayscale opacity-60">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Live Source: Apple Watch</span>
+                      <span className="w-1 h-1 rounded-full bg-blue-500 animate-pulse"></span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -777,6 +813,63 @@ export default function PatientProfile() {
 
           </div>
         </div>
+
+        {/* Link Wearable Modal */}
+        {showWearableModal && (
+          <div className="modal-backdrop z-[100] p-4 flex items-center justify-center bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[48px] p-10 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden">
+              <div className="mb-10 text-center">
+                <div className="w-20 h-20 bg-blue-50 dark:bg-blue-500/10 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6">⌚</div>
+                <h3 className="text-3xl font-black text-zinc-900 dark:text-white lowercase tracking-tight">link_wearable</h3>
+                <p className="text-sm text-zinc-500 font-bold mt-2 uppercase tracking-widest opacity-60">Connect Apple Health or Google Fit</p>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Provider</label>
+                  <select 
+                    className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 ring-blue-500"
+                    value={wearableProvider}
+                    onChange={(e) => setWearableProvider(e.target.value)}
+                  >
+                    <option value="APPLE">Apple Health (HealthKit)</option>
+                    <option value="GOOGLE">Google Health Connect</option>
+                    <option value="FITBIT">Fitbit API</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Wearable User ID (for Demo)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. user_demo_123"
+                    className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 ring-blue-500"
+                    value={wearableId}
+                    onChange={(e) => setWearableId(e.target.value)}
+                  />
+                  <p className="text-[8px] text-zinc-400 font-bold mt-2 px-1 uppercase tracking-widest italic leading-relaxed">
+                    In production, this is handled via OAuth2 redirect. For now, enter your simulation ID.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3 pt-6">
+                  <button 
+                    onClick={handleLinkWearable}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+                  >
+                    Connect Device →
+                  </button>
+                  <button 
+                    onClick={() => setShowWearableModal(false)}
+                    className="w-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   )

@@ -149,6 +149,20 @@ export default function PatientProfile() {
     }
   }
 
+  async function handleDelinkWearable() {
+    if (!confirm("Are you sure you want to disconnect your wearable?")) return
+    try {
+      await apiFetch("/health-sync/delink", {
+        method: "PATCH",
+        body: JSON.stringify({ patient_id: id })
+      })
+      show("Wearable disconnected successfully")
+      setPatient({ ...patient, wearable_id: null, wearable_provider: null })
+    } catch (err) {
+      show("Failed to delink wearable")
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -345,18 +359,46 @@ export default function PatientProfile() {
                   Request Discharge
                 </button>
               )}
-              {(role === 'admin' || role === 'super_admin') && patient.discharge_status === 'DOCTOR_APPROVED' && (
+              {((role === 'admin' || role === 'super_admin' || role === 'patient') && patient.discharge_status === 'DOCTOR_APPROVED') && (
                 <Link href={`/patients/${id}/discharge`} className="bg-red-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:scale-105 transition-transform">
                   Finalize Discharge
                 </Link>
               )}
-              {/* Wearable Sync Button */}
-              <button
-                onClick={() => setShowWearableModal(true)}
-                className={`px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 flex items-center gap-2 ${patient?.wearable_id ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600' : 'premium-bg-blue text-white shadow-lg shadow-blue-500/20'}`}
-              >
-                <span>{patient?.wearable_id ? '⌚ Linked' : '⌚ Link Watch'}</span>
-              </button>
+              {/* Wearable Sync Button - Patient Only for Linking */}
+              {role === 'patient' && (
+                <>
+                  {!patient?.wearable_id ? (
+                    <button
+                      onClick={() => setShowWearableModal(true)}
+                      className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[.2em] transition-all hover:scale-105 flex items-center gap-2 premium-bg-blue text-white shadow-lg shadow-blue-500/20"
+                    >
+                      <span>⌚ {(() => {
+                        if (typeof window !== "undefined") {
+                          const ua = navigator.userAgent || "";
+                          if (/iPad|iPhone|iPod/.test(ua)) return "Link iOS Health";
+                          if (/Android/.test(ua)) return "Link Google Fit";
+                          return "Link Google Fit";
+                        }
+                        return "Link Watch";
+                      })()}</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleDelinkWearable}
+                      className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[.2em] transition-all hover:scale-105 flex items-center gap-2 bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
+                    >
+                      <span>⌚ Delink Wearable</span>
+                    </button>
+                  )}
+                </>
+              )}
+              
+              {/* Show Status for Staff */}
+              {role !== 'patient' && patient?.wearable_id && (
+                <div className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[.2em] bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center gap-2">
+                  <span>⌚ {patient.wearable_provider} Linked</span>
+                </div>
+              )}
             </div>
           )}
         </div>

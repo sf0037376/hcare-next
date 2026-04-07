@@ -12,6 +12,7 @@ export default function PatientsModule() {
     const [searchTerm, setSearchTerm] = useState("")
     const [loading, setLoading] = useState(true)
     const [editingPatient, setEditingPatient] = useState(null)
+    const [role, setRole] = useState('')
     const [doctors, setDoctors] = useState([])
     const [nurses, setNurses] = useState([])
     const [wards, setWards] = useState([])
@@ -20,6 +21,8 @@ export default function PatientsModule() {
     useEffect(() => {
       async function loadSetup() {
         try {
+          const userRole = (localStorage.getItem('role') || '').toLowerCase()
+          setRole(userRole)
           const patientsData = await apiFetch("/patients")
           setPatients(Array.isArray(patientsData) ? patientsData : [])
           const users = await apiFetch("/users")
@@ -74,9 +77,11 @@ export default function PatientsModule() {
       p.aadhaar?.includes(searchTerm) ||
       p.abha_id?.includes(searchTerm)
     )
+    
+    const isAdmin = role === 'admin'
 
   return (
-    <ProtectedRoute roles={["admin"]}>
+    <ProtectedRoute roles={["admin", "doctor"]}>
       <div className="animate-in fade-in duration-500 pb-safe">
         {Toast}
         
@@ -85,9 +90,11 @@ export default function PatientsModule() {
             <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Patients Module</h2>
             <p className="text-zinc-500 dark:text-zinc-400 mt-1">Manage hospital admissions and clinical records.</p>
           </div>
-          <Link href="/users/admission" className="btn-primary !py-3 !px-6 shadow-blue-500/20">
-            + New Admission
-          </Link>
+          {isAdmin && (
+            <Link href="/users/admission" className="btn-primary !py-3 !px-6 shadow-blue-500/20">
+              + New Admission
+            </Link>
+          )}
         </div>
 
         {/* Search & Filters */}
@@ -149,14 +156,18 @@ export default function PatientsModule() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Link href={`/patients/${p.id}/profile`} className="btn-secondary !py-3 text-sm text-center">View History</Link>
-                  <Link href={`/patients/${p.id}/discharge`} className="btn-primary !py-3 text-sm text-center !bg-zinc-900 dark:!bg-white dark:text-zinc-900">Discharge</Link>
-                  <button 
-                    onClick={() => setEditingPatient({...p})}
-                    className="col-span-2 py-3 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-center text-sm font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-                  >
-                    Edit Patient Data
-                  </button>
+                  <Link href={`/patients/${p.id}/profile`} className="btn-secondary !py-3 text-sm text-center">View Profile</Link>
+                  {isAdmin && (
+                    <>
+                      <Link href={`/patients/${p.id}/discharge`} className="btn-primary !py-3 text-sm text-center !bg-zinc-900 dark:!bg-white dark:text-zinc-900">Discharge</Link>
+                      <button 
+                        onClick={() => setEditingPatient({...p})}
+                        className="col-span-2 py-3 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-center text-sm font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        Edit Patient Data
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

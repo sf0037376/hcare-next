@@ -53,11 +53,11 @@ export default function Sidebar() {
 
   const navItems = [
     { href: getDashboardHref(), label: "Dashboard", icon: <Home size={20} /> },
-    { href: "/patients", label: "Patients", icon: <Users size={20} />, roles: ["admin"] },
+    { href: "/patients", label: "Patients", icon: <Users size={20} />, roles: ["admin", "doctor"] },
     { href: "/billing/orders", label: "Audit Logs", icon: <BarChart3 size={20} />, roles: ["admin"] },
     { href: "/medication", label: "Medication", icon: <Pill size={20} />, roles: ["doctor", "nurse"] },
-    { href: "/feeding", label: "Feeding", icon: <Baby size={20} />, roles: ["doctor", "nurse"] },
-    { href: "/vitals", label: "Vitals", icon: <Activity size={20} />, roles: ["doctor", "nurse", "staff"] },
+    { href: "/feeding", label: "Feeding", icon: <Baby size={20} />, roles: ["nurse"] },
+    { href: "/vitals", label: "Vitals", icon: <Activity size={20} />, roles: ["nurse", "staff"] },
     { href: "/appointments", label: "Appointments", icon: <Calendar size={20} />, roles: ["admin", "doctor"] },
     { href: "/availability", label: role === 'admin' ? "Manage Staff Shifts" : "My Schedule", icon: <Calendar size={20} />, roles: ["doctor", "nurse", "admin"] },
     { href: "/alerts", label: "Alerts", icon: <Bell size={20} /> },

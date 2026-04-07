@@ -27,6 +27,13 @@ export default function Dashboard() {
     scheduleId: "",
     recorded_at: new Date().toISOString().slice(0, 16)
   })
+  const [stats, setStats] = useState({
+    occupancyRate: 0,
+    liveAppointments: 0,
+    revenueToday: 0,
+    staffOnline: 0,
+    staffTotal: 0
+  })
 
   useEffect(() => {
     const userRole = (localStorage.getItem("role") || "").toLowerCase()
@@ -57,11 +64,6 @@ export default function Dashboard() {
       }
     }
 
-    if (userRole !== 'patient') {
-      loadPatients()
-      loadGlobalTasks()
-    }
-    
     async function loadGlobalTasks() {
       try {
         const data = await apiFetch("/patients/global-tasks")
@@ -236,12 +238,12 @@ export default function Dashboard() {
                   <div className="mt-10 flex gap-10">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Bed Occupancy</p>
-                      <p className="text-4xl font-black italic font-mono">84%</p>
+                      <p className="text-4xl font-black italic font-mono">{stats.occupancyRate}%</p>
                     </div>
                     <div className="w-px h-12 bg-zinc-700/50 self-center"></div>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Live Appointments</p>
-                      <p className="text-4xl font-black italic font-mono">42</p>
+                      <p className="text-4xl font-black italic font-mono">{stats.liveAppointments}</p>
                     </div>
                   </div>
                 </div>
@@ -250,7 +252,7 @@ export default function Dashboard() {
               
               <div className="bg-blue-600 rounded-[40px] p-8 text-white shadow-xl shadow-blue-500/20 flex flex-col justify-between group cursor-pointer hover:bg-blue-500 transition-all duration-500 hover:scale-[1.02]">
                 <p className="text-blue-100 text-[10px] font-black uppercase tracking-widest">Revenue Today</p>
-                <h4 className="text-5xl font-black italic font-mono tracking-tighter">₹14.2k</h4>
+                <h4 className="text-5xl font-black italic font-mono tracking-tighter">₹{(stats.revenueToday / 1000).toFixed(1)}k</h4>
                 <div className="mt-6 flex items-center gap-2 text-xs font-black text-blue-200">
                   <span className="p-1 px-3 bg-blue-500/50 backdrop-blur-sm rounded-full border border-blue-400/30">↑ 12.5%</span>
                 </div>
@@ -258,7 +260,7 @@ export default function Dashboard() {
 
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm flex flex-col justify-between group transition-all duration-500 hover:shadow-xl">
                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Staff Online</p>
-                <h4 className="text-5xl font-black text-zinc-900 dark:text-white font-mono">18/24</h4>
+                <h4 className="text-5xl font-black text-zinc-900 dark:text-white font-mono">{stats.staffOnline}/{stats.staffTotal}</h4>
                 <Link href="/users/manage" className="text-blue-600 text-xs font-black uppercase tracking-widest hover:text-blue-700 mt-6 flex items-center gap-2 group-hover:translate-x-2 transition-all">
                   Directory <span>&rarr;</span>
                 </Link>

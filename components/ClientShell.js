@@ -5,13 +5,27 @@ import Sidebar from "./sidebar"
 import Topbar from "./topbar"
 import BottomNav from "./BottomNav"
 import AlertListener from "./AlertListener"
+import { useState, useEffect } from "react"
 
 export default function ClientShell({ children }) {
   const pathname = usePathname()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   
+  useEffect(() => {
+    // Client-side only auth check
+    const token = localStorage.getItem("token")
+    setIsAuthenticated(!!token)
+    setIsLoading(false)
+  }, [pathname])
+
   // Exclude landing pages, auth, and dynamic org pages from the clinical shell
   const isOrgRoute = /^\/\d+$/.test(pathname)
-  const showShell = !['/', '/login', '/contact', '/terms', '/privacy', '/register-patient'].includes(pathname) && !isOrgRoute
+  const isExcluded = ['/', '/login', '/contact', '/terms', '/privacy', '/register-patient'].includes(pathname) || isOrgRoute
+  
+  const showShell = !isExcluded && isAuthenticated && !isLoading
+
+  if (isLoading) return null // Prevent layout shift
 
   return (
     <>

@@ -223,13 +223,19 @@ export default function PatientProfile() {
                 {patient.abha_id && (
                   <>
                     <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
-                    <span className="text-blue-600 dark:text-blue-400 font-black italic">ABHA: {patient.abha_id}</span>
+                    <div className="flex items-center gap-1.5 max-w-[120px] sm:max-w-none">
+                      <span className="text-blue-600 dark:text-blue-400 font-black italic truncate">ABHA: {patient.abha_id}</span>
+                      <button onClick={() => { navigator.clipboard.writeText(patient.abha_id); show("ABHA ID copied!"); }} className="p-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors">📋</button>
+                    </div>
                   </>
                 )}
                 {patient.aadhaar && (
                   <>
                     <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
-                    <span className="text-zinc-800 dark:text-zinc-200">Aadhaar: {patient.aadhaar}</span>
+                    <div className="flex items-center gap-1.5 max-w-[120px] sm:max-w-none">
+                      <span className="text-zinc-800 dark:text-zinc-200 truncate font-mono text-[10px]">AADHAAR: {patient.aadhaar}</span>
+                      <button onClick={() => { navigator.clipboard.writeText(patient.aadhaar); show("Aadhaar copied!"); }} className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors">📋</button>
+                    </div>
                   </>
                 )}
                 <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-xl border border-orange-100 dark:border-orange-800/50">

@@ -68,6 +68,7 @@ export default function AlertListener() {
     // 2.5 Initialize Firebase Messaging & Register Token
     const setupFCM = async (userId) => {
       try {
+        if (!firebaseConfig.apiKey) return;
         const app = initializeApp(firebaseConfig);
         const messaging = getMessaging(app);
         

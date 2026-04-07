@@ -70,11 +70,14 @@ export default function Topbar() {
   }
 
   return (
-    <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800">
-      <div className="flex items-center gap-4">
-        {/* Mobile Logo */}
-        <div className="md:hidden w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm shadow-md shadow-blue-500/20">
-          🏥
+    <div className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 py-3 md:py-4 glass border-b border-white/10 dark:border-white/5 transition-all duration-300">
+      <div className="flex items-center gap-3">
+        {/* Mobile Branding */}
+        <div className="md:hidden flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-sm shadow-lg shadow-blue-500/20">
+            🏥
+          </div>
+          <span className="text-sm font-black tracking-tighter text-zinc-900 dark:text-white uppercase">NeoCare</span>
         </div>
         {/* Search with Autocomplete */}
         <div ref={wrapperRef} className="relative max-w-md w-full hidden md:block">
@@ -137,8 +140,8 @@ export default function Topbar() {
         >
           <NotificationBell />
         </div>
-        <div className="md:hidden w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border border-zinc-200 dark:border-zinc-700">
-          👨‍⚕️
+        <div className="md:hidden w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+          <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" alt="User" className="w-full h-full object-cover" />
         </div>
       </div>
     </div>

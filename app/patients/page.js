@@ -109,40 +109,42 @@ export default function PatientsModule() {
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-zinc-900 dark:text-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 text-zinc-900 dark:text-white pb-32">
             {filteredPatients.map(p => (
-              <div key={p.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+              <div key={p.id} className="glass-card p-6 shadow-sm hover:shadow-xl transition-all relative overflow-hidden group border-white/10">
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-xl font-black shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300">
                       {p.name?.[0] || "#"}
                     </div>
                     <div>
-                      <h4 className="font-bold text-lg">{p.name}</h4>
-                      <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">ID: {p.id}</p>
+                      <h4 className="font-extrabold text-lg tracking-tight truncate max-w-[120px] md:max-w-[160px]">{p.name}</h4>
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-70">ID: #{p.id}</p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                    p.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                  <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                    p.status === 'ACTIVE' 
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' 
+                      : 'bg-zinc-50 text-zinc-500 border-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700'
                   }`}>
                     {p.status || 'ACTIVE'}
                   </span>
                 </div>
 
-                <div className="space-y-3 mb-8">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">Type</span>
-                    <span className={`font-bold ${p.patient_type === 'IP' ? 'text-orange-600' : 'text-blue-600'}`}>
+                <div className="space-y-4 mb-8">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-500 font-bold uppercase tracking-widest">Care Type</span>
+                    <span className={`font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${p.patient_type === 'IP' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
                       {p.patient_type || 'OP'}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">Aadhaar</span>
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">{p.aadhaar}</span>
+                  <div className="flex justify-between items-center text-xs overflow-hidden">
+                    <span className="text-zinc-500 font-bold uppercase tracking-widest">Aadhaar</span>
+                    <span className="font-mono text-[10px] text-zinc-900 dark:text-zinc-100 truncate max-w-[140px] text-right font-black">{p.aadhaar}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">ABHA ID</span>
-                    <span className="font-semibold text-blue-600 dark:text-blue-400">{p.abha_id || "Not Linked"}</span>
+                  <div className="flex justify-between items-center text-xs overflow-hidden">
+                    <span className="text-zinc-500 font-bold uppercase tracking-widest">ABHA ID</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400 truncate max-w-[140px] text-right">{p.abha_id || "Not Linked"}</span>
                   </div>
                 </div>
 

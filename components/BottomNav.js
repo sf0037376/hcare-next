@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { apiFetch } from "../lib/api"
+import { Home, Users, BarChart3, Pill, Calendar, Activity, Bell, DollarSign, FileText, CheckCircle, Settings, MoreHorizontal } from "lucide-react"
 
 export default function BottomNav() {
   const pathname = usePathname()
@@ -38,19 +39,19 @@ export default function BottomNav() {
   }, [])
 
   const navItems = [
-    { href: role === "doctor" ? "/doctor-dashboard" : role === "nurse" || role === "staff" || role === "attender" ? "/staff-dashboard" : "/dashboard", label: "Home", icon: "🏠" },
-    { href: "/patients", label: "Patients", icon: "👥", roles: ["admin"] },
-    { href: "/billing/orders", label: "Orders", icon: "📋", roles: ["admin"] },
-    { href: "/medication", label: "Meds", icon: "💊", roles: ["doctor", "nurse"] },
-    { href: "/appointments", label: "Appts", icon: "📅", roles: ["admin", "doctor", "nurse"] },
-    { href: "/availability", label: role === 'admin' ? "Shifts" : "My Schedule", icon: "⏰", roles: ["doctor", "nurse", "admin"] },
-    { href: "/vitals", label: "Vitals", icon: "❤️", roles: ["doctor", "nurse", "staff"] },
-    { href: "/alerts", label: "Alerts", icon: "🔔" },
-    { href: "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist"] },
-    { href: "/billing/ip-logs", label: "IP Logs", icon: "📑", roles: ["admin", "nurse"] },
-    { href: role === 'patient' ? "/patients/financials" : "/billing", label: "Billing", icon: "💰", roles: ["admin", "pharmacist", "patient"] },
-    { href: `/patients/${patientId}/approvals`, label: "Approvals", icon: "✅", roles: ["patient"] },
-    { href: "/masters", label: "Masters", icon: "⚙️", roles: ["admin"] },
+    { href: role === "doctor" ? "/doctor-dashboard" : role === "nurse" || role === "staff" || role === "attender" ? "/staff-dashboard" : "/dashboard", label: "Home", icon: <Home size={18} /> },
+    { href: "/patients", label: "Patients", icon: <Users size={18} />, roles: ["admin"] },
+    { href: "/billing/orders", label: "Audit Logs", icon: <BarChart3 size={18} />, roles: ["admin"] },
+    { href: "/medication", label: "Meds", icon: <Pill size={18} />, roles: ["doctor", "nurse"] },
+    { href: "/appointments", label: "Appts", icon: <Calendar size={18} />, roles: ["admin", "doctor", "nurse"] },
+    { href: "/availability", label: role === 'admin' ? "Shifts" : "My Schedule", icon: <Calendar size={18} />, roles: ["doctor", "nurse", "admin"] },
+    { href: "/vitals", label: "Vitals", icon: <Activity size={18} />, roles: ["doctor", "nurse", "staff"] },
+    { href: "/alerts", label: "Alerts", icon: <Bell size={18} /> },
+    { href: "/billing", label: "Billing", icon: <DollarSign size={18} />, roles: ["admin", "pharmacist"] },
+    { href: "/billing/ip-logs", label: "IP Logs", icon: <FileText size={18} />, roles: ["admin", "nurse"] },
+    { href: role === 'patient' ? "/patients/financials" : "/billing", label: "Billing", icon: <DollarSign size={18} />, roles: ["admin", "pharmacist", "patient"] },
+    { href: `/patients/${patientId}/approvals`, label: "Approvals", icon: <CheckCircle size={18} />, roles: ["patient"] },
+    { href: "/masters", label: "Masters", icon: <Settings size={18} />, roles: ["admin"] },
   ]
 
   const visibleItems = navItems.filter(
@@ -68,8 +69,8 @@ export default function BottomNav() {
   return (
     <>
       {/* Mobile Bottom Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_-8px_30px_rgb(0,0,0,0.4)] md:hidden">
-        <div className="flex justify-around items-center h-16 px-4">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/10 dark:border-white/5 pb-safe md:hidden rounded-t-3xl overflow-hidden shadow-2xl">
+        <div className="flex justify-around items-center h-16 md:h-18 px-1">
           {barItems.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -78,24 +79,16 @@ export default function BottomNav() {
                 href={item.href}
                 className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all relative ${
                   isActive
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+                    ? "text-blue-500 font-bold"
+                    : "text-zinc-500 dark:text-zinc-400 opacity-70"
                 }`}
               >
-                <span className={`text-xl transition-transform ${isActive ? 'scale-110 -translate-y-0.5' : ''}`}>{item.icon}</span>
-                <span className={`text-[10px] font-bold uppercase tracking-tight transition-all ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
-                {item.label === "Approvals" && pendingCount > 0 && (
-                  <span className="absolute top-1 right-2 w-4 h-4 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full font-black animate-pulse">
-                    {pendingCount}
-                  </span>
-                )}
-                {item.label === "Alerts" && unreadAlerts > 0 && (
-                  <span className="absolute top-1 right-2 w-4 h-4 bg-blue-600 text-white text-[8px] flex items-center justify-center rounded-full font-black">
-                    {unreadAlerts}
-                  </span>
-                )}
+                <span className={`transition-transform duration-300 ${isActive ? 'scale-110 -translate-y-1' : ''}`}>
+                  {item.icon}
+                </span>
+                <span className={`text-[9px] font-bold uppercase tracking-widest transition-all ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
                 {isActive && (
-                  <span className="absolute bottom-1 w-1 h-1 rounded-full bg-blue-600 dark:bg-blue-400" />
+                  <span className="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/30" />
                 )}
               </Link>
             )
@@ -103,12 +96,10 @@ export default function BottomNav() {
           
           <button
             onClick={() => setShowMore(true)}
-            className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all ${
-              showMore ? "text-blue-600 dark:text-blue-400" : "text-zinc-500"
-            }`}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all text-zinc-500 dark:text-zinc-400 opacity-70`}
           >
-            <span className="text-xl">☰</span>
-            <span className="text-[10px] font-bold uppercase tracking-tight opacity-60">More</span>
+            <MoreHorizontal size={18} />
+            <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">More</span>
           </button>
         </div>
       </nav>

@@ -19,10 +19,10 @@ export default function ClientShell({ children }) {
         <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-black font-sans antialiased text-zinc-900 dark:text-zinc-50">
           <AlertListener />
           <Sidebar />
-          <div className="flex-1 flex flex-col md:ml-64 relative w-full h-full overflow-hidden">
+          <div className="flex-1 flex flex-col md:ml-64 relative w-full h-full overflow-hidden transition-all duration-300">
             <Topbar />
-            <main id="main-content" className="flex-1 overflow-y-auto pb-24 md:pb-6 relative w-full h-full custom-scrollbar">
-              <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-full">
+            <main id="main-content" className="flex-1 overflow-y-auto pt-20 md:pt-0 pb-24 md:pb-6 relative w-full h-full custom-scrollbar">
+              <div className="px-4 py-6 md:px-8 md:py-8 max-w-7xl mx-auto min-h-full">
                 {children}
               </div>
             </main>

@@ -111,10 +111,13 @@ export default function AlertListener() {
 
       socketRef.current = io(origin, {
         auth: { token },
-        path: socketPath,
+        path: "/api/socket.io", // Force align with backend
         transports: ["websocket", "polling"],
-        withCredentials: true
+        withCredentials: true,
+        reconnection: true,
+        reconnectionAttempts: 5
       })
+
 
       socketRef.current.on("connect_error", (err) => {
         console.error("📡 WebSocket connection error:", err.message)

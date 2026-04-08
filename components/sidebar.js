@@ -48,25 +48,27 @@ export default function Sidebar() {
   const getDashboardHref = () => {
     if (role === "doctor") return "/doctor-dashboard"
     if (role === "nurse" || role === "staff" || role === "attender") return "/staff-dashboard"
+    if (role === "pharmacist") return "/pharmacy/fulfillment"
     return "/dashboard"
   }
 
   const navItems = [
     { href: getDashboardHref(), label: "Dashboard", icon: <Home size={20} /> },
-    { href: "/patients", label: "Patients", icon: <Users size={20} />, roles: ["admin", "doctor"] },
-    { href: "/billing/orders", label: "Audit Logs", icon: <BarChart3 size={20} />, roles: ["admin"] },
-    { href: "/medication", label: "Medication", icon: <Pill size={20} />, roles: ["doctor", "nurse"] },
+    { href: "/patients", label: "Patients", icon: <Users size={20} />, roles: ["admin", "super_admin", "doctor"] },
+    { href: "/billing/orders", label: "Audit Logs", icon: <BarChart3 size={20} />, roles: ["admin", "super_admin"] },
+    { href: "/medication", label: "Medication", icon: <Pill size={20} />, roles: ["doctor", "nurse", "super_admin"] },
     { href: "/feeding", label: "Feeding", icon: <Baby size={20} />, roles: ["nurse"] },
     { href: "/vitals", label: "Vitals", icon: <Activity size={20} />, roles: ["nurse", "staff"] },
-    { href: "/appointments", label: "Appointments", icon: <Calendar size={20} />, roles: ["admin", "doctor"] },
-    { href: "/availability", label: role === 'admin' ? "Manage Staff Shifts" : "My Schedule", icon: <Calendar size={20} />, roles: ["doctor", "nurse", "admin"] },
+    { href: "/appointments", label: "Appointments", icon: <Calendar size={20} />, roles: ["admin", "super_admin", "doctor"] },
+    { href: "/availability", label: (role === 'admin' || role === 'super_admin') ? "Manage Staff Shifts" : "My Schedule", icon: <Calendar size={20} />, roles: ["doctor", "nurse", "admin", "super_admin"] },
     { href: "/alerts", label: "Alerts", icon: <Bell size={20} /> },
-    { href: "/pharmacy/inventory", label: "Pharmacy", icon: <Hospital size={20} />, roles: ["admin", "pharmacist"] },
-    { href: "/billing", label: "Billing", icon: <DollarSign size={20} />, roles: ["admin", "pharmacist"] },
-    { href: "/billing/ip-logs", label: "IP Billing Log", icon: <FileText size={20} />, roles: ["admin", "nurse"] },
+    { href: "/pharmacy/fulfillment", label: "Pharmacy Counter", icon: <Hospital size={20} />, roles: ["admin", "super_admin", "pharmacist"] },
+    { href: "/pharmacy/inventory", label: "Drug Inventory", icon: <Pill size={20} />, roles: ["admin", "super_admin", "pharmacist"] },
+    { href: "/billing", label: "Billing", icon: <DollarSign size={20} />, roles: ["admin", "super_admin", "pharmacist"] },
+    { href: "/billing/ip-logs", label: "IP Billing Log", icon: <FileText size={20} />, roles: ["admin", "super_admin", "nurse"] },
     { href: "/patients/financials", label: "Financials", icon: <CreditCard size={20} />, roles: ["patient"] },
     { href: `/patients/${patientId}/approvals`, label: "Approvals", icon: <CheckCircle size={20} />, roles: ["patient"] },
-    { href: "/masters", label: "Masters", icon: <Settings size={20} />, roles: ["admin"] },
+    { href: "/masters", label: "Masters", icon: <Settings size={20} />, roles: ["admin", "super_admin"] },
   ]
   
   const adminItems = [
@@ -124,7 +126,7 @@ export default function Sidebar() {
           </nav>
         </div>
 
-        {role === "admin" && (
+        {(role === "admin" || role === "super_admin") && (
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4 px-3">Administration</h3>
             <nav className="space-y-1">

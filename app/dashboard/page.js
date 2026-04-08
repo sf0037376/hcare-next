@@ -53,6 +53,9 @@ export default function Dashboard() {
         }).catch(err => console.error("Could not fetch patient dashboard", err))
         return
       }
+    } else if (userRole === 'pharmacist') {
+      window.location.href = '/pharmacy/fulfillment'
+      return
     }
 
     async function loadPatients() {

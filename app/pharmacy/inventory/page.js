@@ -62,7 +62,7 @@ export default function PharmacyInventory() {
   }
 
   return (
-    <ProtectedRoute roles={["admin", "pharmacist"]}>
+    <ProtectedRoute roles={["admin", "super_admin", "pharmacist"]}>
       <div className="animate-in fade-in duration-500 max-w-6xl mx-auto pb-20">
         {Toast}
         

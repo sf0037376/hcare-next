@@ -84,7 +84,7 @@ export default function PharmacistDashboard() {
   }, [handleBarcodeKey])
 
   return (
-    <ProtectedRoute roles={["ADMIN", "PHARMACIST"]}>
+    <ProtectedRoute roles={["ADMIN", "SUPER_ADMIN", "PHARMACIST"]}>
       <div className="animate-in fade-in duration-500 max-w-6xl mx-auto pb-20">
         {Toast}
 

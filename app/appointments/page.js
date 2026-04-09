@@ -128,271 +128,285 @@ export default function AppointmentPage() {
 
   return (
     <ProtectedRoute roles={["admin", "doctor", "patient"]}>
-      <div className="animate-in fade-in duration-500 max-w-6xl mx-auto pb-20">
+      <div className="animate-in fade-in duration-700 max-w-7xl mx-auto pb-safe px-4 lg:px-0">
         {Toast}
         
         <div className="mb-6">
-          <Link href="/dashboard" className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-medium text-sm flex items-center gap-1 transition-colors">
-            &larr; Back to Dashboard
+          <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 hover:text-blue-600 flex items-center gap-2 transition-all group">
+            <span className="group-hover:-translate-x-1 transition-transform">←</span> Return_to_Command_Center
           </Link>
         </div>
 
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Appointments & Scheduling</h2>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-2">Manage patient visits and notify doctors of new bookings. Aligning with ABDM standards.</p>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12 py-8">
+            <div className="space-y-2">
+                <h2 className="page-title">clinical_scheduling</h2>
+                <p className="page-subtitle">Sector_Operational: Priority_Throughput</p>
+            </div>
+            <div className="flex items-center gap-4 px-6 py-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-tactical text-emerald-600">Queue_Active_Sync</span>
+            </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Booking Form */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          {/* Booking Operational Form */}
           <div className="lg:col-span-4">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm sticky top-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold">Book Appointment</h3>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
-                    id="newPatientToggle"
-                    className="w-4 h-4 rounded text-blue-600"
-                    checked={isNewPatient}
-                    onChange={e => {
-                      setIsNewPatient(e.target.checked)
-                      setPatientSearch("")
-                      setForm(prev => ({...prev, patient_id: ""}))
-                    }}
-                  />
-                  <label htmlFor="newPatientToggle" className="text-sm font-medium text-zinc-600">New Patient</label>
-                </div>
-              </div>
-              
-              <form onSubmit={handleBook} className="space-y-4">
-                {!isNewPatient ? (
-                  <div className="relative">
-                    <label className="form-label">Existing Patient</label>
-                    <input 
-                      type="text"
-                      className="form-input"
-                      placeholder="Search patient by name or phone..."
-                      value={patientSearch}
-                      onChange={e => {
-                        setPatientSearch(e.target.value)
-                        setShowPatientSuggestions(true)
-                        if (!e.target.value) setForm({...form, patient_id: ""})
-                      }}
-                      onFocus={() => setShowPatientSuggestions(true)}
-                      required={!isNewPatient && !form.patient_id}
-                    />
-                    {showPatientSuggestions && patientSearch && (
-                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                        {patients
-                          .filter(p => 
-                            p.name.toLowerCase().includes(patientSearch.toLowerCase()) || 
-                            (p.phone || "").includes(patientSearch)
-                          )
-                          .map(p => (
-                            <div 
-                              key={p.id}
-                              className="px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer border-b border-zinc-100 dark:border-zinc-800 last:border-0"
-                              onClick={() => {
-                                setForm({...form, patient_id: p.id})
-                                setPatientSearch(p.name)
-                                setShowPatientSuggestions(false)
-                              }}
-                            >
-                              <p className="font-bold text-sm">{p.name}</p>
-                              <p className="text-xs text-zinc-500">{p.phone} • {p.patient_type || 'OP'}</p>
-                            </div>
-                          ))
-                        }
-                        {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase()) || (p.phone || "").includes(patientSearch)).length === 0 && (
-                          <div className="px-4 py-3 text-sm text-zinc-500">No patients found</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <>
+            <div className="pro-card p-10 shadow-sm sticky top-28">
+                <div className="flex items-center justify-between mb-10">
                     <div>
-                      <label className="form-label">Patient Name</label>
-                      <input 
-                        className="form-input"
-                        placeholder="Full Name"
-                        value={form.patient_name}
-                        onChange={e => setForm({...form, patient_name: e.target.value})}
-                        required={isNewPatient}
-                      />
+                        <h3 className="text-xl font-black tracking-tight uppercase text-zinc-900 dark:text-white leading-none">Book_Slot</h3>
+                        <p className="text-tactical text-zinc-400 mt-2">Allocation_Module</p>
                     </div>
-                    <div>
-                      <label className="form-label text-zinc-500">Aadhaar No. (Optional)</label>
-                      <input 
-                        className="form-input bg-white/50 dark:bg-zinc-950/50" 
-                        placeholder="Enter 12 digit Aadhaar"
-                        value={form.aadhaar}
-                        onChange={e => setForm({...form, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12)})}
-                        maxLength={12}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Phone Number</label>
-                      <input 
-                        className="form-input"
-                        placeholder="10-digit mobile"
-                        value={form.phone}
-                        onChange={e => setForm({...form, phone: e.target.value})}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {isNewPatient && (
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30 space-y-3">
-                    <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">ABDM Details</p>
-                    <div>
-                      <label className="text-[10px] font-semibold text-zinc-500 uppercase mb-1 block">ABHA ID (Optional)</label>
-                      <input 
-                        className="form-input text-sm py-2"
-                        placeholder="1234-5678-9012-34"
-                        value={form.abha_id}
-                        onChange={e => setForm({...form, abha_id: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-semibold text-zinc-500 uppercase mb-1 block">ABHA Address</label>
-                      <input 
-                        className="form-input text-sm py-2"
-                        placeholder="name@abdm"
-                        value={form.abha_address}
-                        onChange={e => setForm({...form, abha_address: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                )}
-                <div>
-                  <label className="form-label">Doctor</label>
-                  <select 
-                    className="form-input"
-                    value={form.doctor_id}
-                    onChange={e => setForm({...form, doctor_id: e.target.value})}
-                    required
-                  >
-                    <option value="">-- Assign Doctor --</option>
-                    {doctors.map(d => <option key={d.id} value={d.id}>{d.username}</option>)}
-                  </select>
-                </div>
-                
-                {form.doctor_id && (
-                  <>
-                    <div className="flex justify-end mb-2">
-                      <button 
-                        type="button" 
-                        onClick={() => {
-                          setUseCustomDate(!useCustomDate)
-                          setForm({...form, appointment_time: ""})
-                          setSelectedDate("")
-                        }} 
-                        className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-colors bg-blue-50 px-3 py-1.5 rounded-full"
-                      >
-                        {useCustomDate ? "Use Doctor Schedule" : "Enter Custom / Past Date"}
-                      </button>
-                    </div>
-                    {useCustomDate ? (
-                      <div>
-                        <label className="form-label">Date & Time</label>
+                    <div className="flex items-center gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700">
                         <input 
-                          type="datetime-local"
-                          className="form-input"
-                          value={form.appointment_time}
-                          onChange={e => setForm({...form, appointment_time: e.target.value})}
-                          required
+                            type="checkbox" 
+                            id="newPatientToggle"
+                            className="hidden"
+                            checked={isNewPatient}
+                            onChange={e => {
+                              setIsNewPatient(e.target.checked)
+                              setPatientSearch("")
+                              setForm(prev => ({...prev, patient_id: ""}))
+                            }}
                         />
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="form-label">Available Date</label>
-                          <select 
-                        className="form-input"
-                        value={selectedDate}
-                        onChange={e => {
-                          setSelectedDate(e.target.value)
-                          setForm({...form, appointment_time: ""})
-                        }}
-                        required
-                      >
-                        <option value="">-- Select Date --</option>
-                        {[...new Set(doctorSchedule.filter(d => d.available_date.split('T')[0] >= new Date().toISOString().split('T')[0]).map(d => d.available_date.split('T')[0]))].sort().map(date => (
-                           <option key={date} value={date}>{date.split('-').reverse().join('-')}</option>
-                        ))}
-                      </select>
+                        <label 
+                            htmlFor="newPatientToggle" 
+                            className={`px-3 py-1.5 rounded-lg text-tactical cursor-pointer transition-all ${isNewPatient ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-900 shadow-md' : 'text-zinc-400'}`}
+                        >
+                            New_Entity
+                        </label>
                     </div>
-                    <div>
-                      <label className="form-label">Time Slot</label>
-                      <select 
-                        className="form-input"
-                        value={form.appointment_time ? form.appointment_time.split('T')[1].substring(0,5) : ""}
-                        onChange={e => {
-                          if (e.target.value) {
-                             const datePart = selectedDate
-                             const timePart = e.target.value
-                             setForm({...form, appointment_time: `${datePart}T${timePart}:00`})
-                          } else {
-                             setForm({...form, appointment_time: ""})
-                          }
-                        }}
-                        disabled={!selectedDate}
-                        required
-                      >
-                        <option value="">-- Select Time --</option>
-                        {availableSlots.map(time => (
-                           <option key={time} value={time}>{time}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                )}
-                  </>
-                )}
-                {!form.doctor_id && (
-                  <div>
-                    <label className="form-label text-zinc-400">Date & Time</label>
-                    <div className="form-input bg-zinc-50 dark:bg-zinc-800/50 text-zinc-400 flex items-center h-11 text-sm border-dashed">Select a doctor first</div>
-                  </div>
-                )}
-                
-                <div>
-                  <label className="form-label">Reason for Visit</label>
-                  <textarea 
-                    className="form-input min-h-[80px]"
-                    placeholder="Brief description..."
-                    value={form.reason}
-                    onChange={e => setForm({...form, reason: e.target.value})}
-                  />
                 </div>
-                <button type="submit" disabled={submitting} className="w-full btn-primary py-3 mt-2 shadow-blue-500/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-                  {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Confirm Booking"}
-                </button>
-              </form>
+                
+                <form onSubmit={handleBook} className="space-y-8">
+                    <div className="space-y-6">
+                        {!isNewPatient ? (
+                            <div className="relative group">
+                                <label className="form-label">Search_Patient_Archive</label>
+                                <input 
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="Search by ID or Phone..."
+                                    value={patientSearch}
+                                    onChange={e => {
+                                        setPatientSearch(e.target.value)
+                                        setShowPatientSuggestions(true)
+                                        if (!e.target.value) setForm({...form, patient_id: ""})
+                                    }}
+                                    onFocus={() => setShowPatientSuggestions(true)}
+                                />
+                                {showPatientSuggestions && patientSearch && (
+                                    <div className="absolute z-50 w-full mt-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl max-h-[300px] overflow-y-auto no-scrollbar animate-elite-zoom">
+                                        {patients
+                                        .filter(p => 
+                                            p.name.toLowerCase().includes(patientSearch.toLowerCase()) || 
+                                            (p.phone || "").includes(patientSearch)
+                                        )
+                                        .map(p => (
+                                            <div 
+                                                key={p.id}
+                                                className="px-8 py-6 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer border-b border-zinc-100 dark:border-zinc-800 last:border-0 transition-all group/item"
+                                                onClick={() => {
+                                                    setForm({...form, patient_id: p.id})
+                                                    setPatientSearch(p.name)
+                                                    setShowPatientSuggestions(false)
+                                                }}
+                                            >
+                                                <div className="font-black text-sm text-zinc-900 dark:text-white uppercase tracking-tight group-hover/item:text-blue-600 transition-colors">{p.name}</div>
+                                                <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest mt-1">{p.phone} • {p.patient_type || 'OP'}</p>
+                                            </div>
+                                        ))
+                                        }
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="space-y-4 p-6 bg-zinc-50 dark:bg-zinc-800/30 rounded-3xl border border-zinc-100 dark:border-zinc-700/50">
+                                <div>
+                                    <label className="form-label">Full_Legal_Identity</label>
+                                    <input 
+                                        className="form-input !bg-transparent font-black"
+                                        placeholder="Enter Name"
+                                        value={form.patient_name}
+                                        onChange={e => setForm({...form, patient_name: e.target.value})}
+                                        required={isNewPatient}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="form-label">Phone_Contact</label>
+                                        <input 
+                                            className="form-input !bg-transparent font-black font-mono tracking-widest"
+                                            placeholder="Mobile"
+                                            value={form.phone}
+                                            onChange={e => setForm({...form, phone: e.target.value})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="form-label opacity-40 italic">Aadhaar_ID (Opt)</label>
+                                        <input 
+                                            className="form-input !bg-transparent font-black font-mono" 
+                                            placeholder="12 digits"
+                                            value={form.aadhaar}
+                                            onChange={e => setForm({...form, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12)})}
+                                            maxLength={12}
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div className="pt-4 mt-4 border-t border-zinc-200 dark:border-zinc-700">
+                                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] mb-4 text-center">ABDM_Federated_Health_Link</p>
+                                    <div className="space-y-3">
+                                        <input 
+                                            className="form-input !bg-transparent text-xs font-black"
+                                            placeholder="ABHA ID (e.g. 1234-5678-9012-34)"
+                                            value={form.abha_id}
+                                            onChange={e => setForm({...form, abha_id: e.target.value})}
+                                        />
+                                        <input 
+                                            className="form-input !bg-transparent text-xs font-black"
+                                            placeholder="ABHA Address (e.g. name@abdm)"
+                                            value={form.abha_address}
+                                            onChange={e => setForm({...form, abha_address: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="form-label">Assigned_Clinical_Lead</label>
+                            <select 
+                                className="form-input font-black uppercase tracking-tight"
+                                value={form.doctor_id}
+                                onChange={e => setForm({...form, doctor_id: e.target.value})}
+                                required
+                            >
+                                <option value="">-- Assign Physician --</option>
+                                {doctors.map(d => <option key={d.id} value={d.id}>{d.username.toUpperCase()}</option>)}
+                            </select>
+                        </div>
+                        
+                        {form.doctor_id && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <label className="form-label mb-0">Temporal_Allocation</label>
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                    setUseCustomDate(!useCustomDate)
+                                    setForm({...form, appointment_time: ""})
+                                    setSelectedDate("")
+                                    }} 
+                                    className="text-[9px] font-black uppercase tracking-widest text-blue-600 hover:text-white transition-all bg-blue-500/10 hover:bg-blue-600 px-4 py-2 rounded-xl"
+                                >
+                                    {useCustomDate ? "Schedule_Sync" : "Override_Manual"}
+                                </button>
+                            </div>
+                            
+                            {useCustomDate ? (
+                                <input 
+                                    type="datetime-local"
+                                    className="form-input font-black !py-4 italic"
+                                    value={form.appointment_time}
+                                    onChange={e => setForm({...form, appointment_time: e.target.value})}
+                                    required
+                                />
+                            ) : (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="form-label opacity-40 italic">Available_Date</label>
+                                        <select 
+                                            className="form-input font-black !py-4"
+                                            value={selectedDate}
+                                            onChange={e => {
+                                            setSelectedDate(e.target.value)
+                                            setForm({...form, appointment_time: ""})
+                                            }}
+                                            required
+                                        >
+                                            <option value="">-- Date --</option>
+                                            {[...new Set(doctorSchedule.filter(d => d.available_date.split('T')[0] >= new Date().toISOString().split('T')[0]).map(d => d.available_date.split('T')[0]))].sort().map(date => (
+                                            <option key={date} value={date}>{date.split('-').reverse().join('-')}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="form-label opacity-40 italic">Selected_Slot</label>
+                                        <select 
+                                            className="form-input font-black !py-4"
+                                            value={form.appointment_time ? form.appointment_time.split('T')[1].substring(0,5) : ""}
+                                            onChange={e => {
+                                            if (e.target.value) {
+                                                const datePart = selectedDate
+                                                const timePart = e.target.value
+                                                setForm({...form, appointment_time: `${datePart}T${timePart}:00`})
+                                            } else {
+                                                setForm({...form, appointment_time: ""})
+                                            }
+                                            }}
+                                            disabled={!selectedDate}
+                                            required
+                                        >
+                                            <option value="">-- Slot --</option>
+                                            {availableSlots.map(time => (
+                                            <option key={time} value={time}>{time}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        )}
+
+                        <div>
+                            <label className="form-label">Clinical_Objective / Reason</label>
+                            <textarea 
+                                className="form-input min-h-[120px] font-black placeholder:italic"
+                                placeholder="Indicate diagnostic intent..."
+                                value={form.reason}
+                                onChange={e => setForm({...form, reason: e.target.value})}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-4">
+                        <button 
+                            type="submit" 
+                            disabled={submitting} 
+                            className="w-full btn-primary py-8 bg-zinc-950 dark:bg-white text-white dark:text-zinc-900 text-xs font-black uppercase tracking-[0.4em] shadow-2xl active:scale-[0.98] transition-all disabled:opacity-50"
+                        >
+                            {submitting ? "Processing_Allocation..." : "Authorize_Booking"}
+                        </button>
+                    </div>
+                </form>
+              <div className="absolute -bottom-20 -left-20 text-[20rem] opacity-5 grayscale group-hover:-rotate-6 transition-all duration-1000 select-none">📅</div>
             </div>
           </div>
 
-          {/* Appointment List */}
-          <div className="lg:col-span-8 space-y-4">
-            <h3 className="text-lg font-semibold px-2 flex items-center justify-between">
-              Upcoming Schedule
-              <span className="text-xs font-medium text-zinc-400">{appointments.length} Appointments</span>
-            </h3>
+          {/* Institutional Schedule Matrix */}
+          <div className="lg:col-span-8 space-y-10">
+            <div className="flex items-center justify-between px-6">
+                <div>
+                    <h3 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight leading-none mb-1">Schedule_Matrix</h3>
+                    <p className="text-tactical text-zinc-400">Institutional_Throughview</p>
+                </div>
+                <div className="px-6 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold uppercase tracking-widest rounded-xl shadow-sm text-[10px]">
+                    {appointments.length} ACTIVE_RECORDS
+                </div>
+            </div>
             
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 text-xs uppercase font-semibold">
+            <div className="clinical-table-container">
+                <table className="clinical-table">
+                  <thead>
                     <tr>
-                      <th className="px-6 py-4">Time</th>
-                      <th className="px-6 py-4">Patient</th>
-                      <th className="px-6 py-4">Doctor</th>
-                      <th className="px-6 py-4">Status</th>
+                      <th className="pl-10">Synchronized_Time</th>
+                      <th>Patient_Entity</th>
+                      <th>Lead_Physician</th>
+                      <th className="pr-10 text-right">Clearance_Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/30">
                     {appointments
                       .filter(appt => {
                         const role = (localStorage.getItem('role') || '').toLowerCase()
@@ -401,25 +415,35 @@ export default function AppointmentPage() {
                         return true
                       })
                       .map(appt => (
-                      <tr key={appt.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100 font-medium">
-                          {appt.appointment_time.split('T')[0].split('-').reverse().join('-')} at {new Date(appt.appointment_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              <tr key={appt.id}>
+                        <td>
+                            <div className="flex flex-col">
+                                <span className="text-xl font-black italic tracking-tighter text-zinc-900 dark:text-white">
+                                    {new Date(appt.appointment_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </span>
+                                <span className="text-tactical text-zinc-400 mt-1">
+                                    {appt.appointment_time.split('T')[0].split('-').reverse().join('-')}
+                                </span>
+                            </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <p className="font-semibold text-zinc-900 dark:text-white">{appt.patient_name}</p>
-                          <p className="text-xs text-zinc-500 truncate max-w-[150px]">{appt.reason}</p>
+                        <td>
+                            <div className="flex flex-col">
+                                <h4 className="font-extrabold text-zinc-900 dark:text-white tracking-tight uppercase">{appt.patient_name}</h4>
+                                <p className="text-tactical text-zinc-500 mt-1 uppercase">INTENT: {appt.reason || 'Routine'}</p>
+                            </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                          {appt.doctor_name}
+                        <td>
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-400">MD</div>
+                                <span className="text-tactical text-zinc-600 dark:text-zinc-300">DR_{appt.doctor_name.toUpperCase()}</span>
+                            </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                              appt.is_confirmed ? 'bg-emerald-100 text-emerald-600' : 
-                              appt.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-600' : 
-                              'bg-zinc-100 text-zinc-600'
+                        <td className="text-right">
+                          <div className="flex items-center justify-end gap-4">
+                            <span className={`status-badge ${
+                              appt.is_confirmed ? 'text-emerald-600' : 'text-blue-600 animate-pulse'
                             }`}>
-                              {appt.is_confirmed ? 'CONFIRMED' : appt.status}
+                              {appt.is_confirmed ? 'Confirmed' : 'Pending'}
                             </span>
                             {!appt.is_confirmed && (
                               <button 
@@ -432,9 +456,9 @@ export default function AppointmentPage() {
                                     show("Failed to confirm");
                                   }
                                 }}
-                                className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg transition-colors border border-emerald-100 dark:border-emerald-800"
+                                className="btn-secondary !py-2 !px-4 !rounded-lg text-[9px]"
                               >
-                                CONFIRM ✓
+                                AUTHORIZE ✓
                               </button>
                             )}
                           </div>
@@ -443,19 +467,19 @@ export default function AppointmentPage() {
                     ))}
                     {appointments.length === 0 && !loading && (
                       <tr>
-                        <td colSpan="4" className="px-6 py-20 text-center text-zinc-400 italic">
-                          No appointments scheduled yet.
-                        </td>
+                        <td colSpan="4" className="py-60 text-center opacity-30 text-zinc-500 uppercase text-[10px] font-black tracking-widest italic">Schedule_Matrix_Empty</td>
                       </tr>
                     )}
                     {loading && (
-                      <tr>
-                        <td colSpan="4" className="px-6 py-10 text-center text-zinc-400">Loading schedule...</td>
-                      </tr>
+                        <tr>
+                            <td colSpan="4" className="py-60 text-center">
+                                <div className="w-12 h-12 border-4 border-zinc-200 dark:border-zinc-700 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 italic">Synchronizing_Archive...</p>
+                            </td>
+                        </tr>
                     )}
                   </tbody>
                 </table>
-              </div>
             </div>
           </div>
         </div>

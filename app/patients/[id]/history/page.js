@@ -25,7 +25,8 @@ export default function PatientHistory() {
         const combined = [
           ...profileData.vitals.map(v => ({ ...v, type: 'VITALS', summary: `Vitals logged: HR ${v.hr || '--'}, SpO2 ${v.spo2 || '--'}%`, time: v.recorded_at })),
           ...profileData.medication_logs.map(m => ({ ...m, type: 'MEDICATION', summary: `${m.medicine} - ${m.dosage || m.dose} administered`, time: m.recorded_at })),
-          ...profileData.feeding_logs.map(f => ({ ...f, type: 'FEEDING', summary: `${f.type} Feed - ${f.quantity}ml logged`, time: f.recorded_at }))
+          ...profileData.feeding_logs.map(f => ({ ...f, type: 'FEEDING', summary: `${f.type} Feed - ${f.quantity}ml logged`, time: f.recorded_at })),
+          ...(profileData.vaccination_logs || []).map(v => ({ ...v, type: 'VACCINATION', summary: `Vaccine: ${v.vaccine_name} (${v.target_disease})`, notes: `${v.status === 'COMPLETED' ? 'Administered' : 'Scheduled'}. ${v.notes || ''}`, time: v.administered_at || v.scheduled_date }))
         ].sort((a, b) => new Date(b.time) - new Date(a.time))
 
         setHistory(combined)
@@ -193,6 +194,7 @@ export default function PatientHistory() {
                     <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-widest ${
                       item.type === 'VITALS' ? 'bg-blue-100 text-blue-600' :
                       item.type === 'MEDICATION' ? 'bg-purple-100 text-purple-600' :
+                      item.type === 'VACCINATION' ? 'bg-emerald-100 text-emerald-600' :
                       'bg-orange-100 text-orange-600'
                     }`}>
                       {item.type}

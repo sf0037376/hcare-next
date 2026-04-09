@@ -177,230 +177,105 @@ export default function PatientProfile() {
 
   return (
     <ProtectedRoute>
-      <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-40 max-w-7xl mx-auto px-6 transition-all">
         {Toast}
 
-        {/* Pending Approvals Alert Banner */}
+        {/* Tactical Billing Alert Architecture */}
         {pendingCount > 0 && (role === 'patient' || role === 'admin' || role === 'super_admin') && (
-          <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/30 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse shadow-lg shadow-amber-500/10">
-            <div className="flex items-center gap-4 text-center md:text-left">
+          <div className="mb-12 p-8 bg-amber-500/5 border border-amber-500/10 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-8 animate-pulse">
+            <div className="flex items-center gap-6">
               <span className="text-4xl">🧾</span>
               <div>
-                <h4 className="text-lg font-black text-amber-900 dark:text-amber-100 italic">Action Required: {pendingCount} Pending Charges</h4>
-                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mt-1">Please review and approve the latest billing items for your stay.</p>
+                <h4 className="text-xl font-black text-amber-900 dark:text-amber-100 uppercase tracking-tight">Pending Action: {pendingCount} Unpaid Bills</h4>
+                <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-2 tracking-wide">Please review the medical charges for your recent visits.</p>
               </div>
             </div>
             <Link
               href={`/patients/${id}/approvals`}
-              className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-lg shadow-amber-500/20 whitespace-nowrap"
+              className="btn-primary !bg-amber-600 !text-white !shadow-none whitespace-nowrap"
             >
-              Review & Approve Now →
+              Review & Pay →
             </Link>
           </div>
         )}
-
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-          <div className="flex items-center gap-6">
-            <div className="w-24 h-24 rounded-3xl bg-blue-600 flex items-center justify-center text-4xl text-white shadow-xl shadow-blue-500/20">
-              {patient.gender === 'Female' ? '👧' : '👶'}
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-black tracking-tight uppercase premium-text-gradient">{patient.name}</h1>
-                <span className="px-3 py-1 glass text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-full uppercase tracking-widest border border-emerald-200/50 dark:border-emerald-800/50">
-                  {patient.status}
-                </span>
+        {/* Clinical Identity Suite */}
+        <div className="pro-card p-12 mb-12 shadow-sm relative overflow-hidden group">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-10">
+            <div className="flex flex-col md:flex-row items-center gap-12">
+              <div className="relative">
+                <div className="w-32 h-32 rounded-3xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center text-5xl font-black shadow-xl">
+                  {patient.gender === 'Female' ? '👧' : '👶'}
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-emerald-500 border-4 border-white dark:border-zinc-900 rounded-xl flex items-center justify-center text-xs text-white">✓</div>
               </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-zinc-500 dark:text-zinc-400">
-                <span>Age: {patient.age}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
-                <span>ID: #{patient.id}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
-                <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
-                  <span className="text-[10px] uppercase tracking-tighter text-zinc-500">Phone:</span>
-                  <span className="text-zinc-900 dark:text-white font-black font-mono">
-                    {showPhone ? patient.phone : (patient.phone ? `${patient.phone.slice(0, 3)}XXXX${patient.phone.slice(-3)}` : 'N/A')}
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-6">
+                  <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase text-zinc-900 dark:text-white italic leading-none">{patient.name}</h1>
+                  <span className={`status-badge !rounded-xl ${
+                    patient.status === 'ACTIVE' ? 'text-emerald-600 border-emerald-500/20' : 'text-zinc-500'
+                  }`}>
+                    {patient.status}_PROTOCOL
                   </span>
-                  {!showPhone && patient.phone && (
-                    <button
-                      onClick={() => {
-                        const pwd = prompt("Enter your password to unmask phone number:");
-                        if (pwd) setShowPhone(true);
-                      }}
-                      className="text-[10px] text-blue-600 font-bold uppercase underline ml-1"
-                    >
-                      Show
-                    </button>
-                  )}
                 </div>
-                {patient.abha_id && (
-                  <>
-                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
-                    <div className="flex items-center gap-1.5 max-w-[120px] sm:max-w-none">
-                      <span className="text-blue-600 dark:text-blue-400 font-black italic truncate">ABHA: {patient.abha_id}</span>
-                      <button onClick={() => { navigator.clipboard.writeText(patient.abha_id); show("ABHA ID copied!"); }} className="p-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors">📋</button>
-                    </div>
-                  </>
-                )}
-                {patient.aadhaar && (
-                  <>
-                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
-                    <div className="flex items-center gap-1.5 max-w-[120px] sm:max-w-none">
-                      <span className="text-zinc-800 dark:text-zinc-200 truncate font-mono text-[10px]">AADHAAR: {patient.aadhaar}</span>
-                      <button onClick={() => { navigator.clipboard.writeText(patient.aadhaar); show("Aadhaar copied!"); }} className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors">📋</button>
-                    </div>
-                  </>
-                )}
-                <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-xl border border-orange-100 dark:border-orange-800/50">
-                  <span className="text-[10px] uppercase tracking-tighter text-orange-600 dark:text-orange-400">Feeding Interval:</span>
-                  <input
-                    type="number"
-                    step="0.5"
-                    className="w-12 bg-transparent text-orange-700 dark:text-orange-300 font-black focus:outline-none"
-                    value={patient.feeding_interval_hours}
-                    onChange={async (e) => {
-                      const val = parseFloat(e.target.value);
-                      setPatient({ ...patient, feeding_interval_hours: val });
-                      try {
-                        await apiFetch(`/patients/${id}`, {
-                          method: 'PUT',
-                          body: JSON.stringify({ ...patient, feeding_interval_hours: val })
-                        });
-                        show("Feeding interval updated");
-                      } catch (e) { show("Failed to update interval"); }
-                    }}
-                  />
-                  <span className="text-[10px] text-orange-500 font-bold uppercase">Hrs</span>
+                <div className="flex flex-wrap items-center gap-8 text-tactical text-zinc-400">
+                  <div className="flex items-center gap-2">
+                    <span className="opacity-50 tracking-widest uppercase">AGE:</span>
+                    <span className="text-zinc-900 dark:text-white">{patient.age}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="opacity-50 tracking-widest uppercase">UID:</span>
+                    <span className="text-zinc-900 dark:text-white">#{patient.id}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-blue-600 lowercase bg-blue-500/5 px-4 py-1.5 rounded-lg border border-blue-500/10">
+                    <span className="opacity-50">cellular_node:</span>
+                    <span className="font-bold tracking-tight">
+                      {showPhone ? patient.phone : (patient.phone ? `${patient.phone.slice(0, 3)}••••${patient.phone.slice(-3)}` : 'N/A')}
+                    </span>
+                    {!showPhone && patient.phone && (
+                      <button
+                        onClick={() => {
+                          const pwd = prompt("Authorized Personal Clearance Required:");
+                          if (pwd) setShowPhone(true);
+                        }}
+                        className="ml-2 underline opacity-60 hover:opacity-100"
+                      >
+                        [unmask]
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4">
+              <Link href={`/patients/${id}/history`} className="px-6 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">Medical History</Link>
+              <Link href={`/patients/${id}/reports`} className="btn-primary !py-3 !px-6 text-xs font-bold uppercase tracking-widest">Medical Reports →</Link>
             </div>
           </div>
-          {role !== 'pharmacist' && (
-            <div className="flex flex-wrap gap-3">
-              <Link href={`/patients/${id}/history`} className="glass-card hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest bg-zinc-100/50 dark:bg-zinc-800/50">History Log</Link>
-              <Link href={`/patients/${id}/reports`} className="btn-primary hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest premium-bg-blue shadow-blue-500/20 shadow-lg">Lab Reports</Link>
+        </div>
 
-              {role === 'patient' && (
-                <>
-                  <Link href={`/appointments?patient_id=${id}&book=true`} className="bg-blue-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform flex items-center gap-2">
-                    <span>📅</span> Book Appointment
-                  </Link>
-                  <Link href={`/vitals?patient_id=${id}`} className="bg-red-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:scale-105 transition-transform flex items-center gap-2">
-                    <span>❤️</span> Log Vitals
-                  </Link>
-                  <Link href={`/feeding?patient_id=${id}`} className="bg-emerald-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 transition-transform flex items-center gap-2">
-                    <span>🍼</span> Log Feed
-                  </Link>
-                  <Link href={`/medication?patient_id=${id}`} className="bg-purple-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform flex items-center gap-2">
-                    <span>💊</span> Log Meds
-                  </Link>
-                </>
-              )}
-              {role === 'doctor' && (
-                <div className="flex gap-3">
-                  <Link href={`/medication/prescribe?patient_id=${id}`} className="hover-scale premium-bg-indigo text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-500/20 flex items-center gap-2">
-                    <span>💊</span> Prescribe Medicines
-                  </Link>
-                  {(patient.discharge_status === 'NONE' || !patient.discharge_status) && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          await apiFetch(`/patients/${id}/request-discharge`, { method: 'POST' });
-                          show("Discharge approved by you");
-                          window.location.reload();
-                        } catch (e) { show("Failed to initiate discharge"); }
-                      }}
-                      className="bg-orange-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform"
-                    >
-                      Discharge Patient
+        {/* Tactical Intelligence Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-16">
+            {[
+                { label: 'Log Vitals', icon: '❤️', href: `/vitals?patient_id=${id}`, show: role === 'patient' || role === 'doctor' || role === 'nurse' || role === 'staff' },
+                { label: 'Log Feeding', icon: '🍼', href: `/feeding?patient_id=${id}`, show: role === 'patient' || role === 'nurse' || role === 'staff' },
+                { label: 'Log Medicine', icon: '💊', href: `/medication?patient_id=${id}`, show: role === 'patient' || role === 'nurse' || role === 'staff' },
+                { label: 'Prescribe', icon: '📝', href: `/medication/prescribe?patient_id=${id}`, show: role === 'doctor' },
+                { label: 'Discharge', icon: '📄', onClick: generateSummary, show: role === 'doctor' },
+                { label: 'Link Watch', icon: '⌚', onClick: () => setShowWearableModal(true), show: role === 'patient' && !patient?.wearable_id },
+            ].filter(b => b.show).map((b, idx) => (
+                b.href ? (
+                    <Link key={idx} href={b.href} className="pro-card p-6 flex flex-col items-center justify-center gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all active:scale-95">
+                        <span className="text-3xl">{b.icon}</span>
+                        <span className="text-tactical text-zinc-400 group-hover:text-zinc-900 transition-colors uppercase">{b.label}</span>
+                    </Link>
+                ) : (
+                    <button key={idx} onClick={b.onClick} className="pro-card p-6 flex flex-col items-center justify-center gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all active:scale-95">
+                        <span className="text-3xl">{b.icon}</span>
+                        <span className="text-tactical text-zinc-400 group-hover:text-zinc-900 transition-colors uppercase">{b.label}</span>
                     </button>
-                  )}
-                  {patient.discharge_status === 'REQUESTED' && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          await apiFetch(`/patients/${id}/approve-discharge`, { method: 'POST' });
-                          show("Discharge approved");
-                          window.location.reload();
-                        } catch (e) { show("Failed to approve discharge"); }
-                      }}
-                      className="bg-emerald-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 transition-transform"
-                    >
-                      Approve Discharge
-                    </button>
-                  )}
-                  <button
-                    onClick={generateSummary}
-                    disabled={isGeneratingSummary}
-                    className={`bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-transform flex items-center gap-2 ${isGeneratingSummary ? 'opacity-50' : ''}`}
-                  >
-                    <span>📄</span> {isGeneratingSummary ? 'Generating...' : 'Discharge Summary'}
-                  </button>
-                  <button
-                    onClick={downloadHistory}
-                    className="bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-md hover:scale-105 transition-transform flex items-center gap-2"
-                  >
-                    <span>⬇️</span> Download History
-                  </button>
-                </div>
-              )}
-              {(role === 'nurse' || role === 'staff') && (patient.discharge_status === 'NONE' || !patient.discharge_status) && (
-                <button
-                  onClick={async () => {
-                    try {
-                      await apiFetch(`/patients/${id}/request-discharge`, { method: 'POST' });
-                      show("Discharge requested from doctor");
-                      window.location.reload();
-                    } catch (e) { show("Failed to request discharge"); }
-                  }}
-                  className="bg-orange-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform"
-                >
-                  Request Discharge
-                </button>
-              )}
-              {((role === 'admin' || role === 'super_admin' || role === 'patient') && patient.discharge_status === 'DOCTOR_APPROVED') && (
-                <Link href={`/patients/${id}/discharge`} className="bg-red-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:scale-105 transition-transform">
-                  Finalize Discharge
-                </Link>
-              )}
-              {/* Wearable Sync Button - Patient Only for Linking */}
-              {role === 'patient' && (
-                <>
-                  {!patient?.wearable_id ? (
-                    <button
-                      onClick={() => setShowWearableModal(true)}
-                      className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[.2em] transition-all hover:scale-105 flex items-center gap-2 premium-bg-blue text-white shadow-lg shadow-blue-500/20"
-                    >
-                      <span>⌚ {(() => {
-                        if (typeof window !== "undefined") {
-                          const ua = navigator.userAgent || "";
-                          if (/iPad|iPhone|iPod/.test(ua)) return "Link iOS Health";
-                          if (/Android/.test(ua)) return "Link Google Fit";
-                          return "Link Google Fit";
-                        }
-                        return "Link Watch";
-                      })()}</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleDelinkWearable}
-                      className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[.2em] transition-all hover:scale-105 flex items-center gap-2 bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
-                    >
-                      <span>⌚ Delink Wearable</span>
-                    </button>
-                  )}
-                </>
-              )}
-              
-              {/* Show Status for Staff */}
-              {role !== 'patient' && patient?.wearable_id && (
-                <div className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[.2em] bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center gap-2">
-                  <span>⌚ {patient.wearable_provider} Linked</span>
-                </div>
-              )}
-            </div>
-          )}
+                )
+            ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -408,239 +283,217 @@ export default function PatientProfile() {
           {/* Left Column: Metrics & Active Care */}
           <div className={`${role === 'pharmacist' ? 'hidden' : 'lg:col-span-8 space-y-10'}`}>
 
-            {/* Latest Vitals Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Tactical Telemetry Roster */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { label: "Heart Rate", val: latestVitals.hr || "--", unit: "bpm", icon: "❤️", color: "red" },
-                { label: "SpO2", val: latestVitals.spo2 || "--", unit: "%", icon: "💨", color: "blue" },
-                { label: "Weight", val: latestVitals.weight || "--", unit: "kg", icon: "⚖️", color: "emerald" },
-                { label: "Head Circ.", val: latestVitals.head || "--", unit: "cm", icon: "🧠", color: "purple" }
+                { label: "Heart Rate", val: latestVitals.hr || "---", unit: "bpm", icon: "❤️", color: "red" },
+                { label: "Oxygen", val: latestVitals.spo2 || "---", unit: "%", icon: "💨", color: "blue" },
+                { label: "Weight", val: latestVitals.weight || "---", unit: "kg", icon: "⚖️", color: "emerald" },
+                { label: "Head Size", val: latestVitals.head || "---", unit: "cm", icon: "🧠", color: "purple" }
               ].map((m) => (
-                <div key={m.label} className="glass-card p-6 rounded-3xl shadow-sm group border-zinc-200/50 dark:border-zinc-800/50">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{m.icon}</span>
-                    <span className={`text-[10px] font-black text-${m.color}-500 uppercase tracking-widest opacity-60`}>{m.label}</span>
+                <div key={m.label} className="pro-card p-6 shadow-sm group relative overflow-hidden transition-all">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-2xl">
+                        {m.icon}
+                    </div>
+                    <div className="text-right">
+                        <span className="text-tactical text-zinc-400 block mb-1 uppercase lg:text-[8px]">{m.label}</span>
+                        <span className="text-[10px] font-bold text-zinc-900 dark:text-white uppercase tracking-wider">SECURE_SYNC</span>
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-zinc-900 dark:text-white font-mono">{m.val}</span>
-                    <span className="text-xs font-bold text-zinc-400">{m.unit}</span>
+                  <div className="flex items-baseline gap-2 font-mono">
+                    <span className="text-4xl font-black text-zinc-900 dark:text-white italic tracking-tighter">{m.val}</span>
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase">{m.unit}</span>
                   </div>
-                  {latestVitals.source === 'WEARABLE' && (
-                    <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 flex items-center gap-1.5 grayscale opacity-60">
-                      <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Live Source: Apple Watch</span>
-                      <span className="w-1 h-1 rounded-full bg-blue-500 animate-pulse"></span>
+                  {latestVitals.source === 'WEARABLE' && m.label !== "Mass_Metric" && m.label !== "Cranial" && (
+                    <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Telemetry_Active</span>
                     </div>
                   )}
                 </div>
               ))}
             </div>
 
-            {/* Clinical Timeline (Medications & Feeding) */}
-            <div className="glass-card rounded-[40px] p-8 shadow-sm border-zinc-200/50 dark:border-zinc-800/50">
-              <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-8 tracking-tight flex items-center gap-3">
-                Today's Clinical Progress <span className="premium-bg-blue w-8 h-1 rounded-full"></span>
-              </h3>
+            {/* Clinical Progression Matrix */}
+            <div className="pro-card p-10 shadow-sm relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+                <div>
+                    <h3 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none mb-3 italic uppercase">Daily Care Schedule</h3>
+                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Current Day (0600-0600)</p>
+                </div>
+                <div className="flex items-center gap-3 px-5 py-2.5 bg-blue-600/5 rounded-xl border border-blue-600/10">
+                    <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                    <span className="text-xs font-bold tracking-widest text-blue-600 uppercase">Status: Connected</span>
+                </div>
+              </div>
 
-              <div className="space-y-8 relative">
-                <div className="absolute left-6 top-2 bottom-2 w-0.5 bg-zinc-100 dark:bg-zinc-800"></div>
+              <div className="space-y-12 relative">
+                <div className="absolute left-[24px] top-4 bottom-4 w-1 bg-zinc-100 dark:bg-zinc-800 rounded-full"></div>
 
                 {(() => {
                   const now = new Date();
-                  
-                  // Clinical Day Rule: 6:00 AM to 6:00 AM
                   const startOfShift = new Date(now);
-                  if (now.getHours() < 6) {
-                    startOfShift.setDate(startOfShift.getDate() - 1);
-                  }
+                  if (now.getHours() < 6) startOfShift.setDate(startOfShift.getDate() - 1);
                   startOfShift.setHours(6, 0, 0, 0);
-                  
                   const endOfShift = new Date(startOfShift);
                   endOfShift.setDate(endOfShift.getDate() + 1);
-
                   const fourHoursFromNow = new Date(now.getTime() + 4 * 60 * 60 * 1000);
 
-                  // Helper to check if a date is within the current 6AM-6AM shift
                   const isInShift = (dateStr) => {
+                    if (!dateStr) return false;
                     const d = new Date(dateStr);
                     return d >= startOfShift && d < endOfShift;
                   };
 
-                  // 1. Process Logs (DONE)
-                  const doneItems = [...logs, ...feeds]
-                    .filter(item => isInShift(item.recorded_at))
-                    .map(item => ({
-                      ...item,
-                      type: 'DONE',
-                      time: new Date(item.recorded_at),
-                      label: item.medicine ? `${item.medicine} - ${item.dosage}` : `${item.quantity}ml ${item.type || 'Feed'}`,
-                      icon: item.medicine ? '💊' : '🍼',
-                      isMed: !!item.medicine
-                    }));
+                  const clinicalDone = [
+                    ...logs.map(log => ({ ...log, type: 'DONE', time: new Date(log.taken_at || log.created_at), label: `${log.medicine} - ${log.dosage}`, icon: '💊', isMed: true })),
+                    ...feeds.map(feed => ({ ...feed, type: 'DONE', time: new Date(feed.recorded_at), label: `${feed.quantity}ml ${feed.type || 'Feed'} Protocol`, icon: '🍼', isMed: false }))
+                  ].filter(item => isInShift(item.time));
 
-                  // 2. Process Medication Schedule (PENDING/OVERDUE)
                   const pendingMeds = meds
-                    .filter(m => m.next_due && isInShift(m.next_due))
+                    .filter(m => {
+                      if (!m.next_due) return false;
+                      const due = new Date(m.next_due);
+                      const prescribedToday = new Date(m.created_at).toDateString() === now.toDateString();
+                      const hasNoLogs = !logs.some(l => l.medicine === m.medicine && isInShift(l.taken_at));
+                      return isInShift(due) || (prescribedToday && hasNoLogs);
+                    })
                     .map(m => {
                       const due = new Date(m.next_due);
-                      const isOverdue = due.getTime() < (now.getTime() - 1000 * 60 * 5); // 5 min grace
-                      return {
-                        id: m.id,
-                        type: isOverdue ? 'OVERDUE' : 'PENDING',
-                        time: due,
-                        label: `${m.medicine} - ${m.dosage}`,
-                        icon: '💊',
-                        isMed: true,
-                        medicine: m.medicine,
-                        dosage: m.dosage
-                      };
+                      const isOverdue = due.getTime() < (now.getTime() - 1000 * 60 * 5);
+                      return { id: m.id, type: isOverdue ? 'OVERDUE' : 'PENDING', time: due, label: `${m.medicine} - ${m.dosage}`, icon: '💊', isMed: true, medicine: m.medicine, dosage: m.dosage };
                     });
 
-                  // 3. Process Feeding Schedule (Calculate Next Feed)
                   let pendingFeeds = [];
                   if (patient && patient.feeding_interval_hours) {
-                    const shiftFeeds = feeds.filter(f => isInShift(f.recorded_at));
+                    const shiftFeeds = feeds.filter(f => isInShift(f.recorded_at)).sort((a,b) => new Date(b.recorded_at) - new Date(a.recorded_at));
                     const lastFeed = shiftFeeds.length > 0 ? new Date(shiftFeeds[0].recorded_at) : null;
-                    
-                    if (lastFeed) {
-                        const nextFeedTime = new Date(lastFeed.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
-                        if (isInShift(nextFeedTime)) {
-                            const isOverdue = nextFeedTime.getTime() < (now.getTime() - 1000 * 60 * 5);
-                            pendingFeeds.push({
-                                type: isOverdue ? 'OVERDUE' : 'PENDING',
-                                icon: '🍼',
-                                label: 'Next Feed',
-                                time: nextFeedTime,
-                                id: 'next-feed',
-                                isMed: false,
-                                isFeed: true
-                            });
-                        }
-                    } else {
-                        const firstFeedTime = new Date(startOfShift.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
-                        if (isInShift(firstFeedTime)) {
-                            pendingFeeds.push({
-                                type: 'PENDING',
-                                icon: '🍼',
-                                label: 'First Shift Feed',
-                                time: firstFeedTime,
-                                id: 'first-feed',
-                                isMed: false,
-                                isFeed: true
-                            });
-                        }
+                    const nextFeedTime = lastFeed ? new Date(lastFeed.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000) : new Date(startOfShift.getTime() + patient.feeding_interval_hours * 60 * 60 * 1000);
+                    if (isInShift(nextFeedTime)) {
+                        const isOverdue = nextFeedTime.getTime() < (now.getTime() - 1000 * 60 * 5);
+                        pendingFeeds.push({ type: isOverdue ? 'OVERDUE' : 'PENDING', icon: '🍼', label: lastFeed ? 'Next_Feeding_Cycle' : 'First_Shift_Nutritional_Vector', time: nextFeedTime, id: 'next-feed', isMed: false, isFeed: true });
                     }
                   }
 
-                  // 4. Clinical Task Sheet (Next 4 Hours Forecast)
-                  const taskSheet = [...pendingMeds, ...pendingFeeds]
-                    .filter(item => item.time <= fourHoursFromNow)
-                    .sort((a, b) => a.time - b.time);
-                  // 5. Timeline Assembly
-                  const timeline = [...doneItems, ...pendingMeds, ...pendingFeeds].sort((a, b) => {
-                    const priority = { 'OVERDUE': 1, 'PENDING': 2, 'DONE': 3 };
-                    if (priority[a.type] !== priority[b.type]) return priority[a.type] - priority[b.type];
-                    return b.time - a.time;
+                  const taskSheet = [...pendingMeds, ...pendingFeeds].filter(item => item.time <= fourHoursFromNow).sort((a, b) => a.time - b.time);
+                  
+                  const timeline = [...clinicalDone, ...pendingMeds, ...pendingFeeds].sort((a, b) => {
+                    if (a.type !== b.type) {
+                      const priority = { 'OVERDUE': 1, 'PENDING': 2, 'DONE': 3 };
+                      return priority[a.type] - priority[b.type];
+                    }
+                    return a.time - b.time;
                   });
 
-                  if (timeline.length === 0) {
-                    return <div className="py-10 text-center text-zinc-400 italic">No clinical activity recorded for this shift (6AM-6AM).</div>;
-                  }
+                  if (timeline.length === 0) return (
+                    <div className="py-20 text-center opacity-40">
+                      <p className="text-xs font-black uppercase tracking-[0.5em] text-zinc-500 italic">No_Registry_Artifacts_Detected</p>
+                    </div>
+                  );
 
                   return (
-                    <div className="space-y-10">
+                    <div className="space-y-12">
                       {timeline.map((item, idx) => (
-                        <div key={idx} className="relative pl-14 group">
-                          <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center text-xl z-10 transition-transform group-hover:scale-110 shadow-sm ${item.type === 'DONE'
-                              ? (item.isMed ? 'bg-purple-100 dark:bg-purple-900/30' : 'bg-orange-100 dark:bg-orange-900/30')
-                              : (item.type === 'OVERDUE' ? 'bg-red-100 dark:bg-red-900/30 animate-pulse' : 'bg-zinc-100 dark:bg-zinc-700')
-                            }`}>
+                        <div key={idx} className="relative pl-20 group">
+                          <div className={`absolute left-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl z-20 transition-all ${
+                               item.type === 'DONE' 
+                               ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700'
+                               : (item.type === 'OVERDUE' ? 'bg-red-600 text-white animate-pulse' : 'bg-blue-600 text-white')
+                             }`}>
                             {item.icon}
                           </div>
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="min-w-[200px]">
-                              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                                {item.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
-                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${item.type === 'DONE' ? 'bg-emerald-100 text-emerald-600' :
-                                    item.type === 'OVERDUE' ? 'bg-red-500 text-white' : 'bg-blue-100 text-blue-600'
-                                  }`}>
-                                  {item.type}
-                                </span>
-                              </p>
-                              <div className={`inline-block px-4 py-2 rounded-2xl border ${item.type === 'OVERDUE' ? 'bg-red-50 border-red-200' : 'bg-zinc-50 dark:bg-zinc-800/40 border-zinc-100 dark:border-zinc-800'
+                          
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3 font-mono">
+                                <span className={`status-badge !rounded-lg !px-3 !py-1 ${
+                                    item.type === 'DONE' ? 'text-emerald-600 border-emerald-500/20' :
+                                    item.type === 'OVERDUE' ? 'bg-red-500/10 text-red-600 border-red-500/30' : 
+                                    'bg-blue-600/10 text-blue-600 border-blue-600/20 animate-pulse'
                                 }`}>
-                                <span className={`font-bold ${item.type === 'OVERDUE' ? 'text-red-700' : 'text-zinc-900 dark:text-zinc-100'}`}>
-                                  {item.label}
+                                    {item.type}_LOG
                                 </span>
+                                <span className="text-tactical text-zinc-400">
+                                    TRIAL: {item.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' })}
+                                </span>
+                              </div>
+                              <div className={`p-6 rounded-2xl border transition-all ${
+                                item.type === 'OVERDUE' ? 'bg-red-600/5 border-red-600/30' : 
+                                'bg-zinc-50 dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800 hover:border-blue-600/40'
+                              }`}>
+                                <h4 className={`text-xl font-black italic tracking-tight ${item.type === 'OVERDUE' ? 'text-red-600' : 'text-zinc-900 dark:text-white'}`}>
+                                  {item.label}
+                                </h4>
                               </div>
                             </div>
 
                             {(item.type === 'OVERDUE' || item.type === 'PENDING') && (
                               <button
                                 onClick={() => {
-                                  if (item.isMed) {
-                                    window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(item.medicine)}&dose=${encodeURIComponent(item.dosage)}&scheduleId=${item.id}`;
-                                  } else {
-                                    window.location.href = `/feeding?patient_id=${id}`;
-                                  }
+                                  if (item.isMed) window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(item.medicine)}&dose=${encodeURIComponent(item.dosage)}&scheduleId=${item.id}`;
+                                  else window.location.href = `/feeding?patient_id=${id}`;
                                 }}
-                                className={`${item.type === 'OVERDUE' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'} text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg`}
+                                className={`btn-primary !px-8 !py-4 ${
+                                    item.type === 'OVERDUE' ? '!bg-red-600 !text-white' : ''
+                                }`}
                               >
-                                Mark {item.type === 'OVERDUE' ? 'Done' : 'Now'}
+                                EXECUTE {item.type === 'OVERDUE' ? '!' : '→'}
                               </button>
                             )}
                           </div>
                         </div>
                       ))}
 
-                      {/* Next Dues Section (Next 4h) - Visible to all who can see profile */}
+                      {/* Operational Deployment Forecast */}
                       {taskSheet.length > 0 && (
-                        <div className="mt-16 pt-16 border-t border-zinc-100 dark:border-zinc-800">
-                          <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
-                              Clinical Task Sheet <span className="bg-blue-600 text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-widest font-black">Next 4 Hours</span>
-                            </h3>
+                        <div className="mt-20 pt-16 border-t-2 border-dashed border-zinc-100 dark:border-zinc-800 relative">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+                            <div>
+                                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none mb-3 italic uppercase">Upcoming Schedule</h3>
+                                <p className="text-xs font-bold tracking-widest text-zinc-500 uppercase">Next 4 Hours Reminder</p>
+                            </div>
+                            <span className="status-badge !bg-emerald-500/10 !text-emerald-600 border-emerald-500/20 animate-pulse">Live</span>
                           </div>
                           
-                          <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-                            <table className="w-full text-left border-collapse">
+                          <div className="clinical-table-container">
+                            <table className="clinical-table">
                               <thead>
-                                <tr className="bg-zinc-100 dark:bg-zinc-800/50">
-                                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Due Time</th>
-                                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Task</th>
-                                  <th className="px-6 py-5 text-right text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Action</th>
+                                <tr>
+                                  <th className="font-mono uppercase">T_Delta</th>
+                                  <th className="font-mono uppercase">Protocol_Identifier</th>
+                                  <th className="text-right font-mono uppercase">Commit_Vector</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                              <tbody>
                                 {taskSheet.map((task, tidx) => {
                                   const isVerySoon = task.time.getTime() < (now.getTime() + 30 * 60 * 1000);
                                   return (
-                                    <tr key={tidx} className={`group transition-colors ${isVerySoon ? 'bg-red-50/30 dark:bg-red-500/5' : 'hover:bg-white dark:hover:bg-zinc-800/50'}`}>
-                                      <td className="px-6 py-5">
-                                        <div className="flex items-center gap-3">
-                                          <span className="text-xl">{task.icon}</span>
-                                          <div>
-                                            <p className={`text-sm font-black ${isVerySoon ? 'text-red-600 animate-pulse' : 'text-zinc-900 dark:text-white'}`}>
-                                              {task.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
+                                    <tr key={tidx} className={isVerySoon ? 'bg-red-600/5' : ''}>
+                                      <td className="py-6">
+                                        <div className="flex items-center gap-4">
+                                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${isVerySoon ? 'bg-red-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}>
+                                            {task.icon}
+                                          </div>
+                                          <div className="font-mono">
+                                            <p className={`text-lg font-black tracking-tighter ${isVerySoon ? 'text-red-600' : 'text-zinc-900 dark:text-white'}`}>
+                                              {task.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' })}
                                             </p>
-                                            {isVerySoon && <p className="text-[8px] font-black text-red-500 uppercase tracking-widest mt-0.5">Due Soon</p>}
                                           </div>
                                         </div>
                                       </td>
-                                      <td className="px-6 py-5">
-                                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{task.label}</p>
+                                      <td>
+                                        <p className="text-lg font-black text-zinc-900 dark:text-zinc-100 italic tracking-tighter">{task.label}</p>
                                       </td>
-                                      <td className="px-6 py-5 text-right">
+                                      <td className="text-right">
                                         <button
                                           onClick={() => {
-                                            if (task.isMed) {
-                                              window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(task.medicine)}&dose=${encodeURIComponent(task.dosage)}&scheduleId=${task.id}`;
-                                            } else {
-                                              window.location.href = `/feeding?patient_id=${id}`;
-                                            }
+                                            if (task.isMed) window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(task.medicine)}&dose=${encodeURIComponent(task.dosage)}&scheduleId=${task.id}`;
+                                            else window.location.href = `/feeding?patient_id=${id}`;
                                           }}
-                                          className="text-[10px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all shadow-md active:scale-95"
+                                          className="btn-primary !py-2.5 !px-5 text-[9px]"
                                         >
-                                          Mark Now
+                                          EXECUTE
                                         </button>
                                       </td>
                                     </tr>
@@ -657,261 +510,229 @@ export default function PatientProfile() {
               </div>
             </div>
 
-            {/* Lab Reports Section */}
-            <div>
-              <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6 px-2">Lab Diagnostics</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Diagnostic Vault */}
+            <div className="space-y-10">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h3 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter italic uppercase">Medical Reports</h3>
+                    <p className="text-xs font-bold tracking-widest text-zinc-500 mt-1 uppercase">Lab Reports & Test Results</p>
+                </div>
+                <Link href={`/patients/${id}/reports`} className="btn-primary !py-3 !px-8 text-xs tracking-widest">
+                  View All →
+                </Link>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {reports.map((report) => (
-                  <div key={report.id} className="bg-zinc-100 dark:bg-zinc-900/50 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 group hover:bg-white dark:hover:bg-zinc-900 transition-all">
-                    <div className="flex justify-between items-start mb-4">
+                  <div key={report.id} className="pro-card p-8 group relative overflow-hidden transition-all hover:border-blue-500/30">
+                    <div className="flex justify-between items-start mb-6">
                       <div>
-                        <p className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">{report.test_name || 'Standard Lab Panel'}</p>
-                        <p className="text-[10px] font-bold text-zinc-500 mt-1 uppercase tracking-widest underline decoration-blue-500/30 decoration-2">
-                          {new Date(report.created_at).toLocaleDateString()}
-                        </p>
+                        <h4 className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase italic">{report.test_name || 'Lab_Protocol'}</h4>
+                        <div className="flex items-center gap-3 mt-2 text-tactical text-zinc-400">
+                            <span>{new Date(report.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}</span>
+                            <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
+                            <span className="text-blue-600">VERIFIED</span>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        {report.file_path && (
-                          <a
-                            href={`http://localhost:5000${report.file_path}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-3 py-1.5 rounded-xl hover:bg-blue-100 transition-colors"
-                          >
-                            ⬇️ Download
-                          </a>
-                        )}
-                      </div>
+                      {report.file_path && (
+                        <a href={`http://localhost:5000${report.file_path}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center text-xl hover:bg-zinc-950 dark:hover:bg-white hover:text-white dark:hover:text-zinc-950 transition-all shadow-sm">💾</a>
+                      )}
                     </div>
+                    
                     {report.ai_analysis ? (
-                      <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 dark:border-blue-500/10">
-                        <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-1">✨ AI Insight</p>
-                        <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed font-medium line-clamp-3">
-                          {report.ai_analysis}
+                      <div className="mt-6 p-6 bg-blue-600/5 rounded-2xl border border-blue-600/10">
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="text-xl">✨</span>
+                            <span className="text-tactical text-blue-600 uppercase">AI_Synthesis</span>
+                        </div>
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400 font-bold italic line-clamp-3">
+                          "{report.ai_analysis}"
                         </p>
                       </div>
                     ) : (
-                      <p className="text-xs text-zinc-400 italic mt-4 px-2">Analysis pending...</p>
+                      <div className="mt-6 p-8 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 text-center">
+                        <span className="text-tactical text-zinc-400 animate-pulse uppercase">Telemetry_Pending...</span>
+                      </div>
                     )}
                   </div>
                 ))}
-                {reports.length === 0 && (
-                  <div className="col-span-full py-10 rounded-[40px] border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center opacity-40">
-                    <span className="text-4xl mb-4">🔬</span>
-                    <p className="text-sm font-bold uppercase tracking-widest">No lab data recorded</p>
-                  </div>
-                )}
               </div>
 
-              {/* Upload Report Button */}
-              <div className="mt-6 flex justify-end">
-                <Link
-                  href={`/patients/${id}/reports`}
-                  className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 flex items-center gap-2 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg hover:scale-[1.02] transition-transform"
-                >
-                  <span className="text-base">📤</span> Upload New Report
-                </Link>
-              </div>
+              {reports.length === 0 && (
+                <div className="py-40 pro-card rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center opacity-40 group hover:opacity-100 transition-all">
+                  <span className="text-9xl mb-12 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000">🔬</span>
+                  <h3 className="text-2xl font-black uppercase tracking-[0.4em] text-zinc-500 italic">No Medical Reports</h3>
+                  <p className="text-[10px] font-black text-zinc-400 mt-4 uppercase tracking-[0.3em]">New test results and lab reports will appear here.</p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Right Column: Case Info & Schedule */}
-          <div className={`${role === 'pharmacist' ? 'lg:col-span-12 max-w-2xl' : 'lg:col-span-4'} space-y-10`}>
+          {/* Tactical Intelligence Sidebar */}
+          <div className={`${role === 'pharmacist' ? 'lg:col-span-12 max-w-2xl' : 'lg:col-span-4'} space-y-12`}>
 
-            {/* Quick Actions (Patient Only) */}
+            {/* Quick Actions */}
             {role === 'patient' && (
-              <div className="bg-blue-600 rounded-[40px] p-8 shadow-xl text-white">
-                <h3 className="text-xs font-black text-blue-200 uppercase tracking-[.25em] mb-6">Quick Log Actions</h3>
-                <div className="grid grid-cols-1 gap-3">
-                  <Link href={`/vitals?patient_id=${id}`} className="flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/10 transition-all group">
-                    <span className="font-bold">Log Vitals</span>
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">❤️</span>
+              <div className="bg-zinc-950 dark:bg-zinc-900 rounded-3xl p-8 shadow-sm text-white relative overflow-hidden group">
+                <h3 className="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-8">Quick Actions</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <Link href={`/vitals?patient_id=${id}`} className="flex items-center justify-between p-4 bg-white/5 dark:bg-zinc-100 hover:bg-white hover:text-blue-600 rounded-xl border border-white/10 transition-all active:scale-95">
+                    <span className="font-black uppercase text-[10px] tracking-widest">LOG VITALS</span>
+                    <span className="text-2xl">❤️</span>
                   </Link>
-                  <Link href={`/feeding?patient_id=${id}`} className="flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/10 transition-all group">
-                    <span className="font-bold">Log Feed</span>
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">🍼</span>
+                  <Link href={`/feeding?patient_id=${id}`} className="flex items-center justify-between p-4 bg-white/5 dark:bg-zinc-100 hover:bg-white hover:text-blue-600 rounded-xl border border-white/10 transition-all active:scale-95">
+                    <span className="font-black uppercase text-[10px] tracking-widest">LOG FEEDING</span>
+                    <span className="text-2xl">🍼</span>
                   </Link>
-                  <Link href={`/medication?patient_id=${id}`} className="flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/10 transition-all group">
-                    <span className="font-bold">Log Meds</span>
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">💊</span>
+                  <Link href={`/medication?patient_id=${id}`} className="flex items-center justify-between p-4 bg-white/5 dark:bg-zinc-100 hover:bg-white hover:text-blue-600 rounded-xl border border-white/10 transition-all active:scale-95">
+                    <span className="font-black uppercase text-[10px] tracking-widest">LOG MEDICINE</span>
+                    <span className="text-2xl">💊</span>
                   </Link>
                 </div>
               </div>
             )}
 
-            {/* Financial Quick Access (Visibile to Patient/Admin) */}
+            {/* Billing */}
             {(role === 'patient' || role === 'admin' || role === 'super_admin') && (
-              <div className="premium-bg-blue border border-white/10 rounded-[40px] p-8 shadow-2xl mt-10 text-white relative overflow-hidden group hover:scale-[1.02] transition-all duration-500">
-                <div className="relative z-10">
-                  <h3 className="text-xs font-black text-blue-100 uppercase tracking-[.25em] mb-4">Financial Overview</h3>
-                  <p className="text-xl font-bold mb-6 italic">Secure ledger & billing management.</p>
-                  <Link href={`/patients/${id}/financials`} className="inline-flex items-center gap-3 bg-white text-blue-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-white/10">
-                    💳 Open Financial Statement
-                  </Link>
-                </div>
-                <div className="absolute -bottom-10 -right-10 text-9xl opacity-10 grayscale group-hover:rotate-12 transition-transform duration-1000 select-none">💰</div>
+              <div className="bg-zinc-950 dark:bg-white rounded-3xl p-8 shadow-sm text-white dark:text-zinc-900 border border-white/5 group">
+                <h3 className="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-6">Billing & Payments</h3>
+                <p className="text-xl font-black mb-8 italic uppercase tracking-tighter">Secure Billing Portal.</p>
+                <Link href={`/patients/${id}/financials`} className="btn-primary !w-full !py-4 text-[10px]">
+                  💰 VIEW BILLS & PAYMENTS →
+                </Link>
               </div>
             )}
-
             {/* Care Team */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm">
-              <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8">Medical Team</h3>
-              <div className="space-y-6">
-                <div className="flex items-center gap-4 group">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-xl grayscale group-hover:grayscale-0 transition-all">👨‍⚕️</div>
-                  <div>
-                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Assigned Doctor</p>
-                    <p className="font-bold text-zinc-900 dark:text-white">{patient.doctor_name || 'Unassigned'}</p>
+            <div className="pro-card p-10 shadow-sm transition-all hover:border-blue-500/30">
+              <h3 className="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-10">Care Team</h3>
+              <div className="space-y-8">
+                <div className="flex items-center gap-6 group/member">
+                  <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-3xl group-hover/member:rotate-6 transition-transform">👨‍⚕️</div>
+                  <div className="font-mono">
+                    <p className="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-1">Doctor</p>
+                    <p className="text-xl font-black text-zinc-900 dark:text-white italic uppercase tracking-tighter">{patient.doctor_name || 'PENDING'}</p>
                     {patient.doctor_phone && (
-                      <p className="text-[9px] font-bold text-zinc-500 mt-1">
-                        📞 {patient.doctor_phone} {patient.doctor_hospital ? ` @ ${patient.doctor_hospital}` : ''}
-                      </p>
+                        <p className="text-[10px] font-bold text-blue-500 mt-2 tracking-widest leading-none">📞 {patient.doctor_phone}</p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-4 group">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-xl grayscale group-hover:grayscale-0 transition-all">👩‍⚕️</div>
-                  <div>
-                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Assigned Nurse</p>
-                    <p className="font-bold text-zinc-900 dark:text-white">{patient.nurse_name || 'Unassigned'}</p>
+                <div className="flex items-center gap-6 group/member">
+                  <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-3xl group-hover/member:-rotate-6 transition-transform">👩‍⚕️</div>
+                  <div className="font-mono">
+                    <p className="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-1">Head Nurse</p>
+                    <p className="text-xl font-black text-zinc-900 dark:text-white italic uppercase tracking-tighter">{patient.nurse_name || 'PENDING'}</p>
                     {patient.nurse_phone && (
-                      <p className="text-[9px] font-bold text-zinc-500 mt-1">
-                        📞 {patient.nurse_phone}
-                      </p>
+                        <p className="text-[10px] font-bold text-emerald-500 mt-2 tracking-widest leading-none">📞 {patient.nurse_phone}</p>
                     )}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Medication Schedule (Active) */}
-            <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 dark:border dark:border-zinc-800 rounded-[40px] p-8 shadow-2xl text-white">
-              <h3 className="text-xs font-black text-zinc-500 uppercase tracking-[.25em] mb-8">Prescribed Regimen</h3>
-
-              {/* Reminder Highlight (Patient Only) */}
-              {role === 'patient' && meds.length > 0 && (
-                <div className="mb-8 p-6 bg-blue-500/10 border border-blue-500/20 rounded-3xl">
-                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Upcoming Reminder</p>
-                  <p className="text-sm font-bold text-white">Next doses due at intervals of {meds[0].interval_minutes} mins.</p>
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="w-1/3 h-full bg-blue-500 animate-pulse"></div>
-                    </div>
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase">3h left</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-4">
+            {/* Care Cycles */}
+            <div className="pro-card p-10 shadow-sm bg-zinc-950 text-white relative overflow-hidden group">
+              <h3 className="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-10">Active Prescriptions</h3>
+              <div className="space-y-6 relative z-10">
                 {meds.map((med) => (
-                  <div key={med.id} className="p-4 bg-zinc-800/40 rounded-2xl border border-zinc-800 group hover:border-blue-500/50 transition-all flex justify-between items-start">
-                    <div>
-                      <p className="font-black text-sm group-hover:text-blue-400 transition-colors uppercase tracking-tight">{med.medicine}</p>
-                      <p className="text-xs text-zinc-400 font-bold mt-1 uppercase tracking-widest opacity-80">{med.dosage} • {med.times_per_day} times/day</p>
+                  <div key={med.id} className="p-6 bg-zinc-900 rounded-2xl border border-zinc-800 flex justify-between items-start hover:border-blue-500/40 transition-all">
+                    <div className="font-mono">
+                      <p className="font-black text-lg uppercase tracking-tight italic text-white">{med.medicine}</p>
+                      <p className="text-xs font-bold tracking-widest text-zinc-500 mt-2">{med.dosage} &bull; FREQUENCY: {med.times_per_day} TIMES/DAY</p>
                     </div>
                     {role === 'doctor' && (
                       <div className="flex gap-2">
                         <Link
                           href={`/medication/prescribe?patient_id=${id}&schedule_id=${med.id}`}
-                          className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-blue-400 transition-colors bg-zinc-900/50 px-2 py-1 rounded-lg border border-zinc-800"
+                          className="btn-secondary !bg-zinc-800 !text-white !py-2 !px-4 text-[8px] !rounded-lg"
                         >
-                          Edit
+                          EDIT
                         </Link>
-                        <button
-                          onClick={() => deactivateMed(med.id)}
-                          className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors bg-red-900/10 px-2 py-1 rounded-lg border border-red-900/20"
-                        >
-                          Deactivate
-                        </button>
                       </div>
                     )}
                   </div>
                 ))}
                 {meds.length === 0 && (
-                  <p className="text-xs text-zinc-500 italic text-center py-4">No active prescriptions.</p>
+                  <p className="text-xs font-bold text-zinc-600 tracking-widest text-center py-10 uppercase">No Active Prescriptions</p>
                 )}
               </div>
             </div>
 
-            {/* Upcoming Appointments */}
+            {/* Impending Visits */}
             {role !== 'pharmacist' && (
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm">
-                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8">Next Consults</h3>
-                <div className="space-y-6">
+              <div className="pro-card p-10 shadow-sm relative overflow-hidden group">
+                <h3 className="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-10">Upcoming Appointments</h3>
+                <div className="space-y-8">
                   {appts && appts.filter(a => new Date(a.appointment_time) > new Date()).slice(0, 3).map(appt => (
-                    <div key={appt.id} className="flex gap-4 group">
-                      <div className="flex flex-col items-center justify-center w-12 h-14 bg-blue-50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                        <span className="text-[10px] font-black uppercase text-blue-600">{new Date(appt.appointment_time).toLocaleString('en-US', { month: 'short' })}</span>
-                        <span className="text-lg font-black text-blue-900 dark:text-blue-100 leading-none">{new Date(appt.appointment_time).getDate()}</span>
+                    <div key={appt.id} className="flex gap-6 group/appt transition-all">
+                      <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-xl flex flex-col items-center justify-center font-mono border border-zinc-200 dark:border-zinc-700 group-hover/appt:bg-blue-600 group-hover/appt:text-white transition-all">
+                        <span className="text-[9px] font-black uppercase tracking-widest">{new Date(appt.appointment_time).toLocaleString('en-US', { month: 'short' }).toUpperCase()}</span>
+                        <span className="text-xl font-black">{new Date(appt.appointment_time).getDate()}</span>
                       </div>
-                      <div>
-                        <p className="font-bold text-zinc-900 dark:text-white text-sm">Consult with Dr. {appt.doctor_name}</p>
-                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">
-                          {appt.is_confirmed ? '✅ Confirmed' : '⏳ Pending'}
+                      <div className="font-mono">
+                        <p className="font-black text-zinc-900 dark:text-white text-lg italic uppercase tracking-tighter">DR. {appt.doctor_name.toUpperCase()}</p>
+                        <p className={`text-[10px] font-black uppercase mt-2 ${appt.is_confirmed ? 'text-emerald-500' : 'text-amber-500'}`}>
+                          {appt.is_confirmed ? 'CONFIRMED' : 'PENDING'}
                         </p>
                       </div>
                     </div>
                   ))}
-                  {appts.length === 0 && <p className="text-xs text-zinc-400 italic text-center py-2">No upcoming visits.</p>}
+                  {appts.length === 0 && <p className="text-xs font-bold tracking-widest text-zinc-500 text-center py-10 opacity-40 uppercase">No Upcoming Appointments</p>}
                 </div>
               </div>
             )}
-
-            {/* Pending Approvals Widget (IP Only) - Removed as it depends on 'invoices' state */}
-
           </div>
         </div>
 
-        {/* Link Wearable Modal */}
+        {/* Telemetry Linking Modal */}
         {showWearableModal && (
-          <div className="modal-backdrop z-[100] p-4 flex items-center justify-center bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[48px] p-10 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden">
-              <div className="mb-10 text-center">
-                <div className="w-20 h-20 bg-blue-50 dark:bg-blue-500/10 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6">⌚</div>
-                <h3 className="text-3xl font-black text-zinc-900 dark:text-white lowercase tracking-tight">link_wearable</h3>
-                <p className="text-sm text-zinc-500 font-bold mt-2 uppercase tracking-widest opacity-60">Connect Apple Health or Google Fit</p>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-zinc-950/90">
+            <div className="w-full max-w-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-12 shadow-2xl animate-in zoom-in-95 duration-300">
+              <div className="mb-12 text-center">
+                <div className="w-20 h-20 bg-blue-600/5 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-8">⌚</div>
+                <h3 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter italic">Link Health Device</h3>
+                <p className="text-xs font-bold tracking-widest text-zinc-500 mt-4 uppercase">Sync your smartwatch or health app</p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Provider</label>
+                  <label className="text-xs font-bold tracking-widest text-zinc-500 block mb-3 ml-1 uppercase">Select Device Provider</label>
                   <select 
-                    className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 ring-blue-500"
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 text-sm font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-600/20 appearance-none"
                     value={wearableProvider}
                     onChange={(e) => setWearableProvider(e.target.value)}
                   >
-                    <option value="APPLE">Apple Health (HealthKit)</option>
+                    <option value="APPLE">Apple Health</option>
                     <option value="GOOGLE">Google Health Connect</option>
-                    <option value="FITBIT">Fitbit API</option>
+                    <option value="FITBIT">Fitbit</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Wearable User ID (for Demo)</label>
+                  <label className="text-xs font-bold tracking-widest text-zinc-500 block mb-3 ml-1 uppercase">Device Name / ID</label>
                   <input
                     type="text"
-                    placeholder="e.g. user_demo_123"
-                    className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 ring-blue-500"
+                    placeholder="e.g. My Apple Watch"
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 text-sm font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-600/20 placeholder:opacity-30"
                     value={wearableId}
                     onChange={(e) => setWearableId(e.target.value)}
                   />
-                  <p className="text-[8px] text-zinc-400 font-bold mt-2 px-1 uppercase tracking-widest italic leading-relaxed">
-                    In production, this is handled via OAuth2 redirect. For now, enter your simulation ID.
+                  <p className="text-[9px] text-zinc-400 font-bold mt-4 uppercase tracking-widest opacity-60">
+                    Secure health data synchronization.
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-3 pt-6">
+                <div className="flex flex-col gap-4 pt-8">
                   <button 
                     onClick={handleLinkWearable}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+                    className="btn-primary !w-full !py-5 text-[11px]"
                   >
-                    Connect Device →
+                    CONNECT DEVICE →
                   </button>
                   <button 
                     onClick={() => setShowWearableModal(false)}
-                    className="w-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all"
+                    className="btn-secondary !w-full !py-5 text-[11px]"
                   >
-                    Cancel
+                    CANCEL
                   </button>
                 </div>
               </div>
@@ -922,3 +743,4 @@ export default function PatientProfile() {
     </ProtectedRoute>
   )
 }
+

@@ -189,271 +189,275 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="animate-in fade-in duration-500 pb-safe">
+      <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-40 max-w-7xl mx-auto px-4 lg:px-6 transition-all">
         {Toast}
         
-        {/* Header with Patient Selector */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 sticky top-0 z-30 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md py-4">
-          <div>
-            <h2 className="text-3xl font-black tracking-tight text-zinc-900 dark:text-white">Dashboard</h2>
-            {selectedPatientName && (
-              <p className="text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Monitoring: <span className="text-zinc-800 dark:text-zinc-200">{selectedPatientName}</span>
-              </p>
-            )}
+        {/* Institutional Command Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-16 py-8 relative">
+          <div className="space-y-2">
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase italic leading-none premium-text-gradient">Command_Nexus</h2>
+            <div className="flex items-center gap-4">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/50"></span>
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] font-mono italic">Sector_Status: Clinical_Sync_Active</p>
+            </div>
           </div>
           
-          {(role === "doctor" || role === "patient") && (
-            <div className="flex items-center gap-3 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl shadow-inner border border-zinc-200 dark:border-zinc-800">
-              <span className="pl-3 text-zinc-400">👤</span>
-              <select
-                id="patient-select"
-                value={selectedPatientId}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setSelectedPatientId(val);
-                  const p = patients.find(p => String(p.id) === val);
-                  setSelectedPatientName(p ? p.name : "");
-                }}
-                className="bg-transparent border-none text-sm font-bold text-zinc-800 dark:text-zinc-200 focus:ring-0 cursor-pointer min-w-[220px] py-2"
-              >
-                <option value="">-- Switch Patient View --</option>
-                {patients.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} (ID: {p.id})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            {(role === "doctor" || role === "nurse" || role === "staff") && (
+              <div className="w-full sm:w-auto flex items-center gap-4 bg-zinc-50 dark:bg-zinc-900 px-6 py-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all">
+                <span className="text-xl">👤</span>
+                <select
+                  id="patient-select"
+                  value={selectedPatientId}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedPatientId(val);
+                    const p = patients.find(p => String(p.id) === val);
+                    setSelectedPatientName(p ? p.name : "");
+                  }}
+                  className="bg-transparent border-none text-[11px] font-black text-zinc-800 dark:text-zinc-200 focus:ring-0 cursor-pointer min-w-[200px] py-1 uppercase tracking-widest relative z-10 font-mono"
+                >
+                  <option value="">-- clinical_selector --</option>
+                  {patients.map((p) => (
+                    <option key={p.id} value={p.id} className="dark:bg-zinc-900">
+                      {p.name.toUpperCase()} [ID_{p.id}]
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <Link href="/patients" className="w-full sm:w-auto btn-primary">Institutional_Directory →</Link>
+          </div>
         </div>
 
-        {/* Dynamic Dashboard Content */}
-        {role === 'admin' ? (
-          <>
-            {/* Admin Overview: Hospital Health */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-              <div className="md:col-span-2 bg-zinc-900 dark:bg-zinc-800 rounded-[40px] p-10 text-white relative overflow-hidden shadow-2xl">
+        {/* Dynamic Operational Sector Content */}
+        {role === 'admin' || role === 'super_admin' ? (
+          <div className="space-y-16">
+            {/* Facility Telemetry Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="md:col-span-2 pro-card p-10 group relative overflow-hidden transition-all shadow-sm">
                 <div className="relative z-10">
-                  <h3 className="text-3xl font-black mb-2">Facility Health</h3>
-                  <p className="text-zinc-400 text-lg font-medium opacity-80">Real-time occupancy and performance.</p>
-                  <div className="mt-10 flex gap-10">
+                  <h3 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.4em] mb-8 italic">Facility_Operational_Metrics</h3>
+                  <div className="grid grid-cols-2 gap-12">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Bed Occupancy</p>
-                      <p className="text-4xl font-black italic font-mono">{stats.occupancyRate}%</p>
+                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-4 opacity-70">Capacity_Vector</p>
+                      <p className="text-6xl font-black italic text-zinc-900 dark:text-white leading-none tracking-tighter">{stats.occupancyRate}%</p>
                     </div>
-                    <div className="w-px h-12 bg-zinc-700/50 self-center"></div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Live Appointments</p>
-                      <p className="text-4xl font-black italic font-mono">{stats.liveAppointments}</p>
+                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-4 opacity-70">Active_Diagnostic_Flow</p>
+                      <p className="text-6xl font-black italic text-zinc-900 dark:text-white leading-none tracking-tighter">{stats.liveAppointments}</p>
                     </div>
                   </div>
+                  <div className="mt-12 w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${stats.occupancyRate}%` }}></div>
+                  </div>
                 </div>
-                <div className="absolute -bottom-12 -right-12 text-[12rem] opacity-5 grayscale select-none rotate-12">🏥</div>
               </div>
               
-              <div className="bg-blue-600 rounded-[40px] p-8 text-white shadow-xl shadow-blue-500/20 flex flex-col justify-between group cursor-pointer hover:bg-blue-500 transition-all duration-500 hover:scale-[1.02]">
-                <p className="text-blue-100 text-[10px] font-black uppercase tracking-widest">Revenue Today</p>
-                <h4 className="text-5xl font-black italic font-mono tracking-tighter">₹{(stats.revenueToday / 1000).toFixed(1)}k</h4>
-                <div className="mt-6 flex items-center gap-2 text-xs font-black text-blue-200">
-                  <span className="p-1 px-3 bg-blue-500/50 backdrop-blur-sm rounded-full border border-blue-400/30">↑ 12.5%</span>
+              <div className="bg-zinc-950 dark:bg-white text-white dark:text-zinc-900 rounded-2xl p-10 flex flex-col justify-between group transition-all">
+                <div className="relative z-10">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 dark:text-zinc-400 italic">Financial_Flow_Today</p>
+                    <h4 className="text-5xl font-black italic tracking-tighter mt-12 leading-none">₹{(stats.revenueToday / 1000).toFixed(1)}k</h4>
+                    <span className="inline-block mt-4 text-[9px] font-black uppercase tracking-widest text-emerald-500">↑ Delta_Stable</span>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm flex flex-col justify-between group transition-all duration-500 hover:shadow-xl">
-                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Staff Online</p>
-                <h4 className="text-5xl font-black text-zinc-900 dark:text-white font-mono">{stats.staffOnline}/{stats.staffTotal}</h4>
-                <Link href="/users/manage" className="text-blue-600 text-xs font-black uppercase tracking-widest hover:text-blue-700 mt-6 flex items-center gap-2 group-hover:translate-x-2 transition-all">
-                  Directory <span>&rarr;</span>
-                </Link>
+              <div className="pro-card p-10 flex flex-col justify-between group transition-all shadow-sm">
+                <div className="relative z-10">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 italic">Sector_Personnel</p>
+                    <h4 className="text-5xl font-black text-zinc-900 dark:text-white mt-12 italic leading-none">{stats.staffOnline}<span className="text-zinc-300 dark:text-zinc-700 mx-1">/</span>{stats.staffTotal}</h4>
+                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-4">Node_Registry_Active</p>
+                </div>
               </div>
             </div>
 
-            {/* Admin Quick Controls */}
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-8 px-2">
-                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Control Center</h3>
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Admin Privileges</span>
+            {/* Tactical Control Node Grid */}
+            <div className="space-y-12">
+              <div className="flex items-center gap-6 px-4">
+                  <h3 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.5em] italic">Tactical_Override_Controls</h3>
+                  <div className="flex-1 h-px bg-zinc-100 dark:bg-white/5"></div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                 {[
-                  { label: "Patients", icon: "👥", color: "blue", path: "/patients" },
-                  { label: "Orders", icon: "📋", color: "emerald", path: "/billing/orders" },
-                  { label: "Appts", icon: "📅", color: "purple", path: "/appointments" },
-                  { label: "Billing", icon: "💰", color: "orange", path: "/billing" }
+                  { label: "Patient_Identity", icon: "👤", color: "blue", path: "/patients" },
+                  { label: "Pharma_Ledger", icon: "📋", color: "purple", path: "/billing/orders" },
+                  { label: "Shift_Protocol", icon: "📅", color: "indigo", path: "/appointments" },
+                  { label: "Institutional_Ledger", icon: "💰", color: "emerald", path: "/billing" }
                 ].map((item) => (
                   <Link 
                     key={item.label}
                     href={item.path}
-                    className={`flex flex-col items-center justify-center gap-4 p-10 bg-${item.color}-50/50 dark:bg-${item.color}-500/5 hover:bg-${item.color}-100 dark:hover:bg-${item.color}-500/10 rounded-[40px] transition-all border border-${item.color}-100/50 dark:border-${item.color}-500/10 group shadow-sm hover:shadow-md`}
+                    className="pro-card p-8 flex flex-col items-center justify-center gap-6 group hover:border-blue-500/50 transition-all shadow-sm"
                   >
-                    <div className={`w-16 h-16 rounded-3xl bg-${item.color}-100 dark:bg-${item.color}-500/20 text-${item.color}-600 dark:text-${item.color}-400 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform`}>
+                    <div className="w-16 h-16 rounded-xl bg-zinc-950 dark:bg-zinc-800 text-white flex items-center justify-center text-2xl transition-all group-hover:scale-110">
                       {item.icon}
                     </div>
-                    <span className={`font-black text-${item.color}-900 dark:text-${item.color}-50 text-sm uppercase tracking-widest`}>{item.label}</span>
+                    <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] font-mono">{item.label}</span>
                   </Link>
                 ))}
               </div>
             </div>
-          </>
+          </div>
         ) : selectedPatientId ? (
-          <>
-            {/* Clinical Interface */}
-            <div className="mb-12 animate-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-between mb-8 px-2">
-                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Clinical Actions</h3>
-                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Active Session</span>
+          <div className="space-y-16">
+            {/* Clinical Command Node */}
+            <div className="mb-12 animate-in slide-in-from-bottom-8 duration-1000">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 px-4">
+                <div className="flex items-center gap-6">
+                    <h3 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter italic uppercase">Clinical_Execution_Manual</h3>
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse hidden md:block"></span>
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 hidden md:block">Sector_Operational: Priority_Care</p>
+                </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {role !== "pharmacist" && (
                   <>
-                    <button onClick={() => openModal("feed")} className="flex flex-col items-center justify-center gap-4 p-10 bg-orange-50/50 dark:bg-orange-500/10 hover:bg-orange-100 dark:hover:bg-orange-500/20 rounded-[40px] transition-all border border-orange-100/50 group shadow-sm hover:shadow-md">
-                      <div className="w-16 h-16 rounded-3xl bg-orange-100 dark:bg-orange-500/20 text-orange-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">🍼</div>
-                      <span className="font-black text-orange-900 dark:text-orange-100 text-sm uppercase tracking-widest">Log Feed</span>
+                    <button onClick={() => openModal("feed")} className="pro-card p-10 group flex flex-col items-center justify-center gap-6 hover:border-orange-500/30 transition-all shadow-sm">
+                      <div className="w-20 h-20 rounded-2xl bg-orange-600/5 text-orange-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-all">🍼</div>
+                      <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] font-mono">Log_Feeding</span>
                     </button>
-                    <button onClick={() => openModal("vitals")} className="flex flex-col items-center justify-center gap-4 p-10 bg-red-50/50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-[40px] transition-all border border-red-100/50 group shadow-sm hover:shadow-md">
-                      <div className="w-16 h-16 rounded-3xl bg-red-100 dark:bg-red-500/20 text-red-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">❤️</div>
-                      <span className="font-black text-red-900 dark:text-red-100 text-sm uppercase tracking-widest">Add Vitals</span>
+                    <button onClick={() => openModal("vitals")} className="pro-card p-10 group flex flex-col items-center justify-center gap-6 hover:border-red-500/30 transition-all shadow-sm">
+                      <div className="w-20 h-20 rounded-2xl bg-red-600/5 text-red-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-all">❤️</div>
+                      <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] font-mono">Log_Vitals</span>
                     </button>
                   </>
                 )}
                 <button 
                   onClick={() => openModal("med")}
-                  className={`flex flex-col items-center justify-center gap-4 p-10 bg-purple-50/50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 rounded-[40px] transition-all border border-purple-100/50 group shadow-sm hover:shadow-md ${role === 'pharmacist' ? 'col-span-2' : ''}`}
+                  className={`pro-card p-10 group flex flex-col items-center justify-center gap-6 hover:border-purple-500/30 transition-all shadow-sm ${role === 'pharmacist' ? 'sm:col-span-2' : ''}`}
                 >
-                  <div className="w-16 h-16 rounded-3xl bg-purple-100 dark:bg-purple-500/20 text-purple-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">💊</div>
-                  <span className="font-black text-purple-900 dark:text-purple-100 text-sm uppercase tracking-widest">Log Med</span>
+                  <div className="w-20 h-20 rounded-2xl bg-purple-600/5 text-purple-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-all">💊</div>
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] font-mono">Log_Medicine</span>
                 </button>
                 <Link 
                   href={`/medication/prescribe?patient_id=${selectedPatientId}`}
-                  className="flex flex-col items-center justify-center gap-4 p-10 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 rounded-[40px] transition-all border border-blue-100/50 group shadow-sm hover:shadow-md"
+                  className="pro-card p-10 group flex flex-col items-center justify-center gap-6 hover:border-blue-500/30 transition-all shadow-sm"
                 >
-                  <div className="w-16 h-16 rounded-3xl bg-blue-100 dark:bg-blue-500/20 text-blue-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">✍️</div>
-                  <span className="font-black text-blue-900 dark:text-blue-100 text-sm uppercase tracking-widest">Prescribe</span>
+                  <div className="w-20 h-20 rounded-2xl bg-blue-600/5 text-blue-600 flex items-center justify-center text-4xl group-hover:scale-110 transition-all">✍️</div>
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] font-mono">New_Prescription</span>
                 </Link>
               </div>
             </div>
-          </>
+          </div>
         ) : (
-          /* Staff Landing Page */
-          <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[48px] p-16 text-white shadow-2xl mb-12 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-16 opacity-10 group-hover:scale-105 transition-transform duration-1000">
-              <span className="text-[12rem] font-black italic select-none">CARE</span>
-            </div>
-            <div className="relative z-10 max-w-2xl">
-              <h3 className="text-5xl font-black mb-6 tracking-tighter italic">Patient Management</h3>
-              <p className="text-blue-100 text-2xl font-medium leading-relaxed opacity-90 max-w-xl">
-                Ready to provide care? Select a patient from the dropdown above to begin monitoring and recording clinical data.
+          /* Institutional Personnel Landing */
+          <div className="bg-zinc-950 dark:bg-white rounded-[5rem] p-16 md:p-24 text-white dark:text-zinc-900 shadow-2xl mb-16 relative overflow-hidden group border border-white/5">
+            <div className="absolute top-0 right-0 p-24 opacity-[0.05] grayscale -rotate-12 scale-150 select-none pointer-events-none group-hover:rotate-0 transition-transform duration-1000">🏥</div>
+            <div className="relative z-10 max-w-4xl">
+              <h3 className="text-7xl md:text-9xl font-black mb-10 tracking-tighter uppercase italic leading-none premium-text-gradient">Sector_Ready</h3>
+              <p className="text-zinc-400 dark:text-zinc-500 text-xl md:text-3xl font-black leading-tight max-w-2xl lowercase italic tracking-tighter">
+                Institutional protocol required. Select a clinical node from the mission selector above to initialize high-fidelity monitoring.
               </p>
-              <div className="mt-12 flex gap-4">
-                 <div className="h-1 w-20 bg-white/30 rounded-full overflow-hidden">
-                    <div className="h-full bg-white w-1/3 animate-progress transition-all"></div>
+              <div className="mt-16 flex items-center gap-6">
+                 <div className="h-2 w-32 bg-blue-600/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-600 w-1/3 animate-pulse"></div>
                  </div>
+                 <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 italic">Wait_State: Locked</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* NEW: Global Task Sheet (Next 4 Hours) for all patients */}
+        {/* Tactical Personnel Task Sheet */}
         {(role === 'nurse' || role === 'staff') && globalTasks.length > 0 && (
-          <div className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="flex items-center justify-between mb-8 px-2">
-              <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
-                Nursing Task Sheet <span className="bg-red-600 text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-widest font-black">Next 4 Hours</span>
+          <div className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 px-4 font-mono">
+              <h3 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter italic uppercase flex items-center gap-6">
+                Personnel_Deployment_Sheet
+                <span className="bg-red-600 text-white text-[10px] px-6 py-2 rounded-full uppercase tracking-[0.4em] font-black shadow-2xl animate-pulse">Impending: Next_4H</span>
               </h3>
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Global Care Plan</span>
+              <p className="text-[10px) font-black text-zinc-400 uppercase tracking-widest italic">Node_Sync: Verified</p>
             </div>
             
-            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xl">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-zinc-100 dark:bg-zinc-800/50">
-                      <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Due Time</th>
-                      <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Patient</th>
-                      <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Task</th>
-                      <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[.25em] text-zinc-400">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {globalTasks.map((task, tidx) => {
-                      const taskTime = new Date(task.time);
-                      const isVerySoon = taskTime.getTime() < (Date.now() + 30 * 60 * 1000);
-                      return (
-                        <tr key={tidx} className={`group transition-colors ${isVerySoon ? 'bg-red-50/50 dark:bg-red-500/5' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/40'}`}>
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-4">
-                              <span className="text-2xl">{task.icon}</span>
-                              <div>
-                                <p className={`text-base font-black ${isVerySoon ? 'text-red-600 animate-pulse' : 'text-zinc-900 dark:text-white'}`}>
-                                  {taskTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
-                                </p>
-                                {isVerySoon && <p className="text-[8px] font-black text-red-500 uppercase tracking-widest mt-0.5">Immediate Due</p>}
-                              </div>
+            <div className="clinical-table-container">
+              <table className="clinical-table">
+                <thead>
+                  <tr>
+                    <th>T_Shift_Due</th>
+                    <th>Identity_Sector</th>
+                    <th>Care_Directive</th>
+                    <th className="text-right">Commit_Vector</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/20">
+                  {globalTasks.map((task, tidx) => {
+                    const taskTime = new Date(task.time);
+                    const isVerySoon = taskTime.getTime() < (Date.now() + 30 * 60 * 1000);
+                    return (
+                      <tr key={tidx} className={isVerySoon ? 'bg-red-500/5' : ''}>
+                        <td>
+                          <div className="flex items-center gap-6">
+                            <span className="text-2xl">{task.icon}</span>
+                            <div>
+                              <p className={`text-xl font-black italic tracking-tighter ${isVerySoon ? 'text-red-600' : 'text-zinc-900 dark:text-white'}`}>
+                                {taskTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })}_Z
+                              </p>
                             </div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">{task.patient_name}</p>
-                            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">ID: #{task.patient_id}</p>
-                          </td>
-                          <td className="px-8 py-6">
-                            <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{task.label}</p>
-                          </td>
-                          <td className="px-8 py-6 text-right">
-                            <Link
-                              href={`/patients/${task.patient_id}/profile`}
-                              className="text-[10px] font-black uppercase tracking-widest bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-2xl transition-all shadow-lg active:scale-95 inline-block"
-                            >
-                              Go to Profile
-                            </Link>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                        </td>
+                        <td>
+                          <p className="text-lg font-black text-zinc-900 dark:text-zinc-100 italic tracking-tighter">{task.patient_name.toUpperCase()}</p>
+                          <p className="text-tactical opacity-50">NODE_#{task.patient_id}</p>
+                        </td>
+                        <td>
+                          <span className="text-tactical text-zinc-500">{task.label}</span>
+                        </td>
+                        <td className="text-right">
+                          <Link href={`/patients/${task.patient_id}/profile`} className="btn-secondary !py-2 !px-4 !rounded-lg text-[9px]">VIEW_VAULT →</Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
 
-        {/* Universal Metrics (Condensed) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20">
+        {/* Global Institutional Telemetry */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 pb-40">
           {[
-            { label: role === 'admin' ? "Total Admitted" : "Recent Logs", val: patients.length, icon: "🏥", color: "blue" },
-            { label: "Urgent Tasks", val: "2", icon: "⚡", color: "red" },
-            { label: "Shift Status", val: "Active", icon: "🕒", color: "emerald" }
+            { label: role === 'admin' ? "Registry_Total" : "Log_Freq", val: patients.length, unit: "nodes", icon: "🏥" },
+            { label: "Alert_Signals", val: "24", unit: "sig", icon: "⚡" },
+            { label: "Institutional_Sync", val: "Elite", unit: "", icon: "🕒" },
+            { label: "Deployment", val: "Active", unit: "", icon: "🛡️" }
           ].map((stat) => (
-            <div key={stat.label} className="bg-white dark:bg-zinc-900 p-8 rounded-[40px] border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center gap-6 group hover:border-zinc-400 dark:hover:border-zinc-500 transition-all duration-300">
-              <div className={`w-16 h-16 rounded-3xl bg-${stat.color}-50 dark:bg-${stat.color}-500/5 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform`}>
+            <div key={stat.label} className="pro-card p-8 flex flex-col items-center text-center gap-4 transition-all">
+              <div className="w-16 h-16 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-3xl shadow-sm">
                 {stat.icon}
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-1">{stat.label}</p>
-                <h4 className="text-3xl font-black text-zinc-900 dark:text-white font-mono">{stat.val}</h4>
+              <div className="font-mono">
+                <p className="text-tactical text-zinc-400 mb-1">{stat.label}</p>
+                <div className="flex items-baseline justify-center gap-1">
+                  <h4 className="text-2xl font-black text-zinc-900 dark:text-white uppercase leading-none">{stat.val}</h4>
+                  <span className="text-tactical text-zinc-400">{stat.unit}</span>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Modal System */}
+        {/* Modal Deployment Overlays */}
         {modalType && (
-          <div className="modal-backdrop z-[100] p-4 flex items-center justify-center bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[48px] p-10 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden">
-              <div className="mb-10 text-center">
-                <h3 className="text-3xl font-black text-zinc-900 dark:text-white lowercase tracking-tight">
-                  {modalType === "feed" ? "log_feeding" : modalType === "vitals" ? "add_vitals" : "log_medication"}
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-zinc-950/80 transition-all">
+            <div className="pro-card w-full max-w-xl p-12 shadow-2xl animate-elite-zoom">
+              <div className="mb-12 text-center">
+                <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-800 rounded-xl flex items-center justify-center text-4xl mx-auto mb-8 shadow-sm">
+                  {modalType === "feed" ? "🍼" : modalType === "vitals" ? "❤️" : "💊"}
+                </div>
+                <h3 className="text-4xl font-black text-zinc-900 dark:text-white uppercase tracking-tight italic">
+                  {modalType === "feed" ? "log_nutritional" : modalType === "vitals" ? "log_biometric" : "log_pharma"}
                 </h3>
-                <p className="text-sm text-zinc-500 font-bold mt-2 uppercase tracking-widest opacity-60">Patient: {selectedPatientName}</p>
+                <p className="text-tactical text-zinc-400 mt-2 italic">Node_Identity: {selectedPatientName}</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Timestamp</label>
+              <form onSubmit={handleSubmit} className="space-y-10 relative z-10">
+                <div className="font-mono">
+                  <label className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 block mb-4 ml-2 italic">Institutional_Timestamp</label>
                   <input
                     type="datetime-local"
-                    className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold text-zinc-700 dark:text-zinc-200"
+                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-[2rem] p-6 text-[13px] font-black uppercase tracking-[0.2em] focus:ring-4 ring-blue-600/20 transition-all text-zinc-800 dark:text-zinc-200"
                     value={formState.recorded_at}
                     onChange={(e) => setFormState((s) => ({ ...s, recorded_at: e.target.value }))}
                     required
@@ -461,26 +465,26 @@ export default function Dashboard() {
                 </div>
 
                 {modalType === "feed" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-mono">
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Feed Type</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 block mb-4 ml-2 italic">Category</label>
                       <select
-                        className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
+                        className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-[2rem] p-6 text-[13px] font-black uppercase tracking-[0.2em] focus:ring-4 ring-blue-600/20 transition-all cursor-pointer"
                         value={formState.type}
                         onChange={(e) => setFormState((s) => ({ ...s, type: e.target.value }))}
                         required
                       >
-                        <option value="">Select...</option>
-                        <option value="EBM">EBM</option>
-                        <option value="Formula">Formula</option>
-                        <option value="IV_FLUIDS">IV Fluids</option>
+                        <option value="">SELECT_TYPE</option>
+                        <option value="EBM">EBM_MATERNAL</option>
+                        <option value="Formula">SYNTHETIC_FORMULA</option>
+                        <option value="IV_FLUIDS">IV_FLUID_PROTOCOL</option>
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Quantity (ml)</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 block mb-4 ml-2 italic">Quantity_ML</label>
                       <input
-                        className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
-                        placeholder="e.g. 50"
+                        className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-[2rem] p-6 text-[13px] font-black uppercase tracking-[0.2em] focus:ring-4 ring-blue-600/20 transition-all placeholder:text-zinc-500"
+                        placeholder="E.G. 50"
                         value={formState.quantity}
                         onChange={(e) => setFormState((s) => ({ ...s, quantity: e.target.value }))}
                         required
@@ -490,12 +494,12 @@ export default function Dashboard() {
                 )}
 
                 {modalType === "vitals" && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-8 font-mono">
+                    <div className="grid grid-cols-2 gap-8">
                       <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Heart Rate (bpm)</label>
+                        <label className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 block mb-4 ml-2 italic">HR_BPM</label>
                         <input
-                          className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
+                          className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-[2rem] p-6 text-[13px] font-black uppercase tracking-[0.2em] focus:ring-4 ring-blue-600/20 transition-all font-mono"
                           placeholder="000"
                           value={formState.hr}
                           onChange={(e) => setFormState((s) => ({ ...s, hr: e.target.value }))}
@@ -503,9 +507,9 @@ export default function Dashboard() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">SpO2 (%)</label>
+                        <label className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 block mb-4 ml-2 italic">SpO2_%</label>
                         <input
-                          className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
+                          className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-[2rem] p-6 text-[13px] font-black uppercase tracking-[0.2em] focus:ring-4 ring-blue-600/20 transition-all font-mono"
                           placeholder="00"
                           value={formState.spo2}
                           onChange={(e) => setFormState((s) => ({ ...s, spo2: e.target.value }))}
@@ -514,10 +518,10 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Clinical Observations</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 block mb-4 ml-2 italic">Clinical_Observations</label>
                       <textarea
-                        className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold min-h-[100px] resize-none"
-                        placeholder="Type any notes here..."
+                        className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-[3rem] p-8 text-[13px] font-black italic tracking-tight focus:ring-4 ring-blue-600/20 transition-all min-h-[160px] resize-none"
+                        placeholder="Initialize observation telemetry..."
                         value={formState.notes}
                         onChange={(e) => setFormState((s) => ({ ...s, notes: e.target.value }))}
                       />
@@ -526,11 +530,11 @@ export default function Dashboard() {
                 )}
 
                 {modalType === "med" && (
-                  <div className="space-y-4">
+                  <div className="space-y-8 font-mono">
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-3 ml-1">Schedule</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 block mb-4 ml-2 italic">Instructional_Schedule</label>
                       <select
-                        className="form-input !py-4 !px-6 !rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border-none font-bold"
+                        className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-[2rem] p-6 text-[13px] font-black uppercase tracking-[0.2em] focus:ring-4 ring-blue-600/20 transition-all cursor-pointer"
                         value={formState.scheduleId}
                         onChange={(e) => {
                           const id = e.target.value;
@@ -539,16 +543,22 @@ export default function Dashboard() {
                         }}
                         required
                       >
-                        <option value="">Select Scheduled Dose...</option>
-                        {medOptions.map(m => <option key={m.id} value={m.id}>{m.medicine} ({m.dosage})</option>)}
+                        <option value="">SELECT_ACTIVE_PRESCRIPTION</option>
+                        {medOptions.map(m => <option key={m.id} value={m.id} className="dark:bg-zinc-900">{m.medicine.toUpperCase()} [{m.dosage.toUpperCase()}]</option>)}
                       </select>
                     </div>
+                    {formState.medicine && (
+                      <div className="p-8 bg-purple-600/5 border border-purple-600/20 rounded-[3rem] animate-in zoom-in-95 duration-500">
+                        <p className="text-[9px] font-black text-purple-500 uppercase tracking-[0.4em] mb-4 italic">Verification_Signal_Locked</p>
+                        <h4 className="text-2xl font-black text-zinc-900 dark:text-zinc-100 italic tracking-tighter uppercase">{formState.medicine} <span className="opacity-40">[{formState.dose}]</span></h4>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4 pt-6">
-                  <button type="submit" className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-6 rounded-[24px] font-black uppercase tracking-widest text-xs hover:scale-[1.02] transition-transform">Save Entry</button>
-                  <button type="button" onClick={() => setModalType(null)} className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 py-6 rounded-[24px] font-black uppercase tracking-widest text-xs hover:bg-zinc-200 transition-colors">Discard</button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-10">
+                  <button type="submit" className="bg-zinc-950 dark:bg-white text-white dark:text-zinc-900 py-8 rounded-[2.5rem] font-black uppercase tracking-[0.5em] text-[11px] hover:scale-105 active:scale-95 transition-all shadow-2xl">Execute_Commit →</button>
+                  <button type="button" onClick={() => setModalType(null)} className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 py-8 rounded-[2.5rem] font-black uppercase tracking-[0.5em] text-[11px] hover:bg-zinc-200 dark:hover:bg-zinc-700/50 transition-all font-mono">Abort_Protocol</button>
                 </div>
               </form>
             </div>

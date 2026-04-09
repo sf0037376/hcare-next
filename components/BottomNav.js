@@ -104,71 +104,78 @@ export default function BottomNav() {
         </div>
       </nav>
 
-      {/* "More" Drawer Overlay */}
+      {/* "More" Drawer Overlay (Bottom Sheet) */}
       {showMore && (
-        <div className="fixed inset-0 z-[60] md:hidden animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMore(false)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 rounded-t-[32px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
-            <div className="w-12 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mb-8" />
+        <div className="fixed inset-0 z-[60] md:hidden">
+          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-500" onClick={() => setShowMore(false)} />
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-zinc-950 rounded-t-[3.5rem] p-10 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] border-t border-white/10 animate-in slide-in-from-bottom duration-500 max-h-[85vh] overflow-y-auto custom-scrollbar">
+            <div className="w-16 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mb-10" />
             
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl">
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xl">
-                  👤
+            <div className="space-y-10">
+              <div className="flex items-center gap-5 p-6 bg-zinc-50 dark:bg-zinc-900/50 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800">
+                <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/10">
+                  <img src={`https://ui-avatars.com/api/?name=${role || 'User'}&background=random`} className="w-full h-full rounded-full" alt="User" />
                 </div>
                 <div>
-                  <p className="font-bold text-zinc-900 dark:text-white capitalize">{role || 'User'}</p>
-                  <p className="text-xs text-zinc-500">Hospital Account</p>
+                  <p className="text-xl font-black text-zinc-900 dark:text-white capitalize tracking-tight leading-tight">{role || 'User'}</p>
+                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mt-1">Hospital Account</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 gap-3">
                 {drawerItems.map((item) => {
                   const isActive = pathname === item.href
                   return (
-                    <Link key={item.href} href={item.href} onClick={() => setShowMore(false)} className={`flex items-center gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-2xl transition-colors ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-zinc-600 dark:text-zinc-400'}`}>
-                      <span className="text-xl">{item.icon}</span>
-                      <span className="font-medium">{item.label}</span>
+                    <Link key={item.href} href={item.href} onClick={() => setShowMore(false)} className={`flex items-center gap-5 p-5 rounded-[2rem] transition-all group ${
+                        isActive 
+                        ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/25' 
+                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900'
+                    }`}>
+                      <span className={`text-xl transition-transform group-hover:scale-110`}>{item.icon}</span>
+                      <span className="font-black text-sm uppercase tracking-widest">{item.label}</span>
                       {item.label === "Approvals" && pendingCount > 0 && (
-                        <span className="ml-auto w-5 h-5 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full font-black animate-pulse">
+                        <span className="ml-auto flex h-6 px-2 bg-red-500 text-white text-[10px] items-center justify-center rounded-full font-black animate-pulse">
                           {pendingCount}
                         </span>
                       )}
                       {item.label === "Alerts" && unreadAlerts > 0 && (
-                        <span className="ml-auto w-5 h-5 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-black">
+                        <span className="ml-auto w-6 h-6 bg-blue-500 text-white text-[10px] flex items-center justify-center rounded-full font-black">
                           {unreadAlerts}
                         </span>
                       )}
                     </Link>
                   )
                 })}
-                {role === "admin" && (
-                  <>
-                    <Link href="/users/manage" onClick={() => setShowMore(false)} className="flex items-center gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-2xl transition-colors">
+                
+                {(role === "admin" || role === "super_admin") && (
+                  <div className="pt-6 mt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
+                    <p className="px-5 text-[10px] font-black text-zinc-400 uppercase tracking-[.25em] mb-4">Administration</p>
+                    <Link href="/users/manage" onClick={() => setShowMore(false)} className="flex items-center gap-5 p-5 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-[2rem] transition-all">
                       <span className="text-xl">👥</span>
-                      <span className="font-medium">Manage Staff</span>
+                      <span className="font-black text-sm uppercase tracking-widest">Manage Staff</span>
                     </Link>
-                    <Link href="/users/admission" onClick={() => setShowMore(false)} className="flex items-center gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-2xl transition-colors">
+                    <Link href="/users/admission" onClick={() => setShowMore(false)} className="flex items-center gap-5 p-5 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-[2rem] transition-all">
                       <span className="text-xl">📝</span>
-                      <span className="font-medium">Patient Admission</span>
+                      <span className="font-black text-sm uppercase tracking-widest">Patient Admission</span>
                     </Link>
-                  </>
+                  </div>
                 )}
+                
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center gap-4 p-4 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-2xl transition-colors w-full mt-4"
+                  className="flex items-center gap-5 p-5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-[2rem] transition-all w-full mt-6"
                 >
                   <span className="text-xl">🚪</span>
-                  <span className="font-bold">Sign Out</span>
+                  <span className="font-black text-sm uppercase tracking-widest">Sign Out</span>
                 </button>
               </div>
             </div>
             
             <button 
               onClick={() => setShowMore(false)}
-              className="w-full mt-8 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold rounded-2xl"
+              className="w-full mt-10 py-5 bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-3xl active:scale-95 transition-all"
             >
-              Close
+              Dismiss
             </button>
           </div>
         </div>

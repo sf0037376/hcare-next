@@ -288,348 +288,325 @@ export default function BillingPage() {
 
   return (
     <ProtectedRoute roles={["admin", "pharmacist"]}>
-      <div className="animate-in fade-in duration-500 max-w-5xl mx-auto pb-20">
+      <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 max-w-[1600px] mx-auto pb-40 px-4 lg:px-8 transition-all">
         {Toast}
         
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Billing & Invoicing</h2>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-2">Generate invoices with GST and independent price snapshots.</p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-20 py-8 relative">
+          <div className="space-y-4">
+            <h2 className="text-6xl md:text-8xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase italic leading-none premium-text-gradient">Financial_Nexus</h2>
+            <div className="flex items-center gap-6">
+              <span className="w-3 h-3 rounded-full bg-blue-600 animate-pulse shadow-lg shadow-blue-600/50"></span>
+              <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.5em] font-mono italic">Sector_Status: Revenue_Cycle_Active</p>
+            </div>
+          </div>
+          <div className="hidden md:flex items-center gap-6 px-10 py-6 rounded-[3rem] glass-card border-white/5 shadow-2xl relative overflow-hidden group/status">
+               <span className="w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.8)] relative z-10"></span>
+               <span className="text-[11px] font-black uppercase tracking-[0.5em] font-mono text-zinc-600 dark:text-zinc-200 relative z-10 italic">Ledger_Sync: Nominal</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
-              <div className="mb-6 h-12">
-                <label className="form-label">Select Patient for Invoice</label>
-                <div className="relative">
-                  <input 
-                    type="text"
-                    className="form-input"
-                    placeholder="Search patient by name or phone..."
-                    value={patientSearch}
-                    onChange={e => {
-                      setPatientSearch(e.target.value)
-                      setShowPatientSuggestions(true)
-                      if (!e.target.value) setSelectedPatientId("")
-                    }}
-                    onFocus={() => setShowPatientSuggestions(true)}
-                    required
-                  />
-                  {showPatientSuggestions && patientSearch && (
-                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                      {patients
-                        .filter(p => 
-                          p.name.toLowerCase().includes(patientSearch.toLowerCase()) || 
-                          (p.phone || "").includes(patientSearch)
-                        )
-                        .map(p => (
-                          <div 
-                            key={p.id}
-                            className="px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer border-b border-zinc-100 dark:border-zinc-800 last:border-0"
-                            onClick={() => {
-                              handlePatientSelect(p.id)
-                              setPatientSearch(`${p.name} (${p.patient_type || 'OP'})`)
-                              setShowPatientSuggestions(false)
-                            }}
-                          >
-                            <p className="font-bold text-sm">{p.name}</p>
-                            <p className="text-xs text-zinc-500">{p.phone} • {p.patient_type || 'OP'}</p>
-                          </div>
-                        ))
-                      }
-                      {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase()) || (p.phone || "").includes(patientSearch)).length === 0 && (
-                        <div className="px-4 py-3 text-sm text-zinc-500">No patients found</div>
-                      )}
-                    </div>
-                  )}
-                </div>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-16 font-mono">
+          <div className="xl:col-span-8 space-y-16">
+            {/* Patient Attribution & Core Entry */}
+            <div className="glass-card rounded-[5rem] p-12 md:p-20 shadow-2xl border border-white/5 relative overflow-hidden group/attribution">
+              <div className="absolute top-0 right-0 p-24 opacity-[0.03] grayscale -rotate-12 scale-150 select-none pointer-events-none group-hover/attribution:rotate-0 transition-transform duration-1000">💳</div>
+              
+              <div className="relative z-10 mb-20 space-y-8">
+                  <label className="text-[11px] font-black uppercase tracking-[0.6em] text-zinc-400 block ml-6 italic">Patient_Attribution_Target</label>
+                  <div className="relative group/search">
+                    <input 
+                      type="text"
+                      className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-[3rem] px-12 py-10 text-3xl md:text-4xl font-black italic tracking-tighter focus:ring-4 ring-blue-500/10 transition-all placeholder:text-zinc-500/30"
+                      placeholder="SEARCH_IDENTITY_BY_NAME_OR_TELEMETRY_ID..."
+                      value={patientSearch}
+                      onChange={e => {
+                        setPatientSearch(e.target.value)
+                        setShowPatientSuggestions(true)
+                        if (!e.target.value) setSelectedPatientId("")
+                      }}
+                      onFocus={() => setShowPatientSuggestions(true)}
+                    />
+                    <div className="absolute right-12 top-1/2 -translate-y-1/2 text-4xl opacity-20 group-focus-within/search:opacity-100 group-focus-within/search:text-blue-500 transition-all pointer-events-none">🔍</div>
+                    
+                    {showPatientSuggestions && patientSearch && (
+                      <div className="absolute z-50 w-full mt-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] max-h-[500px] overflow-y-auto custom-scrollbar animate-in slide-in-from-top-6 duration-700">
+                        {patients
+                          .filter(p => 
+                            p.name.toLowerCase().includes(patientSearch.toLowerCase()) || 
+                            (p.phone || "").includes(patientSearch)
+                          )
+                          .map(p => (
+                            <div 
+                              key={p.id}
+                              className="px-12 py-8 hover:bg-blue-500/5 cursor-pointer border-b border-zinc-100 dark:border-zinc-800 last:border-0 transition-all group/item"
+                              onClick={() => {
+                                handlePatientSelect(p.id)
+                                setPatientSearch(`${p.name.toUpperCase()} [UID:#${p.id.toString().padStart(4, '0')}]`)
+                                setShowPatientSuggestions(false)
+                              }}
+                            >
+                              <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="font-black text-2xl text-zinc-900 dark:text-white tracking-tighter italic group-hover/item:text-blue-600 transition-colors uppercase">{p.name}</p>
+                                    <p className="text-[9px] text-zinc-400 font-black uppercase tracking-[0.4em] mt-2 italic">{p.phone} • SEGMENT: {p.patient_type || 'OP'}</p>
+                                  </div>
+                                  <div className="w-12 h-12 rounded-full border-2 border-zinc-100 dark:border-zinc-800 flex items-center justify-center opacity-0 group-hover/item:opacity-100 group-hover/item:border-blue-500/50 transition-all duration-500 text-blue-500">→</div>
+                              </div>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    )}
+                  </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center px-2">
-                  <h4 className="font-semibold text-zinc-900 dark:text-white uppercase tracking-wider text-xs">Line Items</h4>
+              {/* Transactional Line Items */}
+              <div className="relative z-10 space-y-12">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 px-6">
+                   <div className="space-y-2">
+                        <h4 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase italic leading-none">Clinical_Protocol_Matrix</h4>
+                        <div className="flex items-center gap-4">
+                            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.5em] italic">Enumeration: Active</p>
+                        </div>
+                   </div>
                   {selectedPatientType === 'IP' && (
                     <button 
                       onClick={fetchApprovedLogs}
-                      className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-3 py-1.5 rounded-xl hover:bg-blue-100 animate-pulse"
+                      className="px-10 py-5 rounded-[2rem] bg-emerald-600/10 border border-emerald-600/20 text-[10px] font-black uppercase tracking-[0.4em] text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-2xl shadow-emerald-600/5 animate-pulse italic"
                     >
-                      ✨ Auto-Fill from Approved Logs
+                      ✨ SYNC_ACCEPTED_LOGS
                     </button>
                   )}
                 </div>
-                {items.map((item, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-3 items-end">
-                    <div className="col-span-6 relative">
-                        <input 
-                          className="form-input text-sm"
-                          placeholder={role === 'pharmacist' ? "Type medicine name..." : "Type service name to search (Enter to add)..."}
-                          value={item.searchQuery !== undefined ? item.searchQuery : (pricingMaster.find(p => p.id === parseInt(item.serviceId))?.service_name || item.description || "")}
-                        onChange={e => {
-                          updateItem(index, 'searchQuery', e.target.value)
-                          updateItem(index, 'showSuggestions', true)
-                        }}
-                        onFocus={() => updateItem(index, 'showSuggestions', true)}
-                        onBlur={() => setTimeout(() => updateItem(index, 'showSuggestions', false), 200)}
-                        onKeyDown={e => {
-                           if (e.key === 'Enter') {
-                               e.preventDefault()
-                               const query = item.searchQuery || ""
-                               if (query.trim() === "") return
-                               const suggestions = getSuggestions(query)
-                               if (suggestions.length > 0) {
-                                   handleSelectService(index, suggestions[0])
-                               } else if (role !== 'pharmacist') {
-                                   handleSelectService(index, { id: 'custom', service_name: query, base_charge: 0, category: 'OTHER' })
-                               }
-                               if (role !== 'pharmacist' || (suggestions.length > 0)) {
-                                   addItem()
-                               }
-                           }
-                        }}
-                      />
-                      {item.showSuggestions && item.searchQuery && (
-                         <div className="absolute z-10 w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 mt-1 max-h-60 overflow-y-auto rounded-xl shadow-2xl">
-                            {getSuggestions(item.searchQuery).map(p => (
-                               <div 
-                                 key={p.id} 
-                                 className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer border-b border-zinc-100 dark:border-zinc-700/50 last:border-0"
-                                 onClick={() => handleSelectService(index, p)}
-                               >
-                                 <div className="font-semibold text-sm text-zinc-900 dark:text-white">{p.service_name}</div>
-                                 <div className="text-[10px] text-zinc-500 flex justify-between mt-1">
-                                    <span className="font-bold tracking-wider">{p.category}</span>
-                                    <span className="text-blue-600 dark:text-blue-400 font-bold">₹{p.base_charge}</span>
-                                 </div>
-                               </div>
-                             ))}
-                             {getSuggestions(item.searchQuery).length === 0 && role !== 'pharmacist' && (
-                                <div 
-                                  className="px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700 cursor-pointer text-sm text-blue-600 font-medium"
-                                  onClick={() => handleSelectService(index, { id: 'custom', service_name: item.searchQuery, base_charge: 0, category: 'OTHER' })}
-                                >
-                                  + Add "{item.searchQuery}" as Custom Item
-                                </div>
-                             )}
-                         </div>
-                      )}
-                      {item.serviceId && pricingMaster.find(p => p.id === parseInt(item.serviceId))?.category === 'CONSULTATION' && (
-                        <select 
-                          className="form-input text-[10px] mt-1 py-1"
-                          value={item.doctorId}
-                          onChange={e => updateItem(index, 'doctorId', e.target.value)}
-                        >
-                          <option value="">-- Apply Doctor Fee --</option>
-                          {doctors.map(d => (
-                            <option key={d.id} value={d.id}>{d.username} (₹{d.consultation_fee || 'Std'})</option>
-                          ))}
-                        </select>
-                      )}
-                      {item.serviceId === 'custom' && (
-                        <input 
-                          className="form-input text-xs mt-1" 
-                          placeholder="Manually enter description" 
-                          value={item.description}
-                          onChange={e => updateItem(index, 'description', e.target.value)}
+
+                <div className="space-y-8">
+                    {items.map((item, index) => (
+                    <div key={index} className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start p-10 bg-zinc-100/50 dark:bg-white/5 rounded-[4rem] border border-white/5 group transition-all duration-700 hover:border-blue-500/30">
+                        <div className="lg:col-span-7 relative space-y-4">
+                            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.5em] block ml-6 italic">Protocol_Definition</label>
+                            <input 
+                            className="w-full bg-white dark:bg-zinc-950 border-none rounded-[2rem] px-8 py-6 text-lg font-black italic tracking-tight focus:ring-4 ring-blue-500/10 transition-all placeholder:text-zinc-500/20"
+                            placeholder={role === 'pharmacist' ? "Select medication protocol..." : "Enter diagnostic service..."}
+                            value={item.searchQuery !== undefined ? item.searchQuery : (pricingMaster.find(p => p.id === parseInt(item.serviceId))?.service_name || item.description || "")}
+                            onChange={e => {
+                            updateItem(index, 'searchQuery', e.target.value)
+                            updateItem(index, 'showSuggestions', true)
+                            }}
+                            onFocus={() => updateItem(index, 'showSuggestions', true)}
+                            onBlur={() => setTimeout(() => updateItem(index, 'showSuggestions', false), 200)}
                         />
-                      )}
+                        {item.showSuggestions && item.searchQuery && (
+                            <div className="absolute z-50 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 mt-6 max-h-[400px] overflow-y-auto rounded-[3.5rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.5)] custom-scrollbar animate-in zoom-in-95 duration-500">
+                                {getSuggestions(item.searchQuery).map(p => (
+                                <div 
+                                    key={p.id} 
+                                    className="px-10 py-8 hover:bg-blue-500/5 cursor-pointer border-b border-zinc-100 dark:border-zinc-800 last:border-0 transition-all group/sugg"
+                                    onClick={() => handleSelectService(index, p)}
+                                >
+                                    <div className="font-black text-lg text-zinc-900 dark:text-white tracking-tighter uppercase italic group-hover/sugg:text-blue-500 transition-colors">{p.service_name}</div>
+                                    <div className="flex justify-between items-center mt-4">
+                                        <span className="text-[8px] font-black px-4 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-500 uppercase tracking-[0.4em] italic">{p.category}</span>
+                                        <span className="text-xl font-black text-blue-600 italic tracking-tighter">₹{p.base_charge}</span>
+                                    </div>
+                                </div>
+                                ))}
+                                {getSuggestions(item.searchQuery).length === 0 && role !== 'pharmacist' && (
+                                    <div 
+                                    className="px-10 py-8 hover:bg-zinc-100 dark:hover:bg-white/5 cursor-pointer text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 flex justify-between items-center italic"
+                                    onClick={() => handleSelectService(index, { id: 'custom', service_name: item.searchQuery.toUpperCase(), base_charge: 0, category: 'OTHER' })}
+                                    >
+                                    <span>Override: "{item.searchQuery.toUpperCase()}"</span>
+                                    <span className="px-4 py-2 bg-blue-500 text-white rounded-xl">+ Apply</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {item.serviceId && pricingMaster.find(p => p.id === parseInt(item.serviceId))?.category === 'CONSULTATION' && (
+                            <div className="relative group/doc ml-2">
+                                <select 
+                                className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-2xl px-6 py-4 text-[10px] font-black uppercase tracking-[0.4em] focus:ring-4 ring-blue-500/10 italic appearance-none cursor-pointer"
+                                value={item.doctorId}
+                                onChange={e => updateItem(index, 'doctorId', e.target.value)}
+                                >
+                                <option value="">-- ATTENDING_PHYSICIAN --</option>
+                                {doctors.map(d => (
+                                    <option key={d.id} value={d.id}>{d.username.toUpperCase()} [FEE: ₹{d.consultation_fee || 'STD'}]</option>
+                                ))}
+                                </select>
+                                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 group-hover/doc:opacity-100 transition-all text-[10px]">▼</div>
+                            </div>
+                        )}
+                        </div>
+                        <div className="lg:col-span-2 space-y-4">
+                           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.5em] block text-center italic">Units</label>
+                           <input 
+                            type="number" 
+                            className="w-full bg-white dark:bg-zinc-950 border-none rounded-[2rem] px-4 py-6 text-2xl font-black italic tracking-tighter text-center focus:ring-4 ring-blue-500/10 transition-all" 
+                            placeholder="0" 
+                            value={item.quantity}
+                            onChange={e => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                          />
+                        </div>
+                        <div className="lg:col-span-2 space-y-4">
+                           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.5em] block text-right italic mr-6">Rate</label>
+                           <input 
+                            type="number" 
+                            className="w-full bg-white dark:bg-zinc-950 border-none rounded-[2rem] px-8 py-6 text-2xl font-black italic tracking-tighter text-right focus:ring-4 ring-blue-500/10 transition-all text-blue-600" 
+                            placeholder="0.00" 
+                            value={item.price}
+                            onChange={e => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
+                          />
+                        </div>
+                        <div className="lg:col-span-1 text-center self-end pb-4">
+                            <button onClick={() => setItems(items.filter((_, i) => i !== index))} className="w-16 h-16 rounded-[1.5rem] bg-red-600/5 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-500 flex items-center justify-center font-black group/del shadow-2xl">
+                                <span className="text-2xl group-hover:scale-125 transition-transform duration-500">×</span>
+                            </button>
+                        </div>
                     </div>
-                    <div className="col-span-2">
-                      <input 
-                        type="number" 
-                        className="form-input text-sm" 
-                        placeholder="Qty" 
-                        value={item.quantity}
-                        onChange={e => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      <input 
-                        type="number" 
-                        className="form-input text-sm" 
-                        placeholder="Price" 
-                        value={item.price}
-                        onChange={e => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="col-span-1 text-center pb-2.5">
-                      <button onClick={() => setItems(items.filter((_, i) => i !== index))} className="text-red-400 hover:text-red-600">&times;</button>
-                    </div>
-                  </div>
-                ))}
-                <button onClick={addItem} className="text-sm font-medium text-blue-600 hover:underline px-2">+ Add Item</button>
+                    ))}
+                    <button onClick={addItem} className="w-full py-12 border-4 border-dashed border-zinc-100 dark:border-white/5 rounded-[4rem] text-[11px] font-black uppercase tracking-[0.8em] text-zinc-400 hover:text-blue-500 hover:border-blue-500/20 hover:bg-blue-500/5 transition-all duration-1000 italic group/add">
+                        <span className="opacity-40 group-hover/add:opacity-100 transition-opacity">APPEND_TRANSACTION_PROTOCOL [ + ]</span>
+                    </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm flex flex-col h-full">
-              <h3 className="text-lg font-semibold mb-8">Order Summary</h3>
-              
-              <div className="space-y-4 flex-1">
-                <div className="flex justify-between text-zinc-500 dark:text-zinc-400">
-                  <span>Subtotal</span>
-                  <span>₹{subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-zinc-500 dark:text-zinc-400">
-                  <div className="flex items-center gap-2">
-                    <span>GST (%)</span>
-                    <input 
-                      type="number" 
-                      className="w-12 text-xs bg-zinc-50 dark:bg-zinc-800 border-none rounded p-1 text-center" 
-                      value={gstRate}
-                      onChange={e => setGstRate(parseInt(e.target.value) || 0)}
-                    />
+          <div className="xl:col-span-4 space-y-16">
+            {/* Financial Recital & Summary */}
+            <div className="glass-card rounded-[5rem] p-12 md:p-16 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5 relative overflow-hidden group/summary font-mono">
+              <div className="relative z-10 flex flex-col h-full space-y-16">
+                  <div className="text-center space-y-4">
+                      <h3 className="text-3xl font-black tracking-tighter uppercase premium-text-gradient leading-none italic">Protocol_Yield</h3>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] italic leading-none">Institutional_Settlement_Cycle</p>
                   </div>
-                  <span>₹{gstAmount.toFixed(2)}</span>
-                </div>
                 
-                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-6">
-                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white flex justify-between uppercase tracking-wider text-[10px]">
-                    Discounts & Invoicing
-                  </h4>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Manual Discount (₹)</label>
-                      <input 
-                        type="number"
-                        className="form-input !py-3" 
-                        placeholder="0.00"
-                        value={manualDiscount}
-                      onChange={e => setManualDiscount(parseFloat(e.target.value) || 0)}
-                      />
+                  <div className="space-y-8 flex-1">
+                    <div className="flex justify-between items-end border-b border-zinc-100 dark:border-white/5 pb-8">
+                        <span className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.6em] italic">Gross_Protocol_Val</span>
+                        <span className="text-3xl font-black tracking-tighter italic">₹{subtotal.toFixed(2)}</span>
                     </div>
-                    {selectedPatientType === 'IP' && (
-                      <div>
-                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Frequency</label>
-                        <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 h-[46px] items-center">
-                          <button 
-                            type="button"
-                            onClick={() => setBillingType("Daily")}
-                            className={`flex-1 h-full text-[10px] font-bold uppercase rounded-lg transition-all ${billingType === 'Daily' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600' : 'text-zinc-500'}`}
-                          >Daily</button>
-                          <button 
-                            type="button"
-                            onClick={() => setBillingType("One-Time")}
-                            className={`flex-1 h-full text-[10px] font-bold uppercase rounded-lg transition-all ${billingType === 'One-Time' ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600' : 'text-zinc-500'}`}
-                          >One-Time</button>
+
+                    <div className="space-y-4 px-6 py-8 bg-zinc-100 dark:bg-white/5 rounded-[2.5rem] border border-white/5">
+                        <div className="flex justify-between items-center mb-4">
+                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] italic">Regulatory_GST (%)</span>
+                            <div className="relative">
+                                <input 
+                                type="number" 
+                                className="w-20 bg-zinc-950 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-center font-black py-3 shadow-2xl skew-x-[-10deg] border-none focus:ring-4 ring-blue-500/20" 
+                                value={gstRate}
+                                onChange={e => setGstRate(parseInt(e.target.value) || 0)}
+                                />
+                            </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] italic">GST_Accumulation</span>
+                            <span className="font-black italic text-zinc-400">₹{gstAmount.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-10">
+                        <div className="space-y-4">
+                            <label className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.6em] block ml-6 italic">Protocol_Reduction (₹)</label>
+                            <input 
+                                type="number"
+                                className="w-full bg-zinc-100 dark:bg-zinc-800/50 border-none rounded-[3rem] px-10 py-8 text-2xl font-black italic tracking-tighter text-emerald-600 focus:ring-4 ring-emerald-500/10 transition-all placeholder:text-zinc-400/20" 
+                                placeholder="0.00"
+                                value={manualDiscount}
+                                onChange={e => setManualDiscount(parseFloat(e.target.value) || 0)}
+                            />
+                        </div>
 
-                  <div>
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Coupon Code</label>
-                    <div className="flex gap-2 items-center">
-                      <input 
-                        type="text" 
-                        className="form-input text-xs flex-1 uppercase" 
-                        placeholder="e.g. SAVE10" 
-                        value={couponCode}
-                        onChange={e => setCouponCode(e.target.value)}
-                      />
-                      <button onClick={applyCoupon} className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold rounded-xl transition-all">
-                        Apply
-                      </button>
+                        {selectedPatientType === 'IP' && (
+                            <div className="p-3 bg-zinc-950 dark:bg-zinc-800/50 rounded-[3rem] flex gap-3 shadow-2xl border border-white/5">
+                                <button 
+                                    type="button"
+                                    onClick={() => setBillingType("Daily")}
+                                    className={`flex-1 py-6 text-[10px] font-black uppercase tracking-[0.4em] rounded-[2rem] transition-all duration-700 italic ${billingType === 'Daily' ? 'bg-blue-600 text-white shadow-2xl scale-105' : 'text-zinc-500'}`}
+                                >Daily_Cycle</button>
+                                <button 
+                                    type="button"
+                                    onClick={() => setBillingType("One-Time")}
+                                    className={`flex-1 py-6 text-[10px] font-black uppercase tracking-[0.4em] rounded-[2rem] transition-all duration-700 italic ${billingType === 'One-Time' ? 'bg-blue-600 text-white shadow-2xl scale-105' : 'text-zinc-500'}`}
+                                >One_Time</button>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-6 p-4 bg-zinc-100/50 dark:bg-white/5 rounded-[3.5rem] border border-white/5 shadow-xl">
+                            {['Cash', 'UPI', 'Card', 'Bank'].map(method => (
+                                <button
+                                    key={method}
+                                    onClick={() => setPaymentMethod(method)}
+                                    className={`py-6 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.4em] border-2 transition-all duration-500 italic ${
+                                    paymentMethod === method 
+                                    ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] scale-105' 
+                                    : 'bg-transparent text-zinc-500 border-zinc-100 dark:border-white/5'
+                                    }`}
+                                >
+                                    {method}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="pt-12 border-t-4 border-zinc-950 dark:border-white/10 space-y-10 group/terminal">
+                        <div className="space-y-4">
+                            <label className="text-[11px] font-black uppercase tracking-[0.6em] text-zinc-500 block ml-6 italic">Txn_Auth_Reference (UTR)</label>
+                            <input 
+                                className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-[2.5rem] px-10 py-8 font-black tracking-tighter text-2xl uppercase italic focus:ring-4 ring-blue-500/10 transition-all placeholder:opacity-20 transition-all" 
+                                placeholder="ENTER_AUTH_REF_ID..."
+                                value={transactionRef}
+                                onChange={(e) => setTransactionRef(e.target.value)}
+                            />
+                            {!transactionRef && <p className="text-[9px] text-red-500 font-black mt-4 animate-pulse flex items-center justify-center gap-4 italic uppercase tracking-widest bg-red-500/10 py-3 rounded-2xl">⚠️ SYSTEM_BLOCK: REF_ID_NULL</p>}
+                        </div>
+
+                        <div className="py-12 bg-zinc-950 dark:bg-white rounded-[4rem] flex flex-col items-center gap-4 shadow-2xl border-white/10 group-hover/terminal:scale-105 transition-transform duration-1000">
+                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.8em] italic leading-none opacity-40">Final_Settlement_Engaged</span>
+                            <span className="text-7xl md:text-8xl font-black italic tracking-tighter text-white dark:text-zinc-950 scale-x-95">₹{Math.max(0, total - (insurance.covered_amount || 0)).toFixed(0)}</span>
+                        </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
-                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-wider text-[10px]">Payment Method</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {['Cash', 'UPI', 'Card', 'Bank Transfer'].map(method => (
-                      <button
-                        key={method}
-                        onClick={() => setPaymentMethod(method)}
-                        className={`py-2 px-4 rounded-xl text-xs font-bold transition-all border ${
-                          paymentMethod === method 
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20' 
-                          : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
-                        }`}
+
+                  <div className="space-y-6">
+                    {selectedPatientType === 'IP' ? (
+                      <>
+                        <button 
+                          onClick={() => generateInvoice(false)}
+                          disabled={submitting}
+                          className="w-full py-10 bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 text-[11px] font-black uppercase tracking-[0.8em] rounded-[3rem] shadow-[0_45px_100px_-15px_rgba(0,0,0,0.4)] active:scale-95 hover:scale-[1.02] transition-all duration-1000 italic disabled:opacity-50 relative overflow-hidden group/daily"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-white/10 to-transparent translate-x-[-100%] group-hover/daily:translate-x-[100%] transition-transform duration-1000"></div>
+                          {submitting ? "PROCESSING_CYCLE..." : "ISSUE_DAILY_RECITAL 📑"}
+                        </button>
+                        <button 
+                          onClick={() => generateInvoice(true)}
+                          disabled={submitting}
+                          className="w-full py-10 border-4 border-blue-600 text-blue-600 text-[11px] font-black uppercase tracking-[0.8em] rounded-[3rem] hover:bg-blue-600 hover:text-white transition-all duration-700 active:scale-95 italic disabled:opacity-50"
+                        >
+                          {submitting ? "EXECUTING_FINAL..." : "FINAL_DISCHARGE 🏁"}
+                        </button>
+                      </>
+                    ) : (
+                      <button 
+                        onClick={() => generateInvoice(true)}
+                        disabled={submitting}
+                        className="w-full py-12 bg-zinc-950 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-black uppercase tracking-[1em] rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] active:scale-95 hover:scale-[1.01] transition-all duration-1000 italic disabled:opacity-50 relative overflow-hidden group/exec"
                       >
-                        {method}
+                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/0 via-white/10 to-transparent translate-x-[-100%] group-hover/exec:translate-x-[100%] transition-transform duration-1000"></div>
+                        {submitting ? "AUTHORIZING_SETTLEMENT..." : "EXECUTE_INVOICE 💳"}
                       </button>
-                    ))}
+                    )}
+                    <button 
+                       onClick={logAdvance}
+                       disabled={submitting}
+                       className="w-full py-6 text-[10px] font-black uppercase tracking-[0.6em] text-zinc-500 hover:text-blue-500 transition-all border border-transparent hover:border-blue-500/20 rounded-[2rem] italic opacity-40 hover:opacity-100 duration-1000"
+                    >
+                        [ ENROLL_ADVANCE_SETTLEMENT ]
+                    </button>
                   </div>
-
-                  {paymentMethod === 'Cash' && total > 200000 && (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
-                      <label className="text-[10px] font-black text-red-500 uppercase tracking-widest block mb-2">PAN Number Required (&gt; 2 Lakh Cash)</label>
-                      <input 
-                        className="form-input !border-red-200 focus:!ring-red-500 !py-3 font-mono" 
-                        placeholder="ABCDE1234F"
-                        value={panNumber}
-                        onChange={e => setPanNumber(e.target.value.toUpperCase())}
-                        maxLength={10}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-2">Payment Reference (UTR/REF#) *</label>
-                  <input 
-                    className="form-input !py-3 !rounded-xl !text-sm bg-zinc-50 border-none font-bold" 
-                    placeholder="Enter Payment/Txn Ref"
-                    value={transactionRef}
-                    onChange={(e) => setTransactionRef(e.target.value)}
-                  />
-                  {!transactionRef && <p className="text-[8px] text-amber-600 font-bold mt-1">REFERENCE IS MANDATORY</p>}
-                </div>
-
-                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between font-bold text-xl text-zinc-900 dark:text-white">
-                  <span>{selectedPatientType === 'IP' ? 'Estimate Current Due' : 'Patient Due'}</span>
-                  <span>₹{Math.max(0, total - (insurance.covered_amount || 0)).toFixed(2)}</span>
-                </div>
               </div>
-
-              <div className="space-y-3 mt-8">
-                {selectedPatientType === 'IP' ? (
-                  <>
-                    <button 
-                      onClick={() => generateInvoice(false)}
-                      disabled={submitting}
-                      className="w-full btn-primary py-4 shadow-xl flex items-center justify-center gap-2 shadow-blue-500/20 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "📄 Generate Daily Summary Receipt"}
-                    </button>
-                    <button 
-                      onClick={() => generateInvoice(true)}
-                      disabled={submitting}
-                      className="w-full py-4 border-2 border-blue-600 text-blue-600 flex items-center justify-center gap-2 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-50 transition-all font-mono disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      {submitting ? <div className="w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" /> : "🏦 Generate Final Discharge Invoice"}
-                    </button>
-                  </>
-                ) : (
-                  <button 
-                    onClick={() => generateInvoice(true)}
-                    disabled={submitting}
-                    className="w-full btn-primary py-4 flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Generate Invoice"}
-                  </button>
-                )}
-                <button 
-                  onClick={logAdvance}
-                  disabled={submitting}
-                  className="w-full py-3.5 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {submitting ? <div className="w-5 h-5 border-2 border-zinc-400/30 border-t-zinc-400 rounded-full animate-spin" /> : "➕ Log Advance Payment"}
-                </button>
-                <button 
-                  onClick={() => {
-                    setItems([{ description: "", quantity: 1, price: 0, serviceId: "", doctorId: "", searchQuery: "", showSuggestions: false }])
-                    setInsurance({ provider: "", policy_number: "", covered_amount: 0 })
-                    setSelectedPatientId("")
-                  }}
-                  className="w-full text-[10px] font-black uppercase text-zinc-400 hover:text-red-500 transition-colors py-2"
-                >
-                  Reset / Clear Form
-                </button>
-              </div>
-              <p className="text-[10px] text-zinc-400 mt-4 text-center">Invoices are saved as JSON snapshots in <code>hcare_dev_billing</code></p>
             </div>
           </div>
         </div>

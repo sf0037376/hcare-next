@@ -157,11 +157,22 @@ export default function AlertListener() {
         // If backend says isSilenced=true, we don't trigger intrusive UI/Sound.
         const isUrgent = isHigh && !n.isSilenced
 
+        // Trigger native notification if permitted
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+          new Notification(n.title, { body: n.message || n.body, icon: "/next.svg" });
+        }
+
         if (isUrgent) {
+          console.log("🚨 URGENT ALERT: Triggering buzzer and overlay");
           setHighPriorityQueue(prev => [...prev, n])
           const currentEnabled = localStorage.getItem("hospital_alarms_enabled") !== "false"
           if (currentEnabled && audioRef.current) {
-            audioRef.current.play().catch(e => console.warn("Audio blocked", e))
+            // Force reset audio before playing for consistency
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(e => {
+              console.warn("⚠️ Audio play failed (likely browser policy):", e.message);
+              show("📢 Critical Alert! Please interact with page to enable sound.", { variant: 'warning' });
+            })
           }
         } else {
           // Normal Notification / Silenced Routine Alert

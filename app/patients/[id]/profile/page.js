@@ -416,12 +416,15 @@ export default function PatientProfile() {
                   Finalize Discharge
                 </Link>
               )}
-              {/* Wearable Sync Button - Patient Only for Linking */}
-              {role === 'patient' && (
+              {/* Wearable Sync Button - Patient or Nurse/Admin can Link */}
+              {(role === 'patient' || role === 'nurse' || role === 'admin' || role === 'super_admin') && (
                 <>
                   {!patient?.wearable_id ? (
                     <button
-                      onClick={() => setShowWearableModal(true)}
+                      onClick={() => {
+                        console.log("⌚ Opening wearable modal");
+                        setShowWearableModal(true);
+                      }}
                       className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[.2em] transition-all hover:scale-105 flex items-center gap-2 premium-bg-blue text-white shadow-lg shadow-blue-500/20"
                     >
                       <span>⌚ {(() => {
@@ -429,14 +432,17 @@ export default function PatientProfile() {
                           const ua = navigator.userAgent || "";
                           if (/iPad|iPhone|iPod/.test(ua)) return "Link iOS Health";
                           if (/Android/.test(ua)) return "Link Google Fit";
-                          return "Link Google Fit";
+                          return "Link Health Service";
                         }
                         return "Link Watch";
                       })()}</span>
                     </button>
                   ) : (
                     <button
-                      onClick={handleDelinkWearable}
+                      onClick={() => {
+                        console.log("⌚ Requesting delink");
+                        handleDelinkWearable();
+                      }}
                       className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[.2em] transition-all hover:scale-105 flex items-center gap-2 bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
                     >
                       <span>⌚ Delink Wearable</span>

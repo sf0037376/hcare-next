@@ -182,31 +182,6 @@ export default function PatientProfile() {
       <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-7xl mx-auto px-4 sm:px-6">
         {Toast}
 
-        {/* Vaccination Modal Overlay */}
-        {showVaccinationModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl max-w-4xl w-full my-8">
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex justify-between items-center rounded-t-3xl z-10">
-                <h2 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
-                  💉 Vaccination Records
-                </h2>
-                <button
-                  onClick={() => setShowVaccinationModal(false)}
-                  className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 text-2xl font-bold"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Modal Content */}
-              <div className="p-6">
-                <VaccinationCard patientId={id} />
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Wearable Modal Overlay */}
         {showWearableModal && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
@@ -354,13 +329,13 @@ export default function PatientProfile() {
           {role !== 'pharmacist' && (
             <div className="flex flex-wrap gap-3">
               <Link href={`/patients/${id}/history`} className="glass-card hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest bg-zinc-100/50 dark:bg-zinc-800/50">History Log</Link>
-              {(role === 'doctor' || role === 'nurse' || role === 'staff') && (
-                <button
-                  onClick={() => setShowVaccinationModal(true)}
+              {(role === 'patient' || role === 'doctor' || role === 'nurse' || role === 'staff') && (
+                <Link
+                  href={`/vaccinations?patient_id=${id}`}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform flex items-center gap-2"
                 >
                   <span>💉</span> Vaccination History
-                </button>
+                </Link>
               )}
               <Link href={`/patients/${id}/reports`} className="btn-primary hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest premium-bg-blue shadow-blue-500/20 shadow-lg">Lab Reports</Link>
 
@@ -371,12 +346,6 @@ export default function PatientProfile() {
                   </Link>
                   <Link href={`/vitals?patient_id=${id}`} className="bg-red-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:scale-105 transition-transform flex items-center gap-2">
                     <span>❤️</span> Log Vitals
-                  </Link>
-                  <Link href={`/feeding?patient_id=${id}`} className="bg-emerald-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 transition-transform flex items-center gap-2">
-                    <span>🍼</span> Log Feed
-                  </Link>
-                  <Link href={`/medication?patient_id=${id}`} className="bg-purple-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform flex items-center gap-2">
-                    <span>💊</span> Log Meds
                   </Link>
                 </>
               )}
@@ -556,7 +525,7 @@ export default function PatientProfile() {
 
                   // 2. Process Medication Schedule (PENDING/OVERDUE)
                   const pendingMeds = meds
-                    .filter(m => m.next_due && isInShift(m.next_due))
+                    .filter(m => m.next_due && new Date(m.next_due) < endOfShift)
                     .map(m => {
                       const due = new Date(m.next_due);
                       const isOverdue = due.getTime() < (now.getTime() - 1000 * 60 * 5); // 5 min grace
@@ -610,9 +579,10 @@ export default function PatientProfile() {
 
                   // 3.5 Process Vitals Schedule
                   let pendingVitals = [];
-                  const vitalIntervals = [0, 6, 12, 18]; // 6 AM, 12 PM, 6 PM, 12 AM from start of shift
-                  vitalIntervals.forEach(hoursAfterShift => {
-                    const vitalTime = new Date(startOfShift.getTime() + hoursAfterShift * 60 * 60 * 1000);
+                  if (role === 'nurse') {
+                    const vitalIntervals = [0, 6, 12, 18]; // 6 AM, 12 PM, 6 PM, 12 AM from start of shift
+                    vitalIntervals.forEach(hoursAfterShift => {
+                      const vitalTime = new Date(startOfShift.getTime() + hoursAfterShift * 60 * 60 * 1000);
                     if (isInShift(vitalTime) && vitalTime <= new Date(now.getTime() + 12 * 60 * 60 * 1000)) {
                       // Check if already done within a 3 hour window of this vitalTime
                       const doneVital = vitals.find(v => {
@@ -635,8 +605,9 @@ export default function PatientProfile() {
                       }
                     }
                   });
+                }
 
-                  // 4. Clinical Task Sheet (Next 4 Hours Forecast)
+                // 4. Clinical Task Sheet (Next 4 Hours Forecast)
                   const taskSheet = [...pendingMeds, ...pendingFeeds, ...pendingVitals]
                     .filter(item => item.time <= fourHoursFromNow)
                     .sort((a, b) => a.time - b.time);
@@ -679,7 +650,7 @@ export default function PatientProfile() {
                               </div>
                             </div>
 
-                            {(item.type === 'OVERDUE' || item.type === 'PENDING') && (
+                            {(item.type === 'OVERDUE' || item.type === 'PENDING') && role !== 'doctor' && (
                               <button
                                 onClick={() => {
                                   if (item.isMed) {
@@ -700,7 +671,7 @@ export default function PatientProfile() {
                       ))}
 
                       {/* Next Dues Section (Next 4h) - Visible to all who can see profile */}
-                      {taskSheet.length > 0 && (
+                      {taskSheet.length > 0 && role !== 'doctor' && (
                         <div className="mt-16 pt-16 border-t border-zinc-100 dark:border-zinc-800">
                           <div className="flex items-center justify-between mb-8">
                             <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
@@ -826,41 +797,6 @@ export default function PatientProfile() {
           {/* Right Column: Case Info & Schedule */}
           <div className={`${role === 'pharmacist' ? 'lg:col-span-12 max-w-2xl' : 'lg:col-span-4'} space-y-10`}>
 
-            {/* Quick Actions (Patient Only) */}
-            {role === 'patient' && (
-              <div className="bg-blue-600 rounded-[40px] p-8 shadow-xl text-white">
-                <h3 className="text-xs font-black text-blue-200 uppercase tracking-[.25em] mb-6">Quick Log Actions</h3>
-                <div className="grid grid-cols-1 gap-3">
-                  <Link href={`/vitals?patient_id=${id}`} className="flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/10 transition-all group">
-                    <span className="font-bold">Log Vitals</span>
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">❤️</span>
-                  </Link>
-                  <Link href={`/feeding?patient_id=${id}`} className="flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/10 transition-all group">
-                    <span className="font-bold">Log Feed</span>
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">🍼</span>
-                  </Link>
-                  <Link href={`/medication?patient_id=${id}`} className="flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/10 transition-all group">
-                    <span className="font-bold">Log Meds</span>
-                    <span className="text-xl group-hover:translate-x-1 transition-transform">💊</span>
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* Financial Quick Access (Visibile to Patient/Admin) */}
-            {(role === 'patient' || role === 'admin' || role === 'super_admin') && (
-              <div className="premium-bg-blue border border-white/10 rounded-[40px] p-8 shadow-2xl mt-10 text-white relative overflow-hidden group hover:scale-[1.02] transition-all duration-500">
-                <div className="relative z-10">
-                  <h3 className="text-xs font-black text-blue-100 uppercase tracking-[.25em] mb-4">Financial Overview</h3>
-                  <p className="text-xl font-bold mb-6 italic">Secure ledger & billing management.</p>
-                  <Link href={`/patients/${id}/financials`} className="inline-flex items-center gap-3 bg-white text-blue-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-white/10">
-                    💳 Open Financial Statement
-                  </Link>
-                </div>
-                <div className="absolute -bottom-10 -right-10 text-9xl opacity-10 grayscale group-hover:rotate-12 transition-transform duration-1000 select-none">💰</div>
-              </div>
-            )}
-
             {/* Care Team */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-sm">
               <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[.25em] mb-8">Medical Team</h3>
@@ -897,18 +833,38 @@ export default function PatientProfile() {
               <h3 className="text-xs font-black text-zinc-500 uppercase tracking-[.25em] mb-8">Prescribed Regimen</h3>
 
               {/* Reminder Highlight (Patient Only) */}
-              {role === 'patient' && meds.length > 0 && (
-                <div className="mb-8 p-6 bg-blue-500/10 border border-blue-500/20 rounded-3xl">
-                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Upcoming Reminder</p>
-                  <p className="text-sm font-bold text-white">Next doses due at intervals of {meds[0].interval_minutes} mins.</p>
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="w-1/3 h-full bg-blue-500 animate-pulse"></div>
+              {role === 'patient' && meds.filter(m => m.next_due).length > 0 && (() => {
+                const now = new Date();
+                const upcoming = meds
+                  .filter(m => m.next_due && new Date(m.next_due) > now)
+                  .sort((a, b) => new Date(a.next_due) - new Date(b.next_due))[0];
+                
+                if (!upcoming) return null;
+                
+                const dueDate = new Date(upcoming.next_due);
+                const diffMs = dueDate - now;
+                const hours = Math.floor(diffMs / 3600000);
+                const mins = Math.floor((diffMs % 3600000) / 60000);
+                const totalMins = upcoming.interval_minutes || 480;
+                const elapsedMins = Math.max(0, totalMins - (diffMs / 60000));
+                const progress = Math.min(100, Math.max(0, (elapsedMins / totalMins) * 100));
+
+                return (
+                  <div className="mb-8 p-6 bg-blue-500/10 border border-blue-500/20 rounded-3xl">
+                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Upcoming Reminder</p>
+                    <p className="text-sm font-bold text-white uppercase tracking-tight">{upcoming.medicine} Due</p>
+                    <p className="text-[10px] text-zinc-500 font-bold mt-1 uppercase tracking-widest">In intervals of {upcoming.interval_minutes} mins</p>
+                    <div className="mt-4 flex items-center gap-3">
+                      <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+                      </div>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase whitespace-nowrap">
+                        {hours > 0 ? `${hours}H ` : ''}{mins}M left
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase">3h left</span>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               <div className="space-y-4">
                 {meds.map((med) => (

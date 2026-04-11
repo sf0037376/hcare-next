@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { apiFetch } from "../lib/api"
-import { Home, Users, BarChart3, Pill, Baby, Activity, Calendar, Bell, Hospital, DollarSign, FileText, CreditCard, CheckCircle, Settings, LogOut } from "lucide-react"
+import { Home, Users, BarChart3, Pill, Baby, Activity, Calendar, Bell, Hospital, DollarSign, FileText, CreditCard, CheckCircle, Settings, LogOut, Syringe } from "lucide-react"
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -55,7 +55,7 @@ export default function Sidebar() {
   const navItems = [
     { href: getDashboardHref(), label: "Dashboard", icon: <Home size={20} /> },
     { href: "/patients", label: "Patients", icon: <Users size={20} />, roles: ["admin", "super_admin", "doctor"] },
-    { href: "/vaccinations", label: "Vaccinations", icon: "💉", roles: ["doctor", "nurse", "admin", "super_admin"] },
+    { href: "/vaccinations", label: "Vaccinations", icon: <Syringe size={20} />, roles: ["doctor"] },
     { href: "/billing/orders", label: "Audit Logs", icon: <BarChart3 size={20} />, roles: ["admin", "super_admin"] },
     { href: "/medication", label: "Medication", icon: <Pill size={20} />, roles: ["doctor", "nurse", "super_admin"] },
     { href: "/feeding", label: "Feeding", icon: <Baby size={20} />, roles: ["nurse"] },

@@ -6,6 +6,7 @@ import useToast from "../../components/toast"
 import ProtectedRoute from "../../components/ProtectedRoute"
 import VaccinationCard from "../../components/VaccinationCard"
 import { useSearchParams } from "next/navigation"
+import Link from "next/link"
 
 export default function VaccinationsPage() {
   const { Toast, show } = useToast()
@@ -46,6 +47,12 @@ export default function VaccinationsPage() {
     <ProtectedRoute>
       <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-7xl mx-auto px-4 sm:px-6">
         {Toast}
+
+        {patientId && (
+          <Link href={`/patients/${patientId}/profile`} className="inline-flex items-center text-sm font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 mb-6 transition-colors">
+            ← Back to Profile
+          </Link>
+        )}
 
         <div className="mb-8">
           <h1 className="text-3xl font-black text-zinc-900 dark:text-white mb-2">💉 Vaccination Management</h1>

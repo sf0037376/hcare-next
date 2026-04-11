@@ -141,6 +141,13 @@ export default function AlertListener() {
         socketRef.current.on("new_notification", (n) => {
         console.log("🔔 Received Real-time Alert:", n.title)
         
+        const role = (localStorage.getItem("role") || "").toLowerCase()
+        if (role === "doctor") {
+          // Doctors don't get audio/intrusive alarms, just toast if we want them to see it
+          show(`🔔 ${n.title}`, { variant: 'info' })
+          return
+        }
+
         if (processedIdsRef.current.has(n.id)) return
         processedIdsRef.current.add(n.id)
 

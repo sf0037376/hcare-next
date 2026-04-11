@@ -873,30 +873,46 @@ export default function PatientProfile() {
               })()}
 
               <div className="space-y-4">
-                {meds.map((med) => (
-                  <div key={med.id} className="p-4 bg-zinc-800/40 rounded-2xl border border-zinc-800 group hover:border-blue-500/50 transition-all flex justify-between items-start">
-                    <div>
-                      <p className="font-black text-sm group-hover:text-blue-400 transition-colors uppercase tracking-tight">{med.medicine}</p>
-                      <p className="text-xs text-zinc-400 font-bold mt-1 uppercase tracking-widest opacity-80">{med.dosage} • {med.times_per_day} times/day</p>
-                    </div>
-                    {role === 'doctor' && (
-                      <div className="flex gap-2">
-                        <Link
-                          href={`/medication/prescribe?patient_id=${id}&schedule_id=${med.id}`}
-                          className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-blue-400 transition-colors bg-zinc-900/50 px-2 py-1 rounded-lg border border-zinc-800"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => deactivateMed(med.id)}
-                          className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors bg-red-900/10 px-2 py-1 rounded-lg border border-red-900/20"
-                        >
-                          Deactivate
-                        </button>
+                {meds.map((med) => {
+                  const timings = med.specific_timings ? JSON.parse(med.specific_timings) : [];
+                  return (
+                    <div key={med.id} className="p-4 bg-zinc-800/40 rounded-2xl border border-zinc-800 group hover:border-blue-500/50 transition-all flex justify-between items-start flex-wrap gap-4">
+                      <div className="flex-1 min-w-[200px]">
+                        <p className="font-black text-sm group-hover:text-blue-400 transition-colors uppercase tracking-tight">{med.medicine}</p>
+                        <p className="text-[10px] text-zinc-400 font-bold mt-1 uppercase tracking-widest opacity-80">
+                          {med.dosage} • {med.times_per_day} times/day
+                        </p>
+                        {timings.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1.5">
+                            {timings.map((t, i) => (
+                              <span key={i} className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-md text-[9px] font-black border border-blue-500/20">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div className="flex gap-2">
+                        {(role === 'doctor' || role === 'nurse' || role === 'patient') && (
+                          <Link
+                            href={`/medication/prescribe?patient_id=${id}&schedule_id=${med.id}`}
+                            className="text-[10px] font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-colors bg-zinc-900/50 px-3 py-1.5 rounded-xl border border-zinc-700"
+                          >
+                            {role === 'doctor' ? 'Edit' : 'Set Timings'}
+                          </Link>
+                        )}
+                        {role === 'doctor' && (
+                          <button
+                            onClick={() => deactivateMed(med.id)}
+                            className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors bg-red-900/10 px-3 py-1.5 rounded-xl border border-red-900/20"
+                          >
+                            Deactivate
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
                 {meds.length === 0 && (
                   <p className="text-xs text-zinc-500 italic text-center py-4">No active prescriptions.</p>
                 )}

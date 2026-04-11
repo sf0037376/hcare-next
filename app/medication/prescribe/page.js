@@ -19,6 +19,8 @@ function PrescribeClient() {
   const [medicines, setMedicines] = useState([])
   const [medicineQuery, setMedicineQuery] = useState("")
   const [showMedDropdown, setShowMedDropdown] = useState(false)
+  const [timingMode, setTimingMode] = useState("RELATIVE")
+  const [specificTimings, setSpecificTimings] = useState(["09:00"])
   const [form, setForm] = useState({
     patient_id: initialPatientId,
     medicine: "",
@@ -82,6 +84,7 @@ function PrescribeClient() {
       if (!scheduleId) return
       try {
         const item = await apiFetch(`/medication/schedule/item/${scheduleId}`)
+        const timings = item.specific_timings ? JSON.parse(item.specific_timings) : []
         setForm({
           patient_id: item.patient_id,
           medicine: item.medicine,
@@ -91,6 +94,10 @@ function PrescribeClient() {
           interval_minutes: item.interval_minutes,
           start_date: item.start_date ? new Date(item.start_date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
         })
+        if (timings.length > 0) {
+          setTimingMode("SPECIFIC")
+          setSpecificTimings(timings)
+        }
         setMedicineQuery(item.medicine)
       } catch (err) {
         show("Failed to load schedule details")
@@ -137,7 +144,10 @@ function PrescribeClient() {
         const method = isEdit ? "PUT" : "POST"
         promises.push(apiFetch(url, {
           method,
-          body: JSON.stringify(form)
+          body: JSON.stringify({
+            ...form,
+            specific_timings: timingMode === "SPECIFIC" ? specificTimings : null
+          })
         }))
       }
 
@@ -235,47 +245,122 @@ function PrescribeClient() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="form-label">Dosage</label>
-                    <input 
-                      className="form-input" 
-                      placeholder="e.g. 1.5ml or 250mg"
-                      value={form.dosage}
-                      onChange={e => setForm({...form, dosage: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Times Per Day</label>
-                    <input 
-                      type="number"
-                      className="form-input" 
-                      value={form.times_per_day}
-                      onChange={e => {
-                        const val = parseInt(e.target.value) || 1
-                        setForm({...form, times_per_day: val, interval_minutes: Math.floor(1440/val)})
-                      }}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">First Dose Time</label>
-                    <input 
-                      type="time"
-                      className="form-input" 
-                      value={form.first_dose}
-                      onChange={e => setForm({...form, first_dose: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Start Date</label>
-                    <input 
-                      type="date"
-                      className="form-input" 
-                      value={form.start_date}
-                      onChange={e => setForm({...form, start_date: e.target.value})}
-                      required
-                    />
+                  <div className="col-span-2 space-y-4">
+                    <div className="flex items-center gap-6 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-2">Timing Mode</label>
+                        <div className="flex bg-white dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                          <button 
+                            type="button" 
+                            onClick={() => setTimingMode("RELATIVE")}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${timingMode === 'RELATIVE' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
+                          >
+                            Interval Based
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => setTimingMode("SPECIFIC")}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${timingMode === 'SPECIFIC' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
+                          >
+                            Specific Times
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-zinc-500 font-medium">
+                          {timingMode === 'RELATIVE' 
+                            ? "Doses will be scheduled exactly every X hours starting from the first dose." 
+                            : "Define exact times of the day for administration (e.g. Morning, Evening)."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {timingMode === 'RELATIVE' ? (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                          <label className="form-label">Times Per Day</label>
+                          <input 
+                            type="number"
+                            className="form-input" 
+                            value={form.times_per_day}
+                            onChange={e => {
+                              const val = parseInt(e.target.value) || 1
+                              setForm({...form, times_per_day: val, interval_minutes: Math.floor(1440/val)})
+                            }}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="form-label">First Dose Time</label>
+                          <input 
+                            type="time"
+                            className="form-input" 
+                            value={form.first_dose}
+                            onChange={e => setForm({...form, first_dose: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="form-label">Start Date</label>
+                          <input 
+                            type="date"
+                            className="form-input" 
+                            value={form.start_date}
+                            onChange={e => setForm({...form, start_date: e.target.value})}
+                            required
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="form-label mb-0">Daily Administration Slots</label>
+                          <button 
+                            type="button"
+                            onClick={() => setSpecificTimings([...specificTimings, "12:00"])}
+                            className="text-xs font-bold text-blue-600 hover:underline"
+                          >
+                            + Add Time Slot
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {specificTimings.map((time, idx) => (
+                            <div key={idx} className="relative group/slot">
+                              <input 
+                                type="time"
+                                className="form-input !py-3"
+                                value={time}
+                                onChange={e => {
+                                  const newTimings = [...specificTimings]
+                                  newTimings[idx] = e.target.value
+                                  setSpecificTimings(newTimings)
+                                }}
+                                required
+                              />
+                              {specificTimings.length > 1 && (
+                                <button 
+                                  type="button"
+                                  onClick={() => setSpecificTimings(specificTimings.filter((_, i) => i !== idx))}
+                                  className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity shadow-lg"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <div>
+                          <label className="form-label">Start Date</label>
+                          <input 
+                            type="date"
+                            className="form-input" 
+                            value={form.start_date}
+                            onChange={e => setForm({...form, start_date: e.target.value})}
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

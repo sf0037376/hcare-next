@@ -14,6 +14,7 @@ function VitalsClient() {
   const initialPatientId = searchParams.get("patient_id") || ""
   const [role, setRole] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
 
   const [patients, setPatients] = useState([])
   const [form, setForm] = useState({
@@ -130,6 +131,40 @@ function VitalsClient() {
       setSubmitting(false)
     }
   }
+
+  const startDictation = (e) => {
+    e.preventDefault();
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      show("Voice typing is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.interimResults = false;
+    // Allow the browser to determine the user's language or translate if supported natively
+    
+    recognition.onstart = () => setIsRecording(true);
+    
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setForm(prev => ({ 
+        ...prev, 
+        notes: prev.notes ? prev.notes + ' ' + transcript : transcript 
+      }));
+    };
+
+    recognition.onerror = (event) => {
+      show("Voice recognition error: " + event.error);
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.start();
+  };
 
   const currentRole = typeof window !== "undefined" ? (localStorage.getItem("role") || "").toLowerCase() : ""
   const dashboardLink = currentRole === "doctor" ? "/doctor-dashboard" : currentRole === "nurse" || currentRole === "staff" ? "/staff-dashboard" : "/dashboard"
@@ -264,7 +299,21 @@ function VitalsClient() {
             </div>
 
             <div>
-              <label className="form-label">Clinical Notes / Observation</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="form-label mb-0">Clinical Notes / Observation</label>
+                <button
+                  type="button"
+                  onClick={startDictation}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    isRecording 
+                      ? "bg-red-100 text-red-600 animate-pulse" 
+                      : "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
+                  }`}
+                >
+                  <span className="text-base">{isRecording ? "🔴" : "🎤"}</span>
+                  {isRecording ? "Listening..." : "Voice Type"}
+                </button>
+              </div>
               <textarea
                 className="form-input min-h-[100px] resize-none"
                 value={form.notes}

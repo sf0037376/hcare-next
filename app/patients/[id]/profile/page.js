@@ -6,6 +6,7 @@ import useToast from "../../../../components/toast"
 import ProtectedRoute from "../../../../components/ProtectedRoute"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import VaccinationCard from "../../../../components/VaccinationCard"
 
 export default function PatientProfile() {
   const { id } = useParams()
@@ -25,6 +26,7 @@ export default function PatientProfile() {
   const [showWearableModal, setShowWearableModal] = useState(false)
   const [wearableId, setWearableId] = useState("")
   const [wearableProvider, setWearableProvider] = useState("APPLE")
+  const [showVaccinationModal, setShowVaccinationModal] = useState(false)
 
   useEffect(() => {
     setRole((localStorage.getItem('role') || '').toLowerCase())
@@ -180,6 +182,79 @@ export default function PatientProfile() {
       <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-7xl mx-auto px-4 sm:px-6">
         {Toast}
 
+        {/* Vaccination Modal Overlay */}
+        {showVaccinationModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl max-w-4xl w-full my-8">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex justify-between items-center rounded-t-3xl z-10">
+                <h2 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                  💉 Vaccination Records
+                </h2>
+                <button
+                  onClick={() => setShowVaccinationModal(false)}
+                  className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 text-2xl font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <VaccinationCard patientId={id} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Wearable Modal Overlay */}
+        {showWearableModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl max-w-md w-full my-8 border border-zinc-200 dark:border-zinc-800">
+              <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-800/50 rounded-t-3xl">
+                <h2 className="text-xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                   ⌚ Link Wearable
+                </h2>
+                <button
+                  onClick={() => setShowWearableModal(false)}
+                  className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-xl font-bold transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6 space-y-5">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1.5 ml-1">Provider</label>
+                  <select 
+                    value={wearableProvider} 
+                    onChange={(e) => setWearableProvider(e.target.value)}
+                    className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all p-3"
+                  >
+                    <option value="APPLE">Apple Health</option>
+                    <option value="GOOGLE">Google Fit</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1.5 ml-1">Device / App ID</label>
+                  <input 
+                    type="text" 
+                    value={wearableId} 
+                    onChange={(e) => setWearableId(e.target.value)}
+                    placeholder="Enter integration ID..."
+                    className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all p-3"
+                  />
+                </div>
+                <button 
+                  onClick={handleLinkWearable}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95"
+                >
+                  Confirm & Link
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Pending Approvals Alert Banner */}
         {pendingCount > 0 && (role === 'patient' || role === 'admin' || role === 'super_admin') && (
           <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/30 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse shadow-lg shadow-amber-500/10">
@@ -279,6 +354,14 @@ export default function PatientProfile() {
           {role !== 'pharmacist' && (
             <div className="flex flex-wrap gap-3">
               <Link href={`/patients/${id}/history`} className="glass-card hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest bg-zinc-100/50 dark:bg-zinc-800/50">History Log</Link>
+              {(role === 'doctor' || role === 'nurse' || role === 'staff') && (
+                <button
+                  onClick={() => setShowVaccinationModal(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform flex items-center gap-2"
+                >
+                  <span>💉</span> Vaccination History
+                </button>
+              )}
               <Link href={`/patients/${id}/reports`} className="btn-primary hover-scale px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-bold text-xs uppercase tracking-widest premium-bg-blue shadow-blue-500/20 shadow-lg">Lab Reports</Link>
 
               {role === 'patient' && (
@@ -425,12 +508,6 @@ export default function PatientProfile() {
                     <span className="text-3xl font-black text-zinc-900 dark:text-white font-mono">{m.val}</span>
                     <span className="text-xs font-bold text-zinc-400">{m.unit}</span>
                   </div>
-                  {latestVitals.source === 'WEARABLE' && (
-                    <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 flex items-center gap-1.5 grayscale opacity-60">
-                      <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Live Source: Apple Watch</span>
-                      <span className="w-1 h-1 rounded-full bg-blue-500 animate-pulse"></span>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -531,12 +608,40 @@ export default function PatientProfile() {
                     }
                   }
 
+                  // 3.5 Process Vitals Schedule
+                  let pendingVitals = [];
+                  const vitalIntervals = [0, 6, 12, 18]; // 6 AM, 12 PM, 6 PM, 12 AM from start of shift
+                  vitalIntervals.forEach(hoursAfterShift => {
+                    const vitalTime = new Date(startOfShift.getTime() + hoursAfterShift * 60 * 60 * 1000);
+                    if (isInShift(vitalTime) && vitalTime <= new Date(now.getTime() + 12 * 60 * 60 * 1000)) {
+                      // Check if already done within a 3 hour window of this vitalTime
+                      const doneVital = vitals.find(v => {
+                        const recTime = new Date(v.created_at || v.recorded_at).getTime();
+                        return Math.abs(recTime - vitalTime.getTime()) < 3 * 60 * 60 * 1000;
+                      });
+                      
+                      if (!doneVital) {
+                        const isOverdue = vitalTime.getTime() < now.getTime();
+                        pendingVitals.push({
+                          type: isOverdue ? 'OVERDUE' : 'PENDING',
+                          icon: '❤️',
+                          label: 'Observe Vitals (Voice Enabled)',
+                          time: vitalTime,
+                          id: `vital-${hoursAfterShift}`,
+                          isMed: false,
+                          isFeed: false,
+                          isVital: true
+                        });
+                      }
+                    }
+                  });
+
                   // 4. Clinical Task Sheet (Next 4 Hours Forecast)
-                  const taskSheet = [...pendingMeds, ...pendingFeeds]
+                  const taskSheet = [...pendingMeds, ...pendingFeeds, ...pendingVitals]
                     .filter(item => item.time <= fourHoursFromNow)
                     .sort((a, b) => a.time - b.time);
                   // 5. Timeline Assembly
-                  const timeline = [...doneItems, ...pendingMeds, ...pendingFeeds].sort((a, b) => {
+                  const timeline = [...doneItems, ...pendingMeds, ...pendingFeeds, ...pendingVitals].sort((a, b) => {
                     const priority = { 'OVERDUE': 1, 'PENDING': 2, 'DONE': 3 };
                     if (priority[a.type] !== priority[b.type]) return priority[a.type] - priority[b.type];
                     return b.time - a.time;
@@ -579,8 +684,10 @@ export default function PatientProfile() {
                                 onClick={() => {
                                   if (item.isMed) {
                                     window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(item.medicine)}&dose=${encodeURIComponent(item.dosage)}&scheduleId=${item.id}`;
-                                  } else {
+                                  } else if (item.isFeed) {
                                     window.location.href = `/feeding?patient_id=${id}`;
+                                  } else if (item.isVital) {
+                                    window.location.href = `/vitals?patient_id=${id}`;
                                   }
                                 }}
                                 className={`${item.type === 'OVERDUE' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'} text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg`}
@@ -634,8 +741,10 @@ export default function PatientProfile() {
                                           onClick={() => {
                                             if (task.isMed) {
                                               window.location.href = `/medication?patient_id=${id}&medicine=${encodeURIComponent(task.medicine)}&dose=${encodeURIComponent(task.dosage)}&scheduleId=${task.id}`;
-                                            } else {
+                                            } else if (task.isFeed) {
                                               window.location.href = `/feeding?patient_id=${id}`;
+                                            } else if (task.isVital) {
+                                              window.location.href = `/vitals?patient_id=${id}`;
                                             }
                                           }}
                                           className="text-[10px] font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all shadow-md active:scale-95"
@@ -714,7 +823,6 @@ export default function PatientProfile() {
               </div>
             </div>
           </div>
-
           {/* Right Column: Case Info & Schedule */}
           <div className={`${role === 'pharmacist' ? 'lg:col-span-12 max-w-2xl' : 'lg:col-span-4'} space-y-10`}>
 

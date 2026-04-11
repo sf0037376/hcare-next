@@ -55,6 +55,7 @@ export default function Sidebar() {
   const navItems = [
     { href: getDashboardHref(), label: "Dashboard", icon: <Home size={20} /> },
     { href: "/patients", label: "Patients", icon: <Users size={20} />, roles: ["admin", "super_admin", "doctor"] },
+    { href: "/vaccinations", label: "Vaccinations", icon: "💉", roles: ["doctor", "nurse", "admin", "super_admin"] },
     { href: "/billing/orders", label: "Audit Logs", icon: <BarChart3 size={20} />, roles: ["admin", "super_admin"] },
     { href: "/medication", label: "Medication", icon: <Pill size={20} />, roles: ["doctor", "nurse", "super_admin"] },
     { href: "/feeding", label: "Feeding", icon: <Baby size={20} />, roles: ["nurse"] },
@@ -87,8 +88,8 @@ export default function Sidebar() {
           🏥
         </div>
         <div>
-          <h2 className="text-xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase leading-tight">NEOCARE</h2>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-70">Clinical Portal</p>
+          <h2 className="text-xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase leading-tight">RCHI</h2>
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-70">Powered by NeoCare</p>
         </div>
       </div>
 

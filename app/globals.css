@@ -10,8 +10,11 @@
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   
-  --glass-bg: rgba(255, 255, 255, 0.6);
-  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(228, 228, 231, 0.5);
+  --premium-blue: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  --premium-purple: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  --premium-indigo: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
   
   /* Theme variables for Tailwind v4 */
   --color-background: var(--background);
@@ -24,17 +27,18 @@
     --background-s: 10%;
     --background-l: 4%;
     --foreground: #fafafa;
-    --glass-bg: rgba(14, 14, 18, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-bg: rgba(14, 14, 18, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.1);
   }
 }
 
-:root {
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(228, 228, 231, 0.5);
-  --premium-blue: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  --premium-purple: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-  --premium-indigo: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+.dark, .dark * {
+  --background-h: 240;
+  --background-s: 10%;
+  --background-l: 4%;
+  --foreground: #fafafa;
+  --glass-bg: rgba(14, 14, 18, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 body {

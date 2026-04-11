@@ -82,6 +82,12 @@ export default function AlertListener() {
               method: 'PUT',
               body: { fcm_token }
             });
+
+            onMessage(messaging, (payload) => {
+              console.log("🔥 Foreground FCM received:", payload);
+              // Fallback if socket misses it
+              show(`🔔 ${payload.notification?.title || 'Alert'}`, { variant: 'info' });
+            });
           }
         }
       } catch (err) {
@@ -138,16 +144,11 @@ export default function AlertListener() {
         if (processedIdsRef.current.has(n.id)) return
         processedIdsRef.current.add(n.id)
 
-        // FILTER LOGIC: Adjusted for Admin Oversight
+        // FILTER LOGIC: Enhanced to trigger reliably
         const isHigh = n.priority === 'HIGH' || n.priority === 'high'
-        const isCriticalType = n.title.toLowerCase().includes('due') || 
-                               n.title.toLowerCase().includes('reminder') || 
-                               n.title.toLowerCase().includes('abnormal') ||
-                               n.title.toLowerCase().includes('missed')
 
         // If backend says isSilenced=true, we don't trigger intrusive UI/Sound.
-        // For Admins, backend now only silences routine items.
-        const isUrgent = isHigh && isCriticalType && !n.isSilenced
+        const isUrgent = isHigh && !n.isSilenced
 
         if (isUrgent) {
           setHighPriorityQueue(prev => [...prev, n])

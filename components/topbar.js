@@ -4,20 +4,29 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import NotificationBell from "./notification"
 import { apiFetch } from "../lib/api"
 import Link from "next/link"
-import { Volume2, VolumeX } from "lucide-react"
+import { Volume2, VolumeX, Sun, Moon } from "lucide-react"
 
 export default function Topbar() {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [alarmsEnabled, setAlarmsEnabled] = useState(true)
+  const [theme, setTheme] = useState("light")
   const debounceRef = useRef(null)
   const wrapperRef = useRef(null)
 
-  // Initialize alarms state
+  // Initialize alarms and theme state
   useEffect(() => {
-    const saved = localStorage.getItem("hospital_alarms_enabled")
-    setAlarmsEnabled(saved !== "false") // Default to true
+    const savedAlarms = localStorage.getItem("hospital_alarms_enabled")
+    setAlarmsEnabled(savedAlarms !== "false") // Default to true
+    
+    const savedTheme = localStorage.getItem("theme") || "light"
+    setTheme(savedTheme)
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
     
     function handleClickOutside(e) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -50,6 +59,17 @@ export default function Topbar() {
     }
   }
 
+  const handleToggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light"
+    setTheme(newTheme)
+    localStorage.setItem("theme", newTheme)
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+  }
+
   const handleSearch = useCallback((value) => {
     clearTimeout(debounceRef.current)
     setQuery(value)
@@ -77,7 +97,7 @@ export default function Topbar() {
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-sm shadow-lg shadow-blue-500/20">
             🏥
           </div>
-          <span className="text-sm font-black tracking-tighter text-zinc-900 dark:text-white uppercase">NeoCare</span>
+          <span className="text-sm font-black tracking-tighter text-zinc-900 dark:text-white uppercase">RCHI</span>
         </div>
         {/* Search with Autocomplete */}
         <div ref={wrapperRef} className="relative max-w-md w-full hidden md:block">
@@ -121,6 +141,15 @@ export default function Topbar() {
       </div>
 
       <div className="flex items-center gap-4">
+        {/* THEME TOGGLE */}
+        <div 
+          onClick={handleToggleTheme}
+          title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+          className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+        >
+          {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+        </div>
+
         {/* ALARM TOGGLE */}
         <div 
           onClick={handleToggleAlarms}

@@ -94,7 +94,7 @@ export default function BrandedLandingPage() {
                <span className="text-2xl" aria-hidden="true">🏥</span>
             )}
             <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">
-              {org?.name || "NEOCARE"}<span style={{ color: primaryColor }}>.</span>
+              {org?.name || "RCHI"}<span style={{ color: primaryColor }}>.</span>
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -224,7 +224,7 @@ export default function BrandedLandingPage() {
           <div className="text-center md:text-left flex-1">
             <span className="text-2xl font-black tracking-tighter uppercase italic dark:text-white">{org?.name}.</span>
             <p className="text-zinc-500 font-bold mt-4 uppercase tracking-widest text-[10px] max-w-xs mx-auto md:mx-0 leading-relaxed">
-              {org?.address || "Premium healthcare infrastructure powered by NEOCARE."}
+              {org?.address || "Premium healthcare infrastructure powered by NeoCare."}
             </p>
           </div>
           <div className="text-xs font-black uppercase tracking-widest text-zinc-400">

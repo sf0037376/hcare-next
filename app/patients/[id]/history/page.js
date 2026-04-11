@@ -6,6 +6,7 @@ import useToast from "../../../../components/toast"
 import ProtectedRoute from "../../../../components/ProtectedRoute"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import VaccinationCard from "../../../../components/VaccinationCard"
 
 export default function PatientHistory() {
   const { id } = useParams()
@@ -179,9 +180,11 @@ export default function PatientHistory() {
           </div>
         </div>
 
+        <VaccinationCard patientId={id} />
+
         <div className="space-y-6 relative before:absolute before:left-8 before:top-2 before:bottom-2 before:w-px before:bg-zinc-200 dark:before:bg-zinc-800">
-          {filteredHistory.map(item => (
-            <div key={item.id} className="relative pl-16 group">
+          {filteredHistory.map((item, idx) => (
+            <div key={`${item.type}-${item.id || idx}`} className="relative pl-16 group">
               {/* Dot */}
               <div className={`absolute left-[30px] top-4 w-4 h-4 rounded-full border-4 border-white dark:border-zinc-900 group-hover:scale-125 transition-transform z-10 ${
                 item.urgent ? 'bg-red-500 shadow-red-500/40' : 'bg-blue-500'

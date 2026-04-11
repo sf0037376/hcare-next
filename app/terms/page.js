@@ -9,7 +9,7 @@ export default function TermsOfService() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">🏥</span>
-            <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">NEOCARE<span className="text-blue-600">.</span></span>
+            <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">RCHI<span className="text-blue-600">.</span></span>
           </Link>
           <Link href="/" className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl">Back to Home</Link>
         </div>
@@ -27,18 +27,18 @@ export default function TermsOfService() {
         <div className="prose prose-zinc dark:prose-invert max-w-none space-y-12">
           <section>
             <h2 className="text-2xl font-black uppercase tracking-tight italic">1. Overview</h2>
-            <p className="text-zinc-500 font-bold leading-relaxed">By accessing and using NEOCARE, you agree to bound by these terms. Our platform provides medical information and management tools for patients, families, and healthcare professionals.</p>
+            <p className="text-zinc-500 font-bold leading-relaxed">By accessing and using RCHI, you agree to bound by these terms. Our platform provides medical information and management tools for patients, families, and healthcare professionals.</p>
           </section>
 
           <section>
             <h2 className="text-2xl font-black uppercase tracking-tight italic">2. Patient Privacy & Data</h2>
-            <p className="text-zinc-500 font-bold leading-relaxed">Healthcare data is sacred. NEOCARE implements industry-standard encryption for real-time vitals and history. However, users are responsible for securing their login credentials.</p>
+            <p className="text-zinc-500 font-bold leading-relaxed">Healthcare data is sacred. RCHI implements industry-standard encryption for real-time vitals and history. However, users are responsible for securing their login credentials.</p>
           </section>
 
           <section>
             <h2 className="text-2xl font-black uppercase tracking-tight italic">3. Medical Disclaimer</h2>
             <p className="p-8 bg-zinc-50 dark:bg-zinc-900 rounded-[32px] border border-zinc-100 dark:border-zinc-800 text-zinc-900 dark:text-white font-black italic">
-              NEOCARE is a monitoring and management tool. It does NOT provide medical advice. In case of emergency, always contact your doctor directly or call emergency services.
+              RCHI is a monitoring and management tool. It does NOT provide medical advice. In case of emergency, always contact your doctor directly or call emergency services.
             </p>
           </section>
 
@@ -52,7 +52,7 @@ export default function TermsOfService() {
       <footer className="mt-32 py-20 px-6 border-t border-zinc-100 dark:border-zinc-800">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
           <div className="text-center md:text-left">
-            <span className="text-2xl font-black tracking-tighter uppercase italic dark:text-white">NEOCARE.</span>
+            <span className="text-2xl font-black tracking-tighter uppercase italic dark:text-white">RCHI.</span>
             <p className="text-xs text-zinc-500 font-bold mt-2 uppercase tracking-widest">© 2026 Global Healthcare Solutions Inc.</p>
           </div>
           <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-zinc-400">

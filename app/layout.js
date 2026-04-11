@@ -2,7 +2,7 @@ import './globals.css'
 import ClientShell from '@/components/ClientShell'
 
 export const metadata = {
-  title: 'NEOCARE | Modern Patient Monitoring',
+  title: 'RCHI | Modern Patient Monitoring',
   description: 'High-precision clinical monitoring for Neonatal and Pediatric care.',
 }
 

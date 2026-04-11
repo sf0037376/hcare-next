@@ -601,7 +601,7 @@ export default function PatientProfile() {
                         pendingVitals.push({
                           type: isOverdue ? 'OVERDUE' : 'PENDING',
                           icon: '❤️',
-                          label: 'Observe Vitals (Voice Enabled)',
+                          label: 'Observe Vitals',
                           time: vitalTime,
                           id: `vital-${hoursAfterShift}`,
                           isMed: false,

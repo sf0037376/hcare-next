@@ -19,6 +19,7 @@ function PrescribeClient() {
   const [medicines, setMedicines] = useState([])
   const [medicineQuery, setMedicineQuery] = useState("")
   const [showMedDropdown, setShowMedDropdown] = useState(false)
+  const [role, setRole] = useState("")
   const [timingMode, setTimingMode] = useState("RELATIVE")
   const [specificTimings, setSpecificTimings] = useState(["09:00"])
   const [form, setForm] = useState({
@@ -74,6 +75,8 @@ function PrescribeClient() {
   }, [show])
 
   useEffect(() => {
+    const userRole = (localStorage.getItem("role") || "").toUpperCase()
+    setRole(userRole)
     loadPatients()
     loadMedicines()
     loadLabTests()
@@ -178,30 +181,37 @@ function PrescribeClient() {
   }
 
   return (
-    <ProtectedRoute roles={["DOCTOR"]}>
+    <ProtectedRoute roles={["DOCTOR", "NURSE", "PATIENT"]}>
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto pb-20">
         {Toast}
         
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">{isEdit ? 'Adjust Dosage' : 'Create Prescription'}</h2>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-2">{isEdit ? 'Update details for this prescription. History will be preserved.' : 'Generate a new medication schedule for a patient.'}</p>
+            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+              {role === 'DOCTOR' ? (isEdit ? 'Adjust Prescription' : 'Create Prescription') : 'Configure Medication Timings'}
+            </h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-2">
+              {role === 'DOCTOR' 
+                ? (isEdit ? 'Update details for this prescription. History will be preserved.' : 'Generate a new medication schedule for a patient.')
+                : 'Adjust the daily administration times to match your routine. Alerts will sync automatically.'}
+            </p>
           </div>
           <button onClick={() => router.back()} className="btn-secondary text-sm">Cancel</button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+          <div className={role === 'DOCTOR' ? 'lg:col-span-2' : 'lg:col-span-3'}>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="col-span-2">
                     <label className="form-label">Select Patient</label>
                     <select 
-                      className="form-input"
+                      className="form-input disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:opacity-70"
                       value={form.patient_id}
                       onChange={e => setForm({...form, patient_id: e.target.value})}
                       required
+                      disabled={role !== 'DOCTOR'}
                     >
                       <option value="">-- Choose Patient --</option>
                       {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -212,22 +222,30 @@ function PrescribeClient() {
                   <div className="col-span-2">
                     <div className="flex justify-between items-center mb-2">
                       <label className="form-label mb-0">Medicine</label>
-                      <button 
-                        type="button" 
-                        onClick={() => setShowAddMedicine(true)}
-                        className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        + Add Missing Medicine
-                      </button>
+                      {role === 'DOCTOR' && (
+                        <button 
+                            type="button" 
+                            onClick={() => setShowAddMedicine(true)}
+                            className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                            + Add Missing Medicine
+                        </button>
+                      )}
                     </div>
                     <div className="relative">
                       <input
-                        className="form-input"
-                        placeholder="Type to search medicine (optional if ordering labs)..."
+                        className="form-input disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:opacity-70"
+                        placeholder="Type to search medicine..."
                         value={medicineQuery || form.medicine}
-                        onFocus={() => setShowMedDropdown(true)}
-                        onChange={e => { setMedicineQuery(e.target.value); setForm({...form, medicine: e.target.value}); setShowMedDropdown(true) }}
+                        onFocus={() => role === 'DOCTOR' && setShowMedDropdown(true)}
+                        onChange={e => { 
+                            if(role !== 'DOCTOR') return;
+                            setMedicineQuery(e.target.value); 
+                            setForm({...form, medicine: e.target.value}); 
+                            setShowMedDropdown(true) 
+                        }}
                         onBlur={() => setTimeout(() => setShowMedDropdown(false), 150)}
+                        disabled={role !== 'DOCTOR'}
                       />
                       {showMedDropdown && filteredMedicines.length > 0 && (
                         <div className="absolute z-20 top-full mt-1 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
@@ -243,6 +261,17 @@ function PrescribeClient() {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="form-label">Dosage</label>
+                    <input 
+                      className="form-input disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:opacity-70" 
+                      placeholder="e.g. 1.5ml or 250mg"
+                      value={form.dosage}
+                      onChange={e => setForm({...form, dosage: e.target.value})}
+                      disabled={role !== 'DOCTOR'}
+                    />
                   </div>
 
                   <div className="col-span-2 space-y-4">
@@ -364,45 +393,47 @@ function PrescribeClient() {
                   </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800">
-                  <h4 className="font-bold text-zinc-900 dark:text-white mb-4 uppercase tracking-widest text-xs">Request Lab Tests</h4>
-                  <input
-                    className="form-input mb-3"
-                    placeholder="Search tests..."
-                    value={labSearch}
-                    onChange={e => setLabSearch(e.target.value)}
-                  />
-                  {selectedLabs.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {selectedLabs.map(id => {
-                        const t = labTestsList.find(x => x.id === id)
-                        return t ? (
-                          <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold">
-                            {t.name}
-                            <button type="button" onClick={() => setSelectedLabs(selectedLabs.filter(l => l !== id))} className="text-blue-400 hover:text-blue-600">×</button>
-                          </span>
-                        ) : null
-                      })}
+                {role === 'DOCTOR' && (
+                  <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                    <h4 className="font-bold text-zinc-900 dark:text-white mb-4 uppercase tracking-widest text-xs">Request Lab Tests</h4>
+                    <input
+                        className="form-input mb-3"
+                        placeholder="Search tests..."
+                        value={labSearch}
+                        onChange={e => setLabSearch(e.target.value)}
+                    />
+                    {selectedLabs.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                        {selectedLabs.map(id => {
+                            const t = labTestsList.find(x => x.id === id)
+                            return t ? (
+                            <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold">
+                                {t.name}
+                                <button type="button" onClick={() => setSelectedLabs(selectedLabs.filter(l => l !== id))} className="text-blue-400 hover:text-blue-600">×</button>
+                            </span>
+                            ) : null
+                        })}
+                        </div>
+                    )}
+                    <div className="max-h-48 overflow-y-auto space-y-1 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-2">
+                        {filteredLabs.map(test => (
+                        <label key={test.id} className="flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl cursor-pointer transition-colors">
+                            <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                            checked={selectedLabs.includes(test.id)}
+                            onChange={e => {
+                                if (e.target.checked) setSelectedLabs([...selectedLabs, test.id])
+                                else setSelectedLabs(selectedLabs.filter(id => id !== test.id))
+                            }}
+                            />
+                            <span className="text-sm">{test.name}</span>
+                        </label>
+                        ))}
+                        {filteredLabs.length === 0 && <p className="text-xs text-zinc-400 text-center py-4">No tests match your search</p>}
                     </div>
-                  )}
-                  <div className="max-h-48 overflow-y-auto space-y-1 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-2">
-                    {filteredLabs.map(test => (
-                      <label key={test.id} className="flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl cursor-pointer transition-colors">
-                        <input 
-                          type="checkbox" 
-                          className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                          checked={selectedLabs.includes(test.id)}
-                          onChange={e => {
-                            if (e.target.checked) setSelectedLabs([...selectedLabs, test.id])
-                            else setSelectedLabs(selectedLabs.filter(id => id !== test.id))
-                          }}
-                        />
-                        <span className="text-sm">{test.name}</span>
-                      </label>
-                    ))}
-                    {filteredLabs.length === 0 && <p className="text-xs text-zinc-400 text-center py-4">No tests match your search</p>}
                   </div>
-                </div>
+                )}
 
                 <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800">
                   <button type="submit" disabled={submitting} className="w-full btn-primary py-4 text-lg flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">

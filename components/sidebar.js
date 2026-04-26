@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { apiFetch } from "../lib/api"
-import { Home, Users, BarChart3, Pill, Baby, Activity, Calendar, Bell, Hospital, DollarSign, FileText, CreditCard, CheckCircle, Settings, LogOut, Syringe } from "lucide-react"
+import { Home, Users, BarChart3, Pill, Baby, Activity, Calendar, Bell, Hospital, DollarSign, FileText, CreditCard, CheckCircle, Settings, LogOut, Syringe, Watch } from "lucide-react"
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -60,6 +60,7 @@ export default function Sidebar() {
     { href: "/medication", label: "Medication", icon: <Pill size={20} />, roles: ["doctor", "nurse", "super_admin"] },
     { href: "/feeding", label: "Feeding", icon: <Baby size={20} />, roles: ["nurse"] },
     { href: "/vitals", label: "Vitals", icon: <Activity size={20} />, roles: ["nurse", "staff"] },
+    { href: "/health-sync", label: "Health Sync", icon: <Watch size={20} />, roles: ["patient", "admin", "super_admin"] },
     { href: "/appointments", label: "Appointments", icon: <Calendar size={20} />, roles: ["admin", "super_admin", "doctor"] },
     { href: "/availability", label: (role === 'admin' || role === 'super_admin') ? "Manage Staff Shifts" : "My Schedule", icon: <Calendar size={20} />, roles: ["doctor", "nurse", "admin", "super_admin"] },
     { href: "/alerts", label: "Alerts", icon: <Bell size={20} /> },

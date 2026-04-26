@@ -1,0 +1,21 @@
+{
+  "name": "NeoCare HCare",
+  "short_name": "HCare",
+  "description": "Hospital Management System with Health Sync",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "https://ui-avatars.com/api/?name=HCare&background=0ea5e9&color=fff&size=192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://ui-avatars.com/api/?name=HCare&background=0ea5e9&color=fff&size=512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -17,6 +17,17 @@ export default function ClientShell({ children }) {
     const token = localStorage.getItem("token")
     setIsAuthenticated(!!token)
     setIsLoading(false)
+
+    // Register PWA Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('SW registered: ', registration);
+        }).catch(registrationError => {
+          console.log('SW registration failed: ', registrationError);
+        });
+      });
+    }
   }, [pathname])
 
   // Exclude landing pages, auth, and dynamic org pages from the clinical shell

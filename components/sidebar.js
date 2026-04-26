@@ -60,7 +60,6 @@ export default function Sidebar() {
     { href: "/medication", label: "Medication", icon: <Pill size={20} />, roles: ["doctor", "nurse", "super_admin"] },
     { href: "/feeding", label: "Feeding", icon: <Baby size={20} />, roles: ["nurse"] },
     { href: "/vitals", label: "Vitals", icon: <Activity size={20} />, roles: ["nurse", "staff"] },
-    // { href: "/health-sync", label: "Health Sync", icon: <Watch size={20} />, roles: ["admin", "super_admin"] },
     { href: "/health-sync", label: "Health Sync", icon: <Watch size={20} />, roles: ["patient"] },
     { href: "/appointments", label: "Appointments", icon: <Calendar size={20} />, roles: ["admin", "super_admin", "doctor"] },
     { href: "/availability", label: (role === 'admin' || role === 'super_admin') ? "Manage Staff Shifts" : "My Schedule", icon: <Calendar size={20} />, roles: ["doctor", "nurse", "admin", "super_admin"] },
@@ -106,8 +105,8 @@ export default function Sidebar() {
                   key={item.href}
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${isActive
-                      ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
-                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
+                    ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
+                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
                     }`}
                 >
                   <span className="text-lg">{item.icon}</span>
@@ -139,8 +138,8 @@ export default function Sidebar() {
                     key={item.href}
                     href={item.href}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${isActive
-                        ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
-                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
+                      ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
+                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
                       }`}
                   >
                     <span className="text-lg">{item.icon}</span>

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { apiFetch } from "../lib/api"
-import { Home, Users, BarChart3, Pill, Calendar, Activity, Bell, DollarSign, FileText, CheckCircle, Settings, MoreHorizontal } from "lucide-react"
+import { Home, Users, BarChart3, Pill, Calendar, Activity, Bell, DollarSign, FileText, CheckCircle, Settings, MoreHorizontal, Watch } from "lucide-react"
 
 export default function BottomNav() {
   const pathname = usePathname()
@@ -49,6 +49,7 @@ export default function BottomNav() {
     { href: "/alerts", label: "Alerts", icon: <Bell size={18} /> },
     { href: "/billing", label: "Billing", icon: <DollarSign size={18} />, roles: ["admin", "pharmacist"] },
     { href: "/billing/ip-logs", label: "IP Logs", icon: <FileText size={18} />, roles: ["admin", "nurse"] },
+    { href: "/health-sync", label: "HealthSync", icon: <Watch size={18} />, roles: ["patient"] },
     { href: role === 'patient' ? "/patients/financials" : "/billing", label: "Billing", icon: <DollarSign size={18} />, roles: ["admin", "pharmacist", "patient"] },
     { href: `/patients/${patientId}/approvals`, label: "Approvals", icon: <CheckCircle size={18} />, roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: <Settings size={18} />, roles: ["admin"] },

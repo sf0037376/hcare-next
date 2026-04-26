@@ -49,7 +49,7 @@ export default function BottomNav() {
     { href: "/alerts", label: "Alerts", icon: <Bell size={18} /> },
     { href: "/billing", label: "Billing", icon: <DollarSign size={18} />, roles: ["admin", "pharmacist"] },
     { href: "/billing/ip-logs", label: "IP Logs", icon: <FileText size={18} />, roles: ["admin", "nurse"] },
-    { href: "/health-sync", label: "HealthSync", icon: <Watch size={18} />, roles: ["patient"] },
+    { href: "/health-sync", label: "HealthSync", icon: <Watch size={18} />, roles: ["patient", "doctor", "nurse"] },
     { href: role === 'patient' ? "/patients/financials" : "/billing", label: "Billing", icon: <DollarSign size={18} />, roles: ["admin", "pharmacist", "patient"] },
     { href: `/patients/${patientId}/approvals`, label: "Approvals", icon: <CheckCircle size={18} />, roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: <Settings size={18} />, roles: ["admin"] },

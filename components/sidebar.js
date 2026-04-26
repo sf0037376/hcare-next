@@ -60,7 +60,7 @@ export default function Sidebar() {
     { href: "/medication", label: "Medication", icon: <Pill size={20} />, roles: ["doctor", "nurse", "super_admin"] },
     { href: "/feeding", label: "Feeding", icon: <Baby size={20} />, roles: ["nurse"] },
     { href: "/vitals", label: "Vitals", icon: <Activity size={20} />, roles: ["nurse", "staff"] },
-    { href: "/health-sync", label: "Health Sync", icon: <Watch size={20} />, roles: ["patient"] },
+    { href: "/health-sync", label: "Health Sync", icon: <Watch size={20} />, roles: ["patient", "doctor", "nurse"] },
     { href: "/appointments", label: "Appointments", icon: <Calendar size={20} />, roles: ["admin", "super_admin", "doctor"] },
     { href: "/availability", label: (role === 'admin' || role === 'super_admin') ? "Manage Staff Shifts" : "My Schedule", icon: <Calendar size={20} />, roles: ["doctor", "nurse", "admin", "super_admin"] },
     { href: "/alerts", label: "Alerts", icon: <Bell size={20} /> },

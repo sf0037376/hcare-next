@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { apiFetch } from "../../lib/api"
-import { Clock, Activity, Heart, Download, Zap, Watch, ShieldCheck, Smartphone, Flame, Moon, Footprints, Fingerprint, KeyRound, Check, X } from "lucide-react"
+import { Clock, Activity, Heart, Download, Zap, Watch, ShieldCheck, Smartphone, Flame, Moon, Footprints, Fingerprint, Check, X, TrendingUp, Calendar } from "lucide-react"
 
-export default function HealthSyncDashboard() {
+function HealthSyncContent() {
+  const searchParams = useSearchParams()
   const [patientId, setPatientId] = useState("")
+  const [role, setRole] = useState("")
   const [points, setPoints] = useState(0)
   const [syncStatus, setSyncStatus] = useState("Idle")
   const [lastSync, setLastSync] = useState(null)
@@ -16,24 +19,35 @@ export default function HealthSyncDashboard() {
   const [deviceLinked, setDeviceLinked] = useState(false)
   const [provider, setProvider] = useState("")
   
-  // New: Biometric/Passcode states
+  // History states
+  const [history, setHistory] = useState([])
+  const [timeRange, setTimeRange] = useState("1h") // 1h, 6h, 1d, 1w
+  
+  // Biometric states
   const [showConfirm, setShowConfirm] = useState(false)
   const [pendingDevice, setPendingDevice] = useState(null)
   const [passcode, setPasscode] = useState("")
 
   useEffect(() => {
     const savedPid = localStorage.getItem("patientId") || "1"
-    setPatientId(savedPid)
+    const savedRole = (localStorage.getItem("role") || "").toLowerCase()
+    setRole(savedRole)
+
+    // If doctor/nurse, they might be viewing a specific patient
+    const queryPid = searchParams.get("pId")
+    const pid = (savedRole === "doctor" || savedRole === "nurse" || savedRole === "admin") ? (queryPid || savedPid) : savedPid
+    setPatientId(pid)
 
     const timer = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, [searchParams])
 
   useEffect(() => {
     if (patientId) {
       checkStatusAndPoints()
+      loadHistory()
     }
-  }, [patientId])
+  }, [patientId, timeRange])
 
   const checkStatusAndPoints = async () => {
     setLoading(true)
@@ -51,6 +65,15 @@ export default function HealthSyncDashboard() {
       console.error("Error fetching status:", err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadHistory = async () => {
+    try {
+      const data = await apiFetch(`/health-sync/history/${patientId}?range=${timeRange}`)
+      setHistory(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error("Error fetching history:", err)
     }
   }
 
@@ -78,8 +101,7 @@ export default function HealthSyncDashboard() {
   }
 
   const confirmConnection = async () => {
-    if (passcode.length < 4) return // Simple validation for demo
-    
+    if (passcode.length < 4) return 
     setLoading(true)
     setShowConfirm(false)
     try {
@@ -113,6 +135,7 @@ export default function HealthSyncDashboard() {
         setPoints(prev => prev + (data.points_awarded || 0))
         setSyncStatus("Success")
         setLastSync(new Date())
+        loadHistory()
         setTimeout(() => setSyncStatus("Idle"), 3000)
       }
     } catch (err) {
@@ -128,61 +151,54 @@ export default function HealthSyncDashboard() {
     window.open(`http://localhost:5000/api/health-sync/csv/${patientId}`, '_blank')
   }
 
+  // --- CHART RENDERING ---
+  const renderLineChart = (data, dataKey, color, label, yMin, yMax) => {
+    if (data.length < 2) return <div className="h-32 flex items-center justify-center text-[10px] text-zinc-500 uppercase font-black">Insufficient Data</div>
+    
+    const width = 300
+    const height = 100
+    const padding = 10
+    
+    const points = data.map((d, i) => {
+      const x = (i / (data.length - 1)) * (width - padding * 2) + padding
+      const val = d[dataKey] || yMin
+      const y = height - ((val - yMin) / (yMax - yMin)) * (height - padding * 2) - padding
+      return `${x},${y}`
+    }).join(" ")
+
+    return (
+      <div className="relative">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{label}</span>
+          <span className={`text-xs font-bold tabular-nums`} style={{ color }}>{data[data.length-1][dataKey]}</span>
+        </div>
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-24 overflow-visible">
+          <defs>
+            <linearGradient id={`grad-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={`M ${points} L ${width-padding},${height-padding} L ${padding},${height-padding} Z`} fill={`url(#grad-${dataKey})`} />
+          <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]" />
+          {/* Latest point circle */}
+          {(() => {
+            const last = points.split(" ").pop().split(",")
+            return <circle cx={last[0]} cy={last[1]} r="3" fill={color} className="animate-pulse" />
+          })()}
+        </svg>
+      </div>
+    )
+  }
+
   const formattedTime = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const formattedDate = time.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()
-
-  // MODAL: Confirm Connection with Passcode/Biometric
-  const ConfirmModal = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-[#111] w-full max-w-sm rounded-[32px] p-8 border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-300">
-        <div className="flex flex-col items-center gap-6">
-          <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-            <Fingerprint className="text-blue-500 animate-pulse" size={32} />
-          </div>
-          
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-white mb-1">Confirm Identity</h2>
-            <p className="text-xs text-zinc-400">Enter passcode to authorize device link</p>
-          </div>
-
-          <div className="flex gap-3 mt-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div 
-                key={i} 
-                className={`w-4 h-4 rounded-full border-2 border-zinc-700 transition-all ${passcode.length >= i ? 'bg-blue-500 border-blue-500 scale-110' : ''}`}
-              ></div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 w-full">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "OK"].map((num) => (
-              <button
-                key={num}
-                onClick={() => {
-                  if (num === "C") setPasscode("")
-                  else if (num === "OK") confirmConnection()
-                  else if (passcode.length < 4) setPasscode(prev => prev + num)
-                }}
-                className={`h-14 rounded-2xl flex items-center justify-center font-bold text-lg transition-all ${
-                  num === "OK" ? 'bg-blue-600 text-white' : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800'
-                }`}
-              >
-                {num === "OK" ? <Check size={20} /> : num === "C" ? <X size={20} /> : num}
-              </button>
-            ))}
-          </div>
-
-          <button onClick={() => setShowConfirm(false)} className="text-xs text-zinc-500 uppercase font-black tracking-widest hover:text-white transition-colors">Cancel Authorization</button>
-        </div>
-      </div>
-    </div>
-  )
 
   if (loading && !hasConsent) {
     return <div className="min-h-screen bg-zinc-100 dark:bg-[#0a0a0a] flex items-center justify-center"><div className="animate-spin text-blue-500"><Activity size={40} /></div></div>
   }
 
-  if (!hasConsent) {
+  if (!hasConsent && role === "patient") {
     return (
       <div className="min-h-screen bg-zinc-100 dark:bg-[#0a0a0a] flex items-center justify-center p-4">
         <div className="bg-white dark:bg-[#111] max-w-lg w-full rounded-3xl p-8 shadow-2xl border border-zinc-200 dark:border-[#333]">
@@ -190,53 +206,39 @@ export default function HealthSyncDashboard() {
             <ShieldCheck size={32} />
           </div>
           <h1 className="text-2xl font-black text-zinc-900 dark:text-white mb-4">Health Data Consent</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
-            NeoCare needs your permission to sync data from your smartwatch. Your data is encrypted and secure.
-          </p>
-          <div className="flex items-center gap-4">
-            <button onClick={handleGiveConsent} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all">I Agree & Consent</button>
-          </div>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">NeoCare needs permission to sync data from your watch. Data is encrypted.</p>
+          <button onClick={handleGiveConsent} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all uppercase text-sm tracking-widest">I Agree & Consent</button>
         </div>
       </div>
     )
   }
 
-  if (!deviceLinked) {
+  if (!deviceLinked && role === "patient") {
     return (
       <div className="min-h-screen bg-zinc-100 dark:bg-[#0a0a0a] flex items-center justify-center p-4">
-        {showConfirm && <ConfirmModal />}
-        <div className="bg-white dark:bg-[#111] max-w-lg w-full rounded-3xl p-8 shadow-2xl border border-zinc-200 dark:border-[#333]">
-          <div className="flex items-center justify-between mb-8">
-            <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-2xl flex items-center justify-center">
-              <Watch size={24} />
+        {showConfirm && <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#111] w-full max-w-sm rounded-[32px] p-8 border border-white/10 shadow-2xl">
+            <div className="flex flex-col items-center gap-6">
+              <Fingerprint className="text-blue-500" size={32} />
+              <div className="text-center"><h2 className="text-xl font-bold text-white mb-1">Confirm Identity</h2><p className="text-xs text-zinc-400">Enter passcode to authorize link</p></div>
+              <div className="flex gap-3 mt-2">{[1,2,3,4].map(i => <div key={i} className={`w-3 h-3 rounded-full border border-zinc-700 ${passcode.length >= i ? 'bg-blue-500' : ''}`}></div>)}</div>
+              <div className="grid grid-cols-3 gap-3 w-full">
+                {[1,2,3,4,5,6,7,8,9,"C",0,"OK"].map(num => (
+                  <button key={num} onClick={() => { if(num==="C") setPasscode(""); else if(num==="OK") confirmConnection(); else if(passcode.length<4) setPasscode(p => p+num) }} className="h-12 bg-zinc-900 text-white rounded-xl font-bold">{num}</button>
+                ))}
+              </div>
+              <button onClick={() => setShowConfirm(false)} className="text-xs text-zinc-500 uppercase font-black">Cancel</button>
             </div>
-            <button 
-              onClick={() => initiateConnection("AUTO_DETECT")}
-              className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20 hover:bg-blue-500 hover:text-white transition-all"
-            >
-              Generate ID & Auto-Link
-            </button>
           </div>
-          
-          <h1 className="text-2xl font-black text-zinc-900 dark:text-white mb-2 uppercase tracking-tighter italic">Connect Telemetry</h1>
-          <p className="text-xs text-zinc-500 mb-8 font-bold uppercase tracking-widest">Select Provider Stream</p>
-          
-          <div className="grid grid-cols-1 gap-3 mt-4">
-            {[
-              { id: 'APPLE_WATCH', name: 'Apple Watch', icon: <Watch className="text-red-500" /> },
-              { id: 'GOOGLE_WATCH', name: 'Pixel Watch', icon: <Watch className="text-blue-500" /> },
-              { id: 'IWATCH', name: 'iWatch Series', icon: <Watch className="text-pink-500" /> }
-            ].map((d) => (
-              <button 
-                key={d.id} 
-                onClick={() => initiateConnection(d.id)} 
-                className="group flex items-center justify-between p-5 rounded-2xl border border-zinc-200 dark:border-[#222] hover:border-blue-500 transition-all bg-zinc-50 dark:bg-[#0a0a0a]"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-900 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">{d.icon}</div>
-                  <span className="font-bold text-zinc-900 dark:text-white uppercase tracking-tighter">{d.name}</span>
-                </div>
-                <Zap className="text-zinc-300 dark:text-zinc-800 group-hover:text-yellow-500 transition-colors" size={18} />
+        </div>}
+        <div className="bg-white dark:bg-[#111] max-w-lg w-full rounded-3xl p-8 shadow-2xl border border-zinc-200 dark:border-[#333]">
+          <h1 className="text-2xl font-black text-zinc-900 dark:text-white mb-8 italic uppercase tracking-tighter">Connect Watch</h1>
+          <button onClick={() => initiateConnection("AUTO_DETECT")} className="w-full mb-6 text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-500/10 px-4 py-3 rounded-xl border border-blue-500/20">Generate ID & Auto-Link</button>
+          <div className="space-y-3">
+            {['APPLE_WATCH', 'GOOGLE_WATCH', 'IWATCH'].map(id => (
+              <button key={id} onClick={() => initiateConnection(id)} className="w-full flex items-center justify-between p-4 rounded-xl border border-zinc-200 dark:border-[#222] bg-zinc-50 dark:bg-[#0a0a0a] hover:border-blue-500 transition-all">
+                <span className="font-bold text-zinc-900 dark:text-white uppercase tracking-tighter">{id.replace('_', ' ')}</span>
+                <Watch size={18} className="text-zinc-400" />
               </button>
             ))}
           </div>
@@ -247,110 +249,109 @@ export default function HealthSyncDashboard() {
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-[#0a0a0a] flex items-center justify-center p-4 md:p-8 font-sans transition-colors duration-500">
-      <div className="relative w-full max-w-5xl rounded-[40px] bg-gradient-to-b from-zinc-300 to-zinc-400 dark:from-[#2a2a2a] dark:to-[#111] p-1 shadow-2xl">
-        <div className="relative w-full rounded-[38px] bg-white dark:bg-[#050505] overflow-hidden shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] dark:shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] border border-zinc-200 dark:border-[#333]">
+      <div className="relative w-full max-w-6xl rounded-[40px] bg-gradient-to-b from-zinc-300 to-zinc-400 dark:from-[#2a2a2a] dark:to-[#111] p-1 shadow-2xl">
+        <div className="relative w-full rounded-[38px] bg-white dark:bg-[#050505] overflow-hidden shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] border border-zinc-200 dark:border-[#333]">
           
-          <div className="p-8 md:p-10 relative flex flex-col md:flex-row justify-between items-start gap-8 min-h-[500px]">
-            <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-red-500/5 dark:bg-red-600/10 rounded-full blur-[100px] -translate-y-1/2 pointer-events-none"></div>
-            
-            {/* Left: Telemetry & Stats */}
-            <div className="flex flex-col gap-6 z-10 w-full md:w-1/3">
+          <div className="p-8 md:p-10 flex flex-col gap-8">
+            {/* Header */}
+            <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <Watch className="text-red-500 w-6 h-6" />
-                <span className="text-zinc-500 font-bold tracking-widest text-[10px] uppercase">{provider.replace('_', ' ')} TELEMETRY</span>
-              </div>
-              
-              <div className="bg-zinc-50 dark:bg-[#080808] p-6 rounded-3xl border border-zinc-200 dark:border-[#222]">
-                <div className="text-[10px] text-red-500 font-black uppercase mb-1">Health Points</div>
-                <div className="flex items-end gap-1">
-                  <span className="text-5xl font-light text-zinc-800 dark:text-white tabular-nums tracking-tighter">{points}</span>
-                  <span className="text-xs text-zinc-500 mb-2">XP</span>
+                <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white font-black italic shadow-lg">R</div>
+                <div>
+                  <h1 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter italic">Telemetria-Clinica</h1>
+                  <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Racing Diagnostics & Rewards</p>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-zinc-50 dark:bg-[#080808] p-4 rounded-2xl border border-zinc-200 dark:border-[#222]">
-                  <Footprints className="text-blue-500 mb-2" size={16} />
-                  <div className="text-[9px] text-zinc-500 uppercase font-bold">Steps</div>
-                  <div className="text-xl font-light dark:text-white">8,432</div>
+              <div className="flex items-center gap-6">
+                <div className="text-right">
+                  <div className="text-2xl font-light text-zinc-800 dark:text-white tracking-widest">{formattedTime}</div>
+                  <div className="text-[9px] font-bold text-zinc-500 tracking-[0.2em] uppercase">{formattedDate}</div>
                 </div>
-                <div className="bg-zinc-50 dark:bg-[#080808] p-4 rounded-2xl border border-zinc-200 dark:border-[#222]">
-                  <Flame className="text-orange-500 mb-2" size={16} />
-                  <div className="text-[9px] text-zinc-500 uppercase font-bold">Calories</div>
-                  <div className="text-xl font-light dark:text-white">420</div>
-                </div>
+                {role === "patient" && (
+                   <div className="bg-zinc-100 dark:bg-[#111] px-4 py-2 rounded-xl border border-zinc-200 dark:border-[#222]">
+                     <div className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Points</div>
+                     <div className="text-xl font-light text-zinc-800 dark:text-white">{points}</div>
+                   </div>
+                )}
               </div>
             </div>
 
-            {/* Center: Main Gauges */}
-            <div className="flex-1 flex flex-col items-center justify-center gap-12 z-10 w-full">
-              <div className="relative w-48 h-48 flex items-center justify-center">
-                 {/* CSS Gauge */}
-                 <div className="absolute inset-0 rounded-full border-8 border-zinc-100 dark:border-[#111] shadow-inner"></div>
-                 <div className="absolute inset-0 rounded-full border-t-8 border-r-8 border-red-500 rotate-45"></div>
-                 <div className="flex flex-col items-center">
-                   <Heart className="text-red-500 mb-1" size={24} />
-                   <span className="text-4xl font-light dark:text-white">72</span>
-                   <span className="text-[10px] text-zinc-500 uppercase font-bold">BPM</span>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Main Gauges Column */}
+              <div className="lg:col-span-1 flex flex-col gap-6">
+                 <div className="bg-zinc-50 dark:bg-[#080808] p-6 rounded-3xl border border-zinc-200 dark:border-[#222]">
+                   <div className="flex items-center justify-between mb-6">
+                     <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">Live Pulse</span>
+                     <Activity size={14} className="text-red-500 animate-pulse" />
+                   </div>
+                   <div className="flex items-center justify-center py-4">
+                     <div className="relative w-40 h-40 flex items-center justify-center">
+                        <div className="absolute inset-0 rounded-full border-4 border-zinc-100 dark:border-[#111] shadow-inner"></div>
+                        <div className="absolute inset-0 rounded-full border-t-4 border-red-500 rotate-[30deg]"></div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-5xl font-light dark:text-white tabular-nums">{history.length > 0 ? history[history.length-1].hr : "--"}</span>
+                          <span className="text-[9px] text-zinc-500 uppercase font-black">BPM</span>
+                        </div>
+                     </div>
+                   </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-4">
+                   <div className="bg-zinc-50 dark:bg-[#080808] p-5 rounded-2xl border border-zinc-200 dark:border-[#222]">
+                     <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest block mb-2">SpO2</span>
+                     <span className="text-2xl font-light dark:text-white">{history.length > 0 ? history[history.length-1].spo2 : "--"}%</span>
+                   </div>
+                   <div className="bg-zinc-50 dark:bg-[#080808] p-5 rounded-2xl border border-zinc-200 dark:border-[#222]">
+                     <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-2">BP SYST</span>
+                     <span className="text-2xl font-light dark:text-white">{history.length > 0 ? history[history.length-1].bp_systolic : "--"}</span>
+                   </div>
                  </div>
               </div>
-              
-              <div className="w-full flex flex-col gap-4">
-                <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase px-2">
-                   <span>Sync Accuracy</span>
-                   <span className="text-red-500">98.4%</span>
-                </div>
-                <div className="w-full h-1 bg-zinc-200 dark:bg-[#222] rounded-full overflow-hidden">
-                   <div className="h-full bg-red-500 w-[98%] shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
-                </div>
-              </div>
-            </div>
 
-            {/* Right: Environment & Clock */}
-            <div className="flex flex-col items-end gap-6 z-10 w-full md:w-1/3">
-              <div className="text-right">
-                <div className="text-3xl font-light text-zinc-800 dark:text-white tracking-widest">{formattedTime}</div>
-                <div className="text-[10px] font-bold text-zinc-500 tracking-[0.2em] uppercase">{formattedDate}</div>
-              </div>
-
-              <div className="bg-zinc-50 dark:bg-[#080808] p-6 rounded-3xl border border-zinc-200 dark:border-[#222] w-full max-w-[200px]">
-                <div className="flex items-center gap-3 mb-4">
-                  <Moon className="text-indigo-400" size={16} />
-                  <span className="text-[10px] text-zinc-500 uppercase font-bold">Sleep Quality</span>
+              {/* History & Cardiography Charts Column */}
+              <div className="lg:col-span-2 flex flex-col gap-6">
+                <div className="bg-zinc-900 dark:bg-[#080808] p-6 rounded-3xl border border-zinc-800 dark:border-[#222] shadow-2xl relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-8 z-10 relative">
+                    <div className="flex items-center gap-3">
+                      <TrendingUp size={16} className="text-red-500" />
+                      <span className="text-xs font-black text-white uppercase tracking-widest">Cardiography History</span>
+                    </div>
+                    <div className="flex gap-1 bg-black/40 p-1 rounded-lg">
+                      {['1h', '6h', '1d', '2d', '1w'].map(r => (
+                        <button key={r} onClick={() => setTimeRange(r)} className={`px-3 py-1 rounded text-[9px] font-black uppercase transition-all ${timeRange === r ? 'bg-red-600 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}>{r}</button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {renderLineChart(history, "hr", "#ef4444", "Heart Rate (BPM)", 50, 180)}
+                    {renderLineChart(history, "spo2", "#3b82f6", "Oxygen (%)", 80, 100)}
+                    {renderLineChart(history, "bp_systolic", "#10b981", "BP Systolic", 80, 180)}
+                    {renderLineChart(history, "bp_diastolic", "#fbbf24", "BP Diastolic", 50, 120)}
+                  </div>
                 </div>
-                <div className="text-2xl font-light dark:text-white">82%</div>
-                <div className="w-full h-1 bg-zinc-200 dark:bg-[#222] mt-2 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-400 w-[82%]"></div>
-                </div>
-              </div>
 
-              <div className="mt-auto flex flex-col items-end gap-2">
-                <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">System Status</span>
-                <div className="flex gap-1">
-                  {[1,2,3,4,5].map(i => <div key={i} className={`w-3 h-1 rounded-full ${i <= 4 ? 'bg-red-500' : 'bg-zinc-800'}`}></div>)}
+                <div className="flex justify-between items-center bg-zinc-50 dark:bg-[#0a0a0a] p-6 rounded-3xl border border-zinc-200 dark:border-[#222]">
+                  <div className="flex gap-4">
+                    <button onClick={handleTestSync} className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all"><Zap size={20} /></button>
+                    <div><p className="text-[10px] font-black text-zinc-800 dark:text-zinc-200 uppercase tracking-widest">Engage Test Sync</p><p className="text-[9px] text-zinc-500 uppercase">Simulate Telemetry Injection</p></div>
+                  </div>
+                  <button onClick={handleDownloadCsv} className="flex items-center gap-2 px-6 py-3 bg-zinc-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-md"><Download size={14} /> Export Dataset</button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="bg-zinc-100 dark:bg-[#0a0a0a] border-t border-zinc-200 dark:border-[#222] p-8 flex justify-between items-center">
-            <div className="flex gap-4">
-              <button onClick={handleTestSync} className="w-16 h-16 rounded-full bg-gradient-to-b from-zinc-200 to-zinc-300 dark:from-[#222] dark:to-[#111] shadow-lg border border-zinc-400 dark:border-[#333] flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
-                <Activity size={24} className={loading ? 'animate-spin' : 'text-red-500'} />
-              </button>
-              <div className="flex flex-col justify-center">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Engage Sync</span>
-                <span className="text-[9px] text-zinc-400">Manual Telemetry Override</span>
-              </div>
-            </div>
-            
-            <button onClick={handleDownloadCsv} className="px-8 py-3 rounded-full bg-zinc-800 dark:bg-white text-white dark:text-black font-bold text-xs uppercase tracking-widest hover:bg-black dark:hover:bg-zinc-200 transition-all flex items-center gap-2">
-              <Download size={14} /> Data Export
-            </button>
-          </div>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function HealthSyncDashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><Activity className="text-red-600 animate-spin" /></div>}>
+      <HealthSyncContent />
+    </Suspense>
   )
 }

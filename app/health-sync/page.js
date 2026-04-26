@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { apiFetch } from "../../lib/api"
-import { Clock, Activity, Heart, Download, Zap, Watch, ShieldCheck, Smartphone, Flame, Moon, Footprints } from "lucide-react"
+import { Clock, Activity, Heart, Download, Zap, Watch, ShieldCheck, Smartphone, Flame, Moon, Footprints, Fingerprint, KeyRound, Check, X } from "lucide-react"
 
 export default function HealthSyncDashboard() {
   const [patientId, setPatientId] = useState("")
@@ -15,6 +15,11 @@ export default function HealthSyncDashboard() {
   const [hasConsent, setHasConsent] = useState(false)
   const [deviceLinked, setDeviceLinked] = useState(false)
   const [provider, setProvider] = useState("")
+  
+  // New: Biometric/Passcode states
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [pendingDevice, setPendingDevice] = useState(null)
+  const [passcode, setPasscode] = useState("")
 
   useEffect(() => {
     const savedPid = localStorage.getItem("patientId") || "1"
@@ -64,19 +69,31 @@ export default function HealthSyncDashboard() {
     }
   }
 
-  const handleConnectDevice = async (selectedProvider) => {
+  const initiateConnection = (selectedProvider) => {
+    setPendingDevice({
+      provider: selectedProvider,
+      id: `SYNC-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    })
+    setShowConfirm(true)
+  }
+
+  const confirmConnection = async () => {
+    if (passcode.length < 4) return // Simple validation for demo
+    
     setLoading(true)
+    setShowConfirm(false)
     try {
       await apiFetch(`/health-sync/link`, {
         method: "PATCH",
         body: JSON.stringify({ 
           patient_id: patientId, 
-          wearable_id: `DEVICE_${Math.floor(Math.random()*10000)}`, 
-          provider: selectedProvider 
+          wearable_id: pendingDevice.id, 
+          provider: pendingDevice.provider 
         })
       })
-      setProvider(selectedProvider)
+      setProvider(pendingDevice.provider)
       setDeviceLinked(true)
+      setPasscode("")
     } catch (err) {
       console.error("Error connecting device:", err)
     } finally {
@@ -114,6 +131,53 @@ export default function HealthSyncDashboard() {
   const formattedTime = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const formattedDate = time.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()
 
+  // MODAL: Confirm Connection with Passcode/Biometric
+  const ConfirmModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div className="bg-[#111] w-full max-w-sm rounded-[32px] p-8 border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-300">
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+            <Fingerprint className="text-blue-500 animate-pulse" size={32} />
+          </div>
+          
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-white mb-1">Confirm Identity</h2>
+            <p className="text-xs text-zinc-400">Enter passcode to authorize device link</p>
+          </div>
+
+          <div className="flex gap-3 mt-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div 
+                key={i} 
+                className={`w-4 h-4 rounded-full border-2 border-zinc-700 transition-all ${passcode.length >= i ? 'bg-blue-500 border-blue-500 scale-110' : ''}`}
+              ></div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 w-full">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "OK"].map((num) => (
+              <button
+                key={num}
+                onClick={() => {
+                  if (num === "C") setPasscode("")
+                  else if (num === "OK") confirmConnection()
+                  else if (passcode.length < 4) setPasscode(prev => prev + num)
+                }}
+                className={`h-14 rounded-2xl flex items-center justify-center font-bold text-lg transition-all ${
+                  num === "OK" ? 'bg-blue-600 text-white' : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800'
+                }`}
+              >
+                {num === "OK" ? <Check size={20} /> : num === "C" ? <X size={20} /> : num}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={() => setShowConfirm(false)} className="text-xs text-zinc-500 uppercase font-black tracking-widest hover:text-white transition-colors">Cancel Authorization</button>
+        </div>
+      </div>
+    </div>
+  )
+
   if (loading && !hasConsent) {
     return <div className="min-h-screen bg-zinc-100 dark:bg-[#0a0a0a] flex items-center justify-center"><div className="animate-spin text-blue-500"><Activity size={40} /></div></div>
   }
@@ -140,24 +204,39 @@ export default function HealthSyncDashboard() {
   if (!deviceLinked) {
     return (
       <div className="min-h-screen bg-zinc-100 dark:bg-[#0a0a0a] flex items-center justify-center p-4">
+        {showConfirm && <ConfirmModal />}
         <div className="bg-white dark:bg-[#111] max-w-lg w-full rounded-3xl p-8 shadow-2xl border border-zinc-200 dark:border-[#333]">
-          <div className="w-16 h-16 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center mb-6">
-            <Watch size={32} />
+          <div className="flex items-center justify-between mb-8">
+            <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-2xl flex items-center justify-center">
+              <Watch size={24} />
+            </div>
+            <button 
+              onClick={() => initiateConnection("AUTO_DETECT")}
+              className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20 hover:bg-blue-500 hover:text-white transition-all"
+            >
+              Generate ID & Auto-Link
+            </button>
           </div>
-          <h1 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Connect Your Watch</h1>
-          <div className="grid grid-cols-1 gap-4 mt-8">
+          
+          <h1 className="text-2xl font-black text-zinc-900 dark:text-white mb-2 uppercase tracking-tighter italic">Connect Telemetry</h1>
+          <p className="text-xs text-zinc-500 mb-8 font-bold uppercase tracking-widest">Select Provider Stream</p>
+          
+          <div className="grid grid-cols-1 gap-3 mt-4">
             {[
               { id: 'APPLE_WATCH', name: 'Apple Watch', icon: <Watch className="text-red-500" /> },
-              { id: 'GOOGLE_WATCH', name: 'Google Pixel Watch', icon: <Watch className="text-blue-500" /> },
-              { id: 'IWATCH', name: 'iWatch Series', icon: <Watch className="text-pink-500" /> },
-              { id: 'GENERIC_WATCH', name: 'Other Smartwatch', icon: <Watch className="text-zinc-500" /> }
+              { id: 'GOOGLE_WATCH', name: 'Pixel Watch', icon: <Watch className="text-blue-500" /> },
+              { id: 'IWATCH', name: 'iWatch Series', icon: <Watch className="text-pink-500" /> }
             ].map((d) => (
-              <button key={d.id} onClick={() => handleConnectDevice(d.id)} className="flex items-center justify-between p-4 rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 hover:border-blue-500 transition-colors bg-white dark:bg-[#151515]">
+              <button 
+                key={d.id} 
+                onClick={() => initiateConnection(d.id)} 
+                className="group flex items-center justify-between p-5 rounded-2xl border border-zinc-200 dark:border-[#222] hover:border-blue-500 transition-all bg-zinc-50 dark:bg-[#0a0a0a]"
+              >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">{d.icon}</div>
-                  <span className="font-bold text-zinc-900 dark:text-white">{d.name}</span>
+                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-900 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">{d.icon}</div>
+                  <span className="font-bold text-zinc-900 dark:text-white uppercase tracking-tighter">{d.name}</span>
                 </div>
-                <div className="w-5 h-5 rounded-full border-2 border-zinc-300 dark:border-zinc-700"></div>
+                <Zap className="text-zinc-300 dark:text-zinc-800 group-hover:text-yellow-500 transition-colors" size={18} />
               </button>
             ))}
           </div>

@@ -21,7 +21,7 @@ export default function Sidebar() {
     setUserName(savedName)
     const savedPid = localStorage.getItem("patientId") || ""
     setPatientId(savedPid)
-    
+
     if (savedRole === "patient") {
       const pid = savedPid
       if (pid) {
@@ -29,7 +29,7 @@ export default function Sidebar() {
           if (Array.isArray(data)) {
             setPendingCount(data.filter(i => i.acceptance_status === 'PENDING').length)
           }
-        }).catch(() => {})
+        }).catch(() => { })
       }
     }
 
@@ -37,9 +37,9 @@ export default function Sidebar() {
     const fetchUnread = () => {
       apiFetch("/notifications/unread-count").then(data => {
         setUnreadAlerts(data.count || 0)
-      }).catch(() => {})
+      }).catch(() => { })
     }
-    
+
     fetchUnread()
     window.addEventListener('refresh-notifications', fetchUnread)
     return () => window.removeEventListener('refresh-notifications', fetchUnread)
@@ -60,8 +60,8 @@ export default function Sidebar() {
     { href: "/medication", label: "Medication", icon: <Pill size={20} />, roles: ["doctor", "nurse", "super_admin"] },
     { href: "/feeding", label: "Feeding", icon: <Baby size={20} />, roles: ["nurse"] },
     { href: "/vitals", label: "Vitals", icon: <Activity size={20} />, roles: ["nurse", "staff"] },
-    { href: "/health-sync", label: "Health Sync", icon: <Watch size={20} />, roles: ["admin", "super_admin"] },
-    { href: "/health-sync", label: "HealthSync", icon: <Activity size={20} />, roles: ["patient"] },
+    // { href: "/health-sync", label: "Health Sync", icon: <Watch size={20} />, roles: ["admin", "super_admin"] },
+    { href: "/health-sync", label: "Health Sync", icon: <Watch size={20} />, roles: ["patient"] },
     { href: "/appointments", label: "Appointments", icon: <Calendar size={20} />, roles: ["admin", "super_admin", "doctor"] },
     { href: "/availability", label: (role === 'admin' || role === 'super_admin') ? "Manage Staff Shifts" : "My Schedule", icon: <Calendar size={20} />, roles: ["doctor", "nurse", "admin", "super_admin"] },
     { href: "/alerts", label: "Alerts", icon: <Bell size={20} /> },
@@ -73,7 +73,7 @@ export default function Sidebar() {
     { href: `/patients/${patientId}/approvals`, label: "Approvals", icon: <CheckCircle size={20} />, roles: ["patient"] },
     { href: "/masters", label: "Masters", icon: <Settings size={20} />, roles: ["admin", "super_admin"] },
   ]
-  
+
   const adminItems = [
     { href: "/users/admission", label: "Admission", icon: "📝" },
     { href: "/users/manage", label: "Manage Staff", icon: "👥" },
@@ -105,11 +105,10 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
-                    isActive
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${isActive
                       ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
                       : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
-                  }`}
+                    }`}
                 >
                   <span className="text-lg">{item.icon}</span>
                   {item.label}
@@ -139,11 +138,10 @@ export default function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
-                      isActive
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${isActive
                         ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
                         : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
-                    }`}
+                      }`}
                   >
                     <span className="text-lg">{item.icon}</span>
                     {item.label}
@@ -164,7 +162,7 @@ export default function Sidebar() {
             <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">{userName || 'User'}</p>
             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter">{role}</p>
           </div>
-          <button 
+          <button
             onClick={() => {
               localStorage.clear();
               window.location.href = "/";
